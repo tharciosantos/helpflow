@@ -10,23 +10,28 @@ Aplicação em produção: [helpflow.vercel.app](https://helpflow.vercel.app/)
 
 ## Preview
 
+### Dashboard
+![Dashboard](public/screenshot.PNG)
+
 ### Criação de ticket
 ![Criar ticket](public/create-ticket.PNG)
 
 ### Detalhes do ticket
 ![Detalhes do ticket](public/detail-ticket.PNG)
 
-### Dashboard
-![Dashboard](public/screenshot.PNG)
-
 ## Funcionalidades
 
 - Autenticação com email e senha usando `bcryptjs`
 - Login social com GitHub via `next-auth`
 - Controle de acesso por papel com distinção entre `CLIENT` e `AGENT`
-- Criação, edição, atualização de status e exclusão de tickets
-- Dashboard com listagem, resumo de status e fluxo básico de atendimento
-- Persistência com Prisma e PostgreSQL
+- Criação de tickets com **título**, **descrição** e **prioridade** (Baixa, Média, Alta, Urgente)
+- Edição completa de tickets: título, descrição, status e prioridade
+- Atualização de status diretamente na listagem do dashboard
+- Exclusão de tickets com confirmação
+- Dashboard com listagem paginada e resumo de status
+- Validação de dados com `Zod` nas rotas de API
+- Rate limiting nas rotas de autenticação e cadastro para proteção contra brute force
+- Testes E2E com Cypress cobrindo autenticação, tickets e permissões
 
 ## Regras de acesso
 
@@ -42,6 +47,8 @@ Aplicação em produção: [helpflow.vercel.app](https://helpflow.vercel.app/)
 - `NextAuth.js`
 - `Prisma`
 - `PostgreSQL`
+- `Zod`
+- `Cypress`
 - `Vercel`
 
 ## Estrutura do projeto
@@ -55,8 +62,14 @@ src/
     components/       componentes reutilizáveis da interface
   lib/
     prisma.js         cliente Prisma singleton
+    schemas.js        schemas de validação Zod (tickets, registro)
+    ticketUtils.js    funções utilitárias de status e prioridade
+    rateLimiter.js    rate limiter em memória para proteção de rotas
 prisma/
   schema.prisma       modelos e enums do banco
+cypress/
+  e2e/                testes end-to-end (auth, tickets, permissions)
+  support/            comandos customizados do Cypress
 public/
   *.PNG               imagens usadas no README
 ```
@@ -93,16 +106,17 @@ NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=
 DATABASE_URL=
 DIRECT_URL=
+CYPRESS_TEST_SECRET=   # necessário apenas para rodar os testes Cypress
 ```
 
 ### 4. Prepare o banco
 
-Para ambiente local, o fluxo mais alinhado com o estado atual do projeto é:
-
 ```bash
-npx prisma db push
+npx prisma migrate dev
 npx prisma generate
 ```
+
+> **Atenção no Windows:** pare o servidor Next.js antes de rodar migrations para evitar o erro `EPERM` no Prisma Client.
 
 ### 5. Inicie a aplicação
 
@@ -111,6 +125,22 @@ npm run dev
 ```
 
 Aplicação local: [http://localhost:3000](http://localhost:3000)
+
+## Testes
+
+O projeto usa Cypress para testes E2E. Para rodar:
+
+```bash
+npx cypress open
+```
+
+Os testes cobrem:
+- Criação de conta e login com credenciais válidas e inválidas
+- Criação, edição e exclusão de tickets
+- Controle de permissões entre `CLIENT` e `AGENT`
+- Proteção das rotas de API (401 sem sessão)
+
+> Os testes criam usuários dinamicamente via `/api/register` — não é necessário seed manual no banco.
 
 ## OAuth com GitHub
 
@@ -127,12 +157,15 @@ Se não quiser usar login social, basta deixar `AUTH_GITHUB_ID` e `AUTH_GITHUB_S
 - `npm run build` gera o build de produção
 - `npm run start` sobe o build gerado
 - `npm run lint` executa o ESLint
+- `npx cypress open` abre o Cypress para testes E2E
 
 ## Observações técnicas
 
 - A sessão usa estratégia `jwt`, com `id` e `role` propagados para o token e para `session.user`
 - O papel padrão criado no cadastro é `CLIENT`
 - As rotas protegidas usam `getServerSession` para validar autenticação antes de acessar ou alterar tickets
+- A validação de entrada nas rotas de API é feita com `Zod`, retornando erros detalhados por campo
+- O rate limiter é baseado em memória (Map) — funciona em instância única; para ambientes distribuídos, substituir por Redis (ex: Upstash)
 - Existe uma rota de `health` e um endpoint de `keep-alive` para suporte operacional
 
 ## Documentação adicional
