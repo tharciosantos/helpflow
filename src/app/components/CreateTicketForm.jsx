@@ -11,24 +11,28 @@ export default function CreateTicketForm({ onTicketCreated }) {
     e.preventDefault();
     setStatusMessage('Enviando...');
 
-    const res = await fetch('/api/tickets', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, description }),
-    });
+    try {
+      const res = await fetch('/api/tickets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, description }),
+      });
 
-    if (res.ok) {
-      setStatusMessage('Ticket criado com sucesso!');
-      setTitle('');
-      setDescription('');
-      
-      if (onTicketCreated) {
-        onTicketCreated();
+      if (res.ok) {
+        setStatusMessage('Ticket criado com sucesso!');
+        setTitle('');
+        setDescription('');
+        if (onTicketCreated) {
+          onTicketCreated();
+        }
+      } else {
+        const error = await res.json();
+        setStatusMessage(`Erro: ${error.message || 'Não foi possível criar o ticket.'}`);
       }
-
-    } else {
-      const error = await res.json();
-      setStatusMessage(`Erro: ${error.message || 'Não foi possível criar o ticket.'}`);
+    } catch (err) {
+      // Erro de rede, timeout, servidor offline, etc.
+      setStatusMessage('Erro de conexão. Verifique sua internet e tente novamente.');
+      console.error('Erro ao criar ticket:', err);
     }
   };
 
