@@ -120,7 +120,7 @@ export async function PUT(req, { params }) {
       );
     }
 
-    const { title, description } = validation.data;
+    const { title, description, status, priority } = validation.data;
     const ticket = await prisma.ticket.findUnique({
       where: { id },
     });
@@ -139,7 +139,9 @@ export async function PUT(req, { params }) {
 
     const updatedTicket = await prisma.ticket.update({
       where: { id },
-      data: { title, description },
+      // Só atualiza os campos que vieram no body — se um campo for undefined,
+      // o Prisma ignora e mantém o valor atual no banco
+      data: { title, description, status, priority },
     });
 
     return NextResponse.json(updatedTicket, { status: 200 });

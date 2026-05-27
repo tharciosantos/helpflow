@@ -34,6 +34,9 @@ export const updateTicketSchema = z.object({
         .max(2000, 'A descrição não pode ter mais de 2000 caracteres.')
         .trim()
         .optional(),
+    // Permite editar status e prioridade também pelo formulário de edição
+    status: z.enum(['OPEN', 'IN_PROGRESS', 'CLOSED']).optional(),
+    priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).optional(),
 });
 
 export const registerSchema = z.object({
