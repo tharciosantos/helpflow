@@ -5,19 +5,6 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 
-const getStatusDisplayNamePT = (status) => {
-    switch (status) {
-        case 'OPEN':
-            return 'Aberto';
-        case 'IN_PROGRESS':
-            return 'Em Progresso';
-        case 'CLOSED':
-            return 'Fechado';
-        default:
-            return status;
-    }
-};
-
 export default function TicketDetailsPage() {
     const { data: session, status: sessionStatus } = useSession();
     const { id } = useParams();

@@ -2,19 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-
-const getStatusDisplayNamePT = (status) => {
-  switch (status) {
-    case "OPEN":
-      return "Aberto";
-    case "IN_PROGRESS":
-      return "Em Progresso";
-    case "CLOSED":
-      return "Fechado";
-    default:
-      return status;
-  }
-};
+import { getStatusDisplayNamePT, getStatusBadgeClasses } from '@/lib/ticketUtils';
 
 export default function TicketList({
   tickets,
