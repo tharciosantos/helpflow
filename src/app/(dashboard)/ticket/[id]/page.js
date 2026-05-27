@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
+import { getStatusDisplayNamePT, getPriorityBadge } from '@/lib/ticketUtils';
 
 export default function TicketDetailsPage() {
     const { data: session, status: sessionStatus } = useSession();
@@ -105,16 +106,28 @@ export default function TicketDetailsPage() {
     return (
         <main className="min-h-screen text-white p-8">
             <div className="max-w-4xl mx-auto">
-                <Link href="/dashboard" data-cy="ticket-detail-back-link" className="text-indigo-400 hover:text-indigo-300 mb-8 block">&larr; Voltar para a lista</Link>
+                <Link href="/dashboard" data-cy="ticket-detail-back-link" className="text-teal-400 hover:text-teal-300 mb-8 block">&larr; Voltar para a lista</Link>
                 <div className="p-6 bg-gray-800 rounded-lg shadow-md">
                     <div className="flex justify-between items-start mb-4">
                         <h1 className="text-3xl font-bold">{ticket.title}</h1>
-                        <span className={`px-3 py-1 text-sm font-bold rounded-full ${ticket.status === 'OPEN' ? 'bg-green-600 text-white' :
-                            ticket.status === 'IN_PROGRESS' ? 'bg-yellow-500 text-black' :
-                                'bg-gray-600 text-gray-300'
-                            }`}>
-                            {getStatusDisplayNamePT(ticket.status)}
-                        </span>
+                        <div className="flex items-center gap-2">
+                            {/* Badge de status */}
+                            <span className={`px-3 py-1 text-sm font-bold rounded-full ${ticket.status === 'OPEN' ? 'bg-green-600 text-white' :
+                                ticket.status === 'IN_PROGRESS' ? 'bg-yellow-500 text-black' :
+                                    'bg-gray-600 text-gray-300'
+                                }`}>
+                                {getStatusDisplayNamePT(ticket.status)}
+                            </span>
+                            {/* Badge de prioridade */}
+                            {ticket.priority && (() => {
+                                const { label, classes } = getPriorityBadge(ticket.priority);
+                                return (
+                                    <span className={`px-3 py-1 text-sm font-bold rounded-full ${classes}`}>
+                                        {label}
+                                    </span>
+                                );
+                            })()}
+                        </div>
                     </div>
                     <div className="border-t border-gray-700 my-4"></div>
                     <p className="text-gray-300 whitespace-pre-wrap">{ticket.description}</p>
@@ -139,7 +152,7 @@ export default function TicketDetailsPage() {
                                     <option value="IN_PROGRESS">Em Progresso</option>
                                     <option value="CLOSED">Fechado</option>
                                 </select>
-                                <button data-cy="ticket-detail-status-submit" onClick={handleStatusUpdate} className="py-2 px-4 bg-indigo-600 hover:bg-indigo-700 rounded-md font-semibold">Atualizar Status</button>
+                                <button data-cy="ticket-detail-status-submit" onClick={handleStatusUpdate} className="py-2 px-4 bg-teal-600 hover:bg-teal-700 rounded-md font-semibold">Atualizar Status</button>
                             </div>
 
                             <button
