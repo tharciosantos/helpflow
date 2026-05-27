@@ -10,16 +10,19 @@ export default function DashboardPage() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
-  const fetchTickets = async () => {
+  const fetchTickets = async (page = 1) => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const res = await fetch('/api/tickets');
-      if (!res.ok) {
-        throw new Error('Falha ao buscar os tickets.');
-      }
+      const res = await fetch(`/api/tickets?page=${page}&limit=10`);
+      if (!res.ok) throw new Error('Falha ao carregar tickets.');
+
       const data = await res.json();
-      setTickets(data);
+      setTickets(data.tickets);
+      setTotalPages(data.pagination.totalPages);
+      setCurrentPage(data.pagination.page);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -73,16 +76,43 @@ export default function DashboardPage() {
 
       {/* Resumo rápido + lista */}
       <section className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(260px,1fr)]">
-        {/* Lista de tickets */}
-        <div className="bg-gray-900/60 border border-gray-800 rounded-xl p-4 md:p-6 shadow-lg">
-          <TicketList
-            tickets={tickets}
-            loading={loading}
-            error={error}
-            onTicketDeleted={handleTicketDeleted}
-            onTicketUpdated={handleTicketUpdated}
-            session={session}
-          />
+        {/* Lista de tickets + controles de paginação */}
+        <div className="flex flex-col gap-4">
+          <div className="bg-gray-900/60 border border-gray-800 rounded-xl p-4 md:p-6 shadow-lg">
+            <TicketList
+              tickets={tickets}
+              loading={loading}
+              error={error}
+              onTicketDeleted={handleTicketDeleted}
+              onTicketUpdated={handleTicketUpdated}
+              session={session}
+            />
+          </div>
+
+          {/* Paginação — só aparece quando há mais de 1 página */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-4 py-2">
+              <button
+                data-cy="pagination-prev"
+                onClick={() => fetchTickets(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-4 py-2 rounded-md bg-gray-700 text-white text-sm disabled:opacity-40 hover:bg-gray-600 transition"
+              >
+                ← Anterior
+              </button>
+              <span className="text-sm text-gray-400">
+                Página {currentPage} de {totalPages}
+              </span>
+              <button
+                data-cy="pagination-next"
+                onClick={() => fetchTickets(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 rounded-md bg-gray-700 text-white text-sm disabled:opacity-40 hover:bg-gray-600 transition"
+              >
+                Próxima →
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Painel lateral com resumo e dicas */}
