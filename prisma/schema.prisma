@@ -32,6 +32,7 @@ model Ticket {
   title       String
   description String
   status      Status   @default(OPEN)
+  priority    Priority @default(MEDIUM)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -46,6 +47,13 @@ enum Status {
   OPEN
   IN_PROGRESS
   CLOSED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
 }
 
 model Account {

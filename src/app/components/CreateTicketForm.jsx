@@ -6,6 +6,7 @@ export default function CreateTicketForm({ onTicketCreated }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
+  const [priority, setPriority] = useState('MEDIUM');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -15,7 +16,7 @@ export default function CreateTicketForm({ onTicketCreated }) {
       const res = await fetch('/api/tickets', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, description }),
+        body: JSON.stringify({ title, description, priority }),
       });
 
       if (res.ok) {
@@ -64,8 +65,30 @@ export default function CreateTicketForm({ onTicketCreated }) {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             required
-            className="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-teal-500 focus:border-indigo-500 sm:text-sm"
+            className="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
           ></textarea>
+        </div>
+
+        {/*
+          Campo de prioridade.
+          O valor padrão é 'MEDIUM' (definido no useState lá em cima).
+          Quando o usuário muda, setPriority atualiza o estado,
+          e no submit esse valor vai junto no body do fetch.
+        */}
+        <div>
+          <label htmlFor="priority" className="block text-sm font-medium text-gray-300">Prioridade</label>
+          <select
+            data-cy="ticket-create-priority"
+            id="priority"
+            value={priority}
+            onChange={(e) => setPriority(e.target.value)}
+            className="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
+          >
+            <option value="LOW">🟢 Baixa</option>
+            <option value="MEDIUM">🟡 Média</option>
+            <option value="HIGH">🟠 Alta</option>
+            <option value="URGENT">🔴 Urgente</option>
+          </select>
         </div>
       </div>
       <div className="mt-6 text-center">

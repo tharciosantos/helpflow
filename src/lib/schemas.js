@@ -11,6 +11,9 @@ export const createTicketSchema = z.object({
         .min(1, 'A descrição é obrigatória.')
         .max(2000, 'A descrição não pode ter mais de 2000 caracteres.')
         .trim(),
+    // optional: se não vier no body, o Zod simplesmente ignora
+    // e o Prisma usa o @default(MEDIUM) do schema.prisma
+    priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).optional(),
 });
 
 export const updateTicketStatusSchema = z.object({

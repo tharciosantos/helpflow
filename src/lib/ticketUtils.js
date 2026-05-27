@@ -25,3 +25,19 @@ export function getStatusBadgeClasses(status) {
     };
     return classMap[status] ?? 'bg-gray-600/40 text-gray-300';
 }
+
+/**
+ * Retorna label e classes CSS do badge de prioridade.
+ * @param {string} priority - 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'
+ * @returns {{ label: string, classes: string }}
+ */
+export function getPriorityBadge(priority) {
+    const map = {
+        LOW:    { label: 'Baixa',   classes: 'bg-green-700/30 text-green-300' },
+        MEDIUM: { label: 'Média',   classes: 'bg-blue-700/30 text-blue-300' },
+        HIGH:   { label: 'Alta',    classes: 'bg-orange-700/30 text-orange-300' },
+        URGENT: { label: 'Urgente', classes: 'bg-red-700/40 text-red-300' },
+    };
+    // Se vier um valor desconhecido, retorna um badge cinza genérico
+    return map[priority] ?? { label: priority, classes: 'bg-gray-600/40 text-gray-300' };
+}

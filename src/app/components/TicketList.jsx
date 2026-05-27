@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { getStatusDisplayNamePT, getStatusBadgeClasses } from '@/lib/ticketUtils';
+import { getStatusDisplayNamePT, getStatusBadgeClasses, getPriorityBadge } from '@/lib/ticketUtils';
 
 export default function TicketList({
   tickets,
@@ -114,7 +114,7 @@ export default function TicketList({
               >
                 <div className="p-5 bg-gray-800/40 border border-gray-700 rounded-xl hover:bg-gray-800/60 transition-colors">
 
-                  {/* TÍTULO + STATUS */}
+                  {/* TÍTULO + BADGES */}
                   <div className="flex items-center justify-between mb-2">
                     <Link
                       data-cy={`ticket-${ticket.id}-detail-link`}
@@ -126,21 +126,39 @@ export default function TicketList({
                       </h3>
                     </Link>
 
-                    {/* BADGE MINIMALISTA */}
-                    <span
-                      data-cy="ticket-status-badge"
-                      className={`
-                      px-3 py-1 text-xs rounded-full font-medium
-                      ${ticket.status === "OPEN"
-                          ? "bg-green-700/40 text-green-300"
-                          : ticket.status === "IN_PROGRESS"
-                            ? "bg-yellow-600/30 text-yellow-300"
-                            : "bg-gray-600/40 text-gray-300"
-                        }
-                    `}
-                    >
-                      {getStatusDisplayNamePT(ticket.status)}
-                    </span>
+                    {/* Os dois badges ficam juntos à direita */}
+                    <div className="flex items-center gap-2">
+                      {/* BADGE DE STATUS */}
+                      <span
+                        data-cy="ticket-status-badge"
+                        className={`px-3 py-1 text-xs rounded-full font-medium
+                          ${ticket.status === "OPEN"
+                            ? "bg-green-700/40 text-green-300"
+                            : ticket.status === "IN_PROGRESS"
+                              ? "bg-yellow-600/30 text-yellow-300"
+                              : "bg-gray-600/40 text-gray-300"
+                          }`}
+                      >
+                        {getStatusDisplayNamePT(ticket.status)}
+                      </span>
+
+                      {/*
+                        BADGE DE PRIORIDADE
+                        getPriorityBadge retorna { label, classes } —
+                        desestruturamos direto para usar as duas propriedades
+                      */}
+                      {ticket.priority && (() => {
+                        const { label, classes } = getPriorityBadge(ticket.priority);
+                        return (
+                          <span
+                            data-cy="ticket-priority-badge"
+                            className={`px-3 py-1 text-xs rounded-full font-medium ${classes}`}
+                          >
+                            {label}
+                          </span>
+                        );
+                      })()}
+                    </div>
                   </div>
 
                   {/* DESCRIÇÃO */}

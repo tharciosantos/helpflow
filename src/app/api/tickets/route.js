@@ -25,11 +25,13 @@ export async function POST(req) {
       );
     }
 
-    const { title, description } = validation.data;
+    // validation.data já tem os campos limpos e validados pelo Zod
+    // Extraímos priority também — se não vier no body, o banco usa o default (MEDIUM)
+    const { title, description, priority } = validation.data;
     const authorId = session.user.id;
 
     const newTicket = await prisma.ticket.create({
-      data: { title, description, authorId },
+      data: { title, description, priority, authorId },
     });
 
     return NextResponse.json(newTicket, { status: 201 });
