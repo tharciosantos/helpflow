@@ -4,6 +4,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GitHubProvider from "next-auth/providers/github";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { checkRateLimit } from "@/lib/rateLimiter";
 
 export const authOptions = {
   adapter: PrismaAdapter(prisma),
@@ -24,6 +25,13 @@ export const authOptions = {
           throw new Error("Invalid credentials");
         }
 
+        // Rate limit por email — bloqueia brute force na mesma conta
+        // Usa o email como identifier para que o bloqueio seja por conta,
+        // não por IP (evita bloquear múltiplos usuários atrás do mesmo IP)
+        const { isLimited } = checkRateLimit(`login:${credentials.email}`);
+        if (isLimited) {
+          throw new Error('Muitas tentativas de login. Tente novamente em 15 minutos.');
+        }
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
         });

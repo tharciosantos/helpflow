@@ -1,8 +1,27 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+import { checkRateLimit } from '@/lib/rateLimiter';
+
 
 export async function POST(req) {
+
+    const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    const { isLimited, remaining } = checkRateLimit(`register:${ip}`);
+
+    if (isLimited) {
+        return NextResponse.json(
+            { message: 'Muitas tentativas. Tente novamente em 15 minutos.' },
+            {
+                status: 429,
+                headers: {
+                    'X-RateLimit-Remaining': '0',
+                    'Retry-After': '900',
+                },
+            }
+        );
+    }
+
     try {
         const body = await req.json();
         const { name, email, password, role } = body;
