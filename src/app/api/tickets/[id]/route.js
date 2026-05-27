@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../auth/[...nextauth]/route';
 import prisma from '@/lib/prisma';
+import { updateTicketStatusSchema, updateTicketSchema } from '@/lib/schemas';
 
 // FUNÇÃO GET
 export async function GET(req, { params }) {
@@ -42,18 +43,26 @@ export async function GET(req, { params }) {
 export async function PATCH(req, { params }) {
   const session = await getServerSession(authOptions);
   if (!session) {
-    return NextResponse.json({ message: 'Não autorizado' }, { status: 403 });
+    // 401 = sem identidade (não logado). 403 seria "logado mas sem permissão".
+    return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
   }
 
   const { id } = await params;
 
   try {
     const body = await req.json();
-    const { status } = body;
 
-    if (!['OPEN', 'IN_PROGRESS', 'CLOSED'].includes(status)) {
-      return NextResponse.json({ message: 'Status inválido' }, { status: 400 });
+    // Validação com Zod — substitui o if manual de status
+    // updateTicketStatusSchema aceita apenas 'OPEN' | 'IN_PROGRESS' | 'CLOSED'
+    const validation = updateTicketStatusSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { message: 'Dados inválidos.', errors: validation.error.flatten().fieldErrors },
+        { status: 400 }
+      );
     }
+
+    const { status } = validation.data;
 
     // Verifica se o ticket existe
     const ticket = await prisma.ticket.findUnique({
@@ -100,7 +109,18 @@ export async function PUT(req, { params }) {
 
   try {
     const body = await req.json();
-    const { title, description } = body;
+
+    // Validação com Zod — title e description são opcionais no PUT
+    // (o usuário pode querer atualizar só o título, ou só a descrição)
+    const validation = updateTicketSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json(
+        { message: 'Dados inválidos.', errors: validation.error.flatten().fieldErrors },
+        { status: 400 }
+      );
+    }
+
+    const { title, description } = validation.data;
     const ticket = await prisma.ticket.findUnique({
       where: { id },
     });
@@ -131,7 +151,8 @@ export async function PUT(req, { params }) {
 export async function DELETE(req, { params }) {
   const session = await getServerSession(authOptions);
   if (!session) {
-    return NextResponse.json({ message: 'Não autorizado' }, { status: 403 });
+    // 401 = sem identidade (não logado)
+    return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
   }
 
   const { id } = await params;
