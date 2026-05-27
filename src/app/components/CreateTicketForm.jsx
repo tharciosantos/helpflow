@@ -49,6 +49,9 @@ export default function CreateTicketForm({ onTicketCreated }) {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
+            minLength={5}
+            maxLength={100}
+            placeholder="Descreva brevemente o problema (mín. 5 caracteres)"
             className="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
           />
         </div>

@@ -16,12 +16,49 @@ export async function POST(req) {
     const body = await req.json();
     const { title, description } = body;
 
+    // Validação de campos obrigatórios
+    if (!title || typeof title !== 'string' || title.trim().length === 0) {
+      return NextResponse.json(
+        { message: 'O título é obrigatório.' },
+        { status: 400 }
+      );
+    }
+
+    if (!description || typeof description !== 'string' || description.trim().length === 0) {
+      return NextResponse.json(
+        { message: 'A descrição é obrigatória.' },
+        { status: 400 }
+      );
+    }
+
+    // Limites de tamanho
+    if (title.trim().length < 5) {
+      return NextResponse.json(
+        { message: 'O título deve ter pelo menos 5 caracteres.' },
+        { status: 400 }
+      );
+    }
+
+    if (title.trim().length > 100) {
+      return NextResponse.json(
+        { message: 'O título não pode ter mais de 100 caracteres.' },
+        { status: 400 }
+      );
+    }
+
+    if (description.trim().length > 2000) {
+      return NextResponse.json(
+        { message: 'A descrição não pode ter mais de 2000 caracteres.' },
+        { status: 400 }
+      );
+    }
+
     const authorId = session.user.id;
 
     const newTicket = await prisma.ticket.create({
       data: {
-        title,
-        description,
+        title: title.trim(),       // ✅ Salva sem espaços nas bordas
+        description: description.trim(),
         authorId,
       },
     });
