@@ -23,7 +23,7 @@ export async function GET(req, { params }) {
       return NextResponse.json({ message: 'Ticket não encontrado' }, { status: 404 });
     }
 
-    const role    = session.user.role || 'CLIENT';
+    const role = session.user.role || 'CLIENT';
     const isOwner = ticket.authorId === session.user.id;
     const isAgent = role === 'AGENT';
 
@@ -65,7 +65,7 @@ export async function PATCH(req, { params }) {
     }
 
     // Verifica dono ou role de AGENT
-    const role    = session.user.role || 'CLIENT';
+    const role = session.user.role || 'CLIENT';
     const isOwner = ticket.authorId === session.user.id;
     const isAgent = role === 'AGENT';
 
@@ -96,14 +96,11 @@ export async function PUT(req, { params }) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
 
-  // 1. Desestrutura com await (A caixa é aberta aqui)
   const { id } = await params;
 
   try {
     const body = await req.json();
     const { title, description } = body;
-
-    // 2. Use a variável 'id' purinha, sem o 'params.' na frente
     const ticket = await prisma.ticket.findUnique({
       where: { id },
     });
@@ -112,7 +109,7 @@ export async function PUT(req, { params }) {
       return NextResponse.json({ message: 'Ticket não encontrado' }, { status: 404 });
     }
 
-    const role    = session.user.role || 'CLIENT';
+    const role = session.user.role || 'CLIENT';
     const isOwner = ticket.authorId === session.user.id;
     const isAgent = role === 'AGENT';
 
@@ -121,7 +118,7 @@ export async function PUT(req, { params }) {
     }
 
     const updatedTicket = await prisma.ticket.update({
-      where: { id }, // 3. Aqui também apenas 'id'
+      where: { id },
       data: { title, description },
     });
 
@@ -149,7 +146,7 @@ export async function DELETE(req, { params }) {
       return NextResponse.json({ message: 'Ticket não encontrado' }, { status: 404 });
     }
 
-    const role    = session.user.role || 'CLIENT';
+    const role = session.user.role || 'CLIENT';
     const isOwner = ticket.authorId === session.user.id;
     const isAgent = role === 'AGENT';
 

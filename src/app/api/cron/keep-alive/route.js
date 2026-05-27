@@ -15,7 +15,6 @@ export async function GET(request) {
     }
 
     try {
-        // Faz uma query simples para manter o banco ativo
         await prisma.$queryRaw`SELECT 1`;
 
         console.log('[Keep-Alive] Database ping successful:', new Date().toISOString());
