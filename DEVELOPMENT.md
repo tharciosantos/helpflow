@@ -15,7 +15,7 @@ Guia prático para configurar e rodar o HelpFlow localmente com `Next.js`, `Pris
 ### 1. Clone o projeto
 
 ```bash
-git clone https://github.com/tharcio09/helpflow.git
+git clone https://github.com/tharciosantos/helpflow.git
 cd helpflow
 ```
 

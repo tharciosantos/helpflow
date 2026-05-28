@@ -79,7 +79,7 @@ public/
 ### 1. Clone o repositório
 
 ```bash
-git clone https://github.com/tharcio09/helpflow.git
+git clone https://github.com/tharciosantos/helpflow.git
 cd helpflow
 ```
 
