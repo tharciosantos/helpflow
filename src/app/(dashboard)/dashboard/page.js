@@ -12,6 +12,7 @@ export default function DashboardPage() {
   const [error, setError] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   const fetchTickets = async (page = 1) => {
     setLoading(true);
@@ -23,6 +24,7 @@ export default function DashboardPage() {
       setTickets(data.tickets);
       setTotalPages(data.pagination.totalPages);
       setCurrentPage(data.pagination.page);
+      setTotalCount(data.pagination.total);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -48,7 +50,6 @@ export default function DashboardPage() {
     );
   };
 
-  const totalTickets = tickets.length;
   const openTickets = tickets.filter(t => t.status === 'OPEN').length;
   const inProgressTickets = tickets.filter(t => t.status === 'IN_PROGRESS').length;
 
@@ -124,7 +125,7 @@ export default function DashboardPage() {
             <div className="space-y-2 text-sm">
               <p className="flex justify-between text-gray-300">
                 <span>Total</span>
-                <span className="font-semibold text-white">{totalTickets}</span>
+                <span className="font-semibold text-white">{totalCount}</span>
               </p>
               <p className="flex justify-between text-gray-300">
                 <span>Abertos</span>

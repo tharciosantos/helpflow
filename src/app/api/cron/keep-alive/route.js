@@ -1,10 +1,8 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '@/lib/prisma';
 
 /**
- * Rota de keep-alive para prevenir que o Supabase entre em pausa
- * Esta rota será chamada periodicamente pelo Vercel Cron Job
+ * Rota de keep-alive para prevenir que o Supabase entre em pausa.
+ * Esta rota é chamada periodicamente pelo Vercel Cron Job (vercel.json).
  */
 export async function GET(request) {
     // Verifica se a requisição vem do Cron do Vercel (segurança)
@@ -31,7 +29,5 @@ export async function GET(request) {
             success: false,
             error: error.message
         }, { status: 500 });
-    } finally {
-        await prisma.$disconnect();
     }
 }

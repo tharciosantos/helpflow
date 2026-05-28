@@ -158,7 +158,6 @@ export async function DELETE(req, { params }) {
   }
 
   const { id } = await params;
-  console.log("Deletando ticket:", id);
 
   try {
     const ticket = await prisma.ticket.findUnique({

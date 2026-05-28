@@ -131,13 +131,7 @@ export default function TicketList({
                       {/* BADGE DE STATUS */}
                       <span
                         data-cy="ticket-status-badge"
-                        className={`px-3 py-1 text-xs rounded-full font-medium
-                          ${ticket.status === "OPEN"
-                            ? "bg-green-700/40 text-green-300"
-                            : ticket.status === "IN_PROGRESS"
-                              ? "bg-yellow-600/30 text-yellow-300"
-                              : "bg-gray-600/40 text-gray-300"
-                          }`}
+                        className={`px-3 py-1 text-xs rounded-full font-medium ${getStatusBadgeClasses(ticket.status)}`}
                       >
                         {getStatusDisplayNamePT(ticket.status)}
                       </span>

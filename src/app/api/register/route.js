@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { checkRateLimit } from '@/lib/rateLimiter';
+import { registerSchema } from '@/lib/schemas';
 
 
 export async function POST(req) {
@@ -24,14 +25,19 @@ export async function POST(req) {
 
     try {
         const body = await req.json();
-        const { name, email, password, role } = body;
 
-        if (!email || !password) {
+        // Validação com Zod — mesma fonte de verdade que o restante das rotas
+        const validation = registerSchema.safeParse(body);
+        if (!validation.success) {
             return NextResponse.json(
-                { message: 'Missing fields' },
+                { message: 'Dados inválidos.', errors: validation.error.flatten().fieldErrors },
                 { status: 400 }
             );
         }
+
+        const { name, email, password } = validation.data;
+        // role vem fora do schema (exclusivo para testes via x-test-secret)
+        const { role } = body;
 
         const existingUser = await prisma.user.findUnique({
             where: { email },
@@ -39,7 +45,7 @@ export async function POST(req) {
 
         if (existingUser) {
             return NextResponse.json(
-                { message: 'User already exists' },
+                { message: 'Este email já está em uso.' },
                 { status: 409 }
             );
         }
@@ -66,9 +72,9 @@ export async function POST(req) {
 
         return NextResponse.json(userWithoutPassword, { status: 201 });
     } catch (error) {
-        console.error('Registration Error:', error);
+        console.error('Erro ao registrar usuário:', error);
         return NextResponse.json(
-            { message: 'Internal Server Error' },
+            { message: 'Erro interno do servidor.' },
             { status: 500 }
         );
     }

@@ -18,7 +18,7 @@ export const createTicketSchema = z.object({
 
 export const updateTicketStatusSchema = z.object({
     status: z.enum(['OPEN', 'IN_PROGRESS', 'CLOSED'], {
-        errorMap: () => ({ message: 'Status inválido.' }),
+        error: 'Status inválido.',
     }),
 });
 
