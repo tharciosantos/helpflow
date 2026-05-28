@@ -3,7 +3,7 @@ Cypress.Commands.add("createTestUser", (overrides = {}) => {
   const user = {
     name: "Usuário Teste",
     email: `usuario-${uniqueId}@teste.com`,
-    password: "123456",
+    password: "Senha@123",
     role: "CLIENT",
     ...overrides,
   };

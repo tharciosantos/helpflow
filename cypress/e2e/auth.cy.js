@@ -6,8 +6,8 @@ describe("Autenticação", () => {
 
         cy.get("[data-cy='register-name']").type("Usuário Teste");
         cy.get("[data-cy='register-email']").type(email);
-        cy.get("[data-cy='register-password']").type("123456");
-        cy.get("[data-cy='register-confirm-password']").type("123456");
+        cy.get("[data-cy='register-password']").type("Senha@123");
+        cy.get("[data-cy='register-confirm-password']").type("Senha@123");
         cy.get("[data-cy='register-submit']").click();
 
         cy.url().should("include", "/dashboard");
