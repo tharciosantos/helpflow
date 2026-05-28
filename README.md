@@ -128,10 +128,21 @@ Aplicação local: [http://localhost:3000](http://localhost:3000)
 
 ## Testes
 
-O projeto usa Cypress para testes E2E. Para rodar:
+### Testes E2E (Cypress)
+
+Antes de rodar os testes E2E, certifique-se de que `CYPRESS_TEST_SECRET` está definido no `.env`:
+
+```env
+CYPRESS_TEST_SECRET=algum-valor-seguro-qualquer
+```
+
+> O valor deve ser o mesmo em `.env` (lido pela API) e disponível no ambiente onde o Cypress roda. O `cypress.config.js` lê essa variável via `process.env.CYPRESS_TEST_SECRET`.
+
+Para rodar os testes:
 
 ```bash
-npx cypress open
+npx cypress open   # modo interativo
+npx cypress run    # modo headless (CI)
 ```
 
 Os testes cobrem:
@@ -141,6 +152,17 @@ Os testes cobrem:
 - Proteção das rotas de API (401 sem sessão)
 
 > Os testes criam usuários dinamicamente via `/api/register` — não é necessário seed manual no banco.
+> Os testes de permissão que criam usuários `AGENT` dependem de `CYPRESS_TEST_SECRET` estar configurado.
+
+### Testes Unitários (Vitest)
+
+```bash
+npm test                # roda uma vez
+npm run test:watch      # modo watch — re-roda ao salvar
+npm run test:coverage   # relatório de cobertura
+```
+
+Os testes unitários cobrem os schemas Zod (`schemas.js`) e os utilitários de display (`ticketUtils.js`).
 
 ## OAuth com GitHub
 
