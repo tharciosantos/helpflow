@@ -1,80 +1,144 @@
 # HelpFlow
 
-Sistema de help desk full-stack com autenticação híbrida, RBAC e gestão de tickets construído com Next.js, Prisma e PostgreSQL.
+Sistema de help desk para abertura, acompanhamento e gerenciamento de chamados. O projeto reúne autenticação por credenciais e GitHub, controle de acesso por perfil e persistência de dados com Prisma e PostgreSQL.
 
-## Visão Geral
+## Status do projeto
 
-O HelpFlow foi pensado para centralizar a abertura, o acompanhamento e a atualização de chamados em uma interface simples. A aplicação combina autenticação por credenciais e GitHub OAuth, com autorização aplicada no servidor para proteger rotas e operações sensíveis.
+**Em evolução contínua, com versão disponível em produção.**
 
-Aplicação em produção: [helpflow.vercel.app](https://helpflow.vercel.app/)
+As principais funcionalidades de autenticação, autorização e gestão de tickets estão implementadas. Melhorias de infraestrutura, observabilidade e ampliação dos testes permanecem planejadas.
 
-## Preview
+## Objetivo do projeto
+
+O HelpFlow foi criado para praticar o desenvolvimento de uma aplicação full stack baseada em um fluxo real de suporte. O sistema centraliza a abertura e o acompanhamento de tickets, diferenciando as permissões de clientes e agentes.
+
+O projeto também tem como foco o aprendizado de autenticação, autorização no servidor, modelagem de dados relacionais, validação de entradas, testes automatizados e deploy.
+
+## Demonstração
+
+- **Aplicação em produção:** [https://helpflow.vercel.app/](https://helpflow.vercel.app/)
+- **Repositório:** [https://github.com/tharciosantos/helpflow](https://github.com/tharciosantos/helpflow)
 
 ### Dashboard
-![Dashboard](public/screenshot.PNG)
+
+![Dashboard do HelpFlow](public/screenshot.PNG)
 
 ### Criação de ticket
-![Criar ticket](public/create-ticket.PNG)
+
+![Formulário de criação de ticket](public/create-ticket.PNG)
 
 ### Detalhes do ticket
-![Detalhes do ticket](public/detail-ticket.PNG)
 
-## Funcionalidades
+![Tela de detalhes do ticket](public/detail-ticket.PNG)
 
-- Autenticação com email e senha usando `bcryptjs`
-- Login social com GitHub via `next-auth`
-- Controle de acesso por papel com distinção entre `CLIENT` e `AGENT`
-- Criação de tickets com **título**, **descrição** e **prioridade** (Baixa, Média, Alta, Urgente)
-- Edição completa de tickets: título, descrição, status e prioridade
-- Atualização de status diretamente na listagem do dashboard
-- Exclusão de tickets com confirmação
-- Dashboard com listagem paginada e resumo de status
-- Validação de dados com `Zod` nas rotas de API
-- Rate limiting nas rotas de autenticação e cadastro para proteção contra brute force
-- Testes E2E com Cypress cobrindo autenticação, tickets e permissões
+## Funcionalidades implementadas
 
-## Regras de acesso
+### Autenticação e segurança
 
-- `CLIENT` cria tickets, visualiza os próprios chamados e pode editar ou remover os tickets que abriu
-- `AGENT` visualiza todos os tickets e pode editar, atualizar status e excluir qualquer chamado
-- A autorização é validada nas rotas da API com base em `role` e `ownership`; a interface apenas reflete essas permissões
+- Cadastro e login com e-mail e senha.
+- Armazenamento de senhas com hash gerado pelo `bcryptjs`.
+- Login social com GitHub por meio do NextAuth.js.
+- Sessões baseadas em JWT, com `id` e `role` disponíveis na sessão do usuário.
+- Limitação de tentativas nas rotas de login e cadastro por meio de um rate limiter em memória.
+- Validação de entradas com Zod nas rotas de cadastro e tickets.
 
-## Stack
+### Controle de acesso
 
-- `Next.js 15` com App Router
-- `React 19`
-- `Tailwind CSS 4`
-- `NextAuth.js`
-- `Prisma`
-- `PostgreSQL`
-- `Zod`
-- `Cypress`
-- `Vercel`
+- Controle de acesso baseado nos perfis `CLIENT` e `AGENT`.
+- Validação de autenticação, perfil e propriedade do ticket nas rotas da API.
+- Usuários `CLIENT` podem criar tickets, visualizar os próprios chamados e editar ou excluir os tickets que abriram.
+- Usuários `AGENT` podem visualizar e gerenciar todos os tickets.
+- Novos usuários cadastrados recebem o perfil `CLIENT` por padrão.
 
-## Estrutura do projeto
+### Gestão de tickets
+
+- Criação de tickets com título, descrição e prioridade.
+- Prioridades disponíveis: baixa, média, alta e urgente.
+- Estados disponíveis: aberto, em progresso e fechado.
+- Edição de título, descrição, status e prioridade.
+- Atualização de status diretamente pelo dashboard.
+- Exclusão de tickets com confirmação.
+- Listagem paginada de chamados.
+- Indicadores com resumo dos tickets por status.
+
+### Suporte operacional
+
+- Endpoint de health check para verificar a comunicação com o banco de dados.
+- Endpoint protegido de keep-alive configurado no Vercel Cron para execução periódica.
+
+## Tecnologias utilizadas
+
+### Front-end
+
+- Next.js 15 com App Router
+- React 19
+- Tailwind CSS 4
+- React Icons
+
+### Back-end e autenticação
+
+- Route Handlers do Next.js
+- NextAuth.js
+- Prisma Adapter para NextAuth.js
+- bcryptjs
+- Zod
+
+### Banco de dados
+
+- PostgreSQL
+- Supabase como serviço de hospedagem do banco
+- Prisma ORM
+
+### Testes e qualidade
+
+- Vitest
+- Cypress
+- ESLint
+
+### Deploy e operação
+
+- Vercel
+- Vercel Cron Jobs
+
+> As dependências do Upstash estão instaladas no projeto, mas o rate limiter utilizado atualmente é baseado em memória.
+
+## Estrutura geral do projeto
 
 ```text
 src/
-  app/
-    (auth)/           telas de login e cadastro
-    (dashboard)/      dashboard, criação e edição de tickets
-    api/              autenticação, cadastro, tickets, health e keep-alive
-    components/       componentes reutilizáveis da interface
-  lib/
-    prisma.js         cliente Prisma singleton
-    schemas.js        schemas de validação Zod (tickets, registro)
-    ticketUtils.js    funções utilitárias de status e prioridade
-    rateLimiter.js    rate limiter em memória para proteção de rotas
+├── app/
+│   ├── (auth)/              # Páginas de login e cadastro
+│   ├── (dashboard)/         # Dashboard e páginas de gerenciamento de tickets
+│   ├── api/                 # Autenticação, cadastro, tickets, health e cron
+│   └── components/          # Componentes reutilizáveis da interface
+└── lib/
+    ├── __tests__/           # Testes unitários
+    ├── prisma.js            # Instância compartilhada do Prisma Client
+    ├── rateLimiter.js       # Limitação de requisições em memória
+    ├── schemas.js           # Schemas de validação com Zod
+    └── ticketUtils.js       # Utilitários de status e prioridade
+
 prisma/
-  schema.prisma       modelos e enums do banco
+├── migrations/              # Histórico de alterações do banco
+└── schema.prisma            # Modelos, relacionamentos e enums
+
 cypress/
-  e2e/                testes end-to-end (auth, tickets, permissions)
-  support/            comandos customizados do Cypress
-public/
-  *.PNG               imagens usadas no README
+├── e2e/                     # Testes de autenticação, tickets e permissões
+└── support/                 # Comandos e seletores usados nos testes E2E
+
+public/                      # Imagens e arquivos estáticos
 ```
 
-## Como rodar localmente
+O arquivo [`DEVELOPMENT.md`](DEVELOPMENT.md) contém informações adicionais sobre o ambiente de desenvolvimento.
+
+## Como executar localmente
+
+### Pré-requisitos
+
+- Node.js 20 ou superior
+- npm
+- Banco PostgreSQL disponível
+- Credenciais de uma OAuth App do GitHub, caso o login social seja utilizado
 
 ### 1. Clone o repositório
 
@@ -91,32 +155,22 @@ npm install
 
 ### 3. Configure o ambiente
 
-Crie o arquivo `.env` a partir de `.env.example`:
+Crie o arquivo `.env` a partir do exemplo disponível no projeto:
 
 ```bash
 cp .env.example .env
 ```
 
-Preencha as variáveis:
+Preencha as variáveis necessárias conforme a seção seguinte.
 
-```env
-AUTH_GITHUB_ID=
-AUTH_GITHUB_SECRET=
-NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=
-DATABASE_URL=
-DIRECT_URL=
-CYPRESS_TEST_SECRET=   # necessário apenas para rodar os testes Cypress
-```
-
-### 4. Prepare o banco
+### 4. Prepare o banco de dados
 
 ```bash
 npx prisma migrate dev
 npx prisma generate
 ```
 
-> **Atenção no Windows:** pare o servidor Next.js antes de rodar migrations para evitar o erro `EPERM` no Prisma Client.
+> No Windows, pode ser necessário interromper o servidor Next.js antes de executar comandos do Prisma para evitar erros de acesso ao Prisma Client.
 
 ### 5. Inicie a aplicação
 
@@ -124,78 +178,101 @@ npx prisma generate
 npm run dev
 ```
 
-Aplicação local: [http://localhost:3000](http://localhost:3000)
+A aplicação ficará disponível em [http://localhost:3000](http://localhost:3000).
+
+### Scripts disponíveis
+
+| Comando                 | Descrição                                           |
+| ----------------------- | --------------------------------------------------- |
+| `npm run dev`           | Inicia o servidor de desenvolvimento.               |
+| `npm run build`         | Gera o build de produção.                           |
+| `npm run start`         | Inicia a aplicação a partir do build.               |
+| `npm run lint`          | Executa o ESLint.                                   |
+| `npm test`              | Executa os testes unitários uma vez.                |
+| `npm run test:watch`    | Executa os testes unitários em modo de observação.  |
+| `npm run test:coverage` | Gera o relatório de cobertura dos testes unitários. |
+| `npm run cypress:open`  | Abre o Cypress no modo interativo.                  |
+| `npm run cypress:run`   | Executa os testes E2E em modo headless.             |
+
+## Variáveis de ambiente
+
+O projeto fornece um arquivo `.env.example`. Nenhum valor sensível deve ser versionado.
+
+| Variável              | Finalidade                                                                            |
+| --------------------- | ------------------------------------------------------------------------------------- |
+| `AUTH_GITHUB_ID`      | Identificador da OAuth App usada no login com GitHub.                                 |
+| `AUTH_GITHUB_SECRET`  | Segredo da OAuth App do GitHub.                                                       |
+| `NEXTAUTH_URL`        | URL base utilizada pelo NextAuth.js. Em desenvolvimento, use `http://localhost:3000`. |
+| `NEXTAUTH_SECRET`     | Segredo usado para proteger tokens e sessões do NextAuth.js.                          |
+| `DATABASE_URL`        | URL de conexão do Prisma com o pool de transações do PostgreSQL no Supabase.          |
+| `DIRECT_URL`          | Conexão direta com o PostgreSQL, utilizada principalmente pelas migrations do Prisma. |
+| `CRON_SECRET`         | Segredo enviado pelo Vercel Cron para autorizar o endpoint `/api/cron/keep-alive`.    |
+| `CYPRESS_TEST_SECRET` | Segredo usado apenas pelos testes E2E que precisam criar usuários com perfil `AGENT`. |
+
+Para utilizar o login com GitHub, configure uma OAuth App com os seguintes callbacks:
+
+- Desenvolvimento: `http://localhost:3000/api/auth/callback/github`
+- Produção: `https://helpflow.vercel.app/api/auth/callback/github`
 
 ## Testes
 
-### Testes E2E (Cypress)
-
-Antes de rodar os testes E2E, certifique-se de que `CYPRESS_TEST_SECRET` está definido no `.env`:
-
-```env
-CYPRESS_TEST_SECRET=algum-valor-seguro-qualquer
-```
-
-> O valor deve ser o mesmo em `.env` (lido pela API) e disponível no ambiente onde o Cypress roda. O `cypress.config.js` lê essa variável via `process.env.CYPRESS_TEST_SECRET`.
-
-Para rodar os testes:
+### Testes unitários com Vitest
 
 ```bash
-npx cypress open   # modo interativo
-npx cypress run    # modo headless (CI)
+npm test
+npm run test:watch
+npm run test:coverage
 ```
 
-Os testes cobrem:
-- Criação de conta e login com credenciais válidas e inválidas
-- Criação, edição e exclusão de tickets
-- Controle de permissões entre `CLIENT` e `AGENT`
-- Proteção das rotas de API (401 sem sessão)
+Os testes unitários cobrem:
 
-> Os testes criam usuários dinamicamente via `/api/register` — não é necessário seed manual no banco.
-> Os testes de permissão que criam usuários `AGENT` dependem de `CYPRESS_TEST_SECRET` estar configurado.
+- Schemas Zod de cadastro, criação e atualização de tickets.
+- Validação dos estados e das prioridades permitidas.
+- Funções de apresentação de status e prioridade.
 
-### Testes Unitários (Vitest)
+### Testes E2E com Cypress
 
 ```bash
-npm test                # roda uma vez
-npm run test:watch      # modo watch — re-roda ao salvar
-npm run test:coverage   # relatório de cobertura
+npm run cypress:open
+npm run cypress:run
 ```
 
-Os testes unitários cobrem os schemas Zod (`schemas.js`) e os utilitários de display (`ticketUtils.js`).
+Os testes E2E verificam:
 
-## OAuth com GitHub
+- Cadastro e login com credenciais válidas e inválidas.
+- Criação, listagem, atualização de status e exclusão de tickets.
+- Acesso básico dos perfis `CLIENT` e `AGENT` à listagem de tickets.
+- Proteção das rotas da API contra requisições sem sessão.
 
-Configure uma OAuth App no GitHub com os callbacks:
+> As regras de RBAC são aplicadas pelas rotas da API, mas a suíte E2E atual ainda não cobre todos os cenários de autorização entre usuários diferentes, como um `CLIENT` tentar consultar, editar ou excluir o ticket de outro usuário.
 
-- Local: `http://localhost:3000/api/auth/callback/github`
-- Produção: `https://helpflow.vercel.app/api/auth/callback/github`
+Os usuários de teste são criados pela rota `/api/register`. Os cenários que criam um usuário `AGENT` exigem que `CYPRESS_TEST_SECRET` esteja configurado com o mesmo valor no servidor e no ambiente do Cypress.
 
-Se não quiser usar login social, basta deixar `AUTH_GITHUB_ID` e `AUTH_GITHUB_SECRET` vazios.
+## Aprendizados
 
-## Scripts
+- Implementação de autenticação por credenciais e OAuth.
+- Controle de acesso baseado em perfil e propriedade de recursos.
+- Proteção de rotas e operações no servidor.
+- Modelagem de usuários, contas, sessões e tickets com Prisma.
+- Integração entre Prisma, PostgreSQL e Supabase.
+- Validação e tratamento de dados com Zod.
+- Criação de operações CRUD e listagem paginada.
+- Escrita de testes unitários e testes de fluxo ponta a ponta.
+- Configuração de deploy e tarefas agendadas na Vercel.
+- Organização de uma aplicação com Next.js App Router.
 
-- `npm run dev` inicia o ambiente de desenvolvimento
-- `npm run build` gera o build de produção
-- `npm run start` sobe o build gerado
-- `npm run lint` executa o ESLint
-- `npx cypress open` abre o Cypress para testes E2E
+## Próximos passos
 
-## Observações técnicas
+- **Planejado:** substituir o rate limiter em memória por uma solução distribuída com Redis.
+- **Planejado:** ampliar a cobertura de testes unitários e E2E.
+- **Planejado:** adicionar testes E2E para tentativas de acesso cruzado entre usuários e para todas as operações autorizadas ao perfil `AGENT`.
+- **Planejado:** adicionar logs estruturados e monitoramento de erros.
+- **Planejado:** evoluir o fluxo de atribuição de tickets aos agentes.
+- **Planejado:** melhorar a documentação das rotas da API.
 
-- A sessão usa estratégia `jwt`, com `id` e `role` propagados para o token e para `session.user`
-- O papel padrão criado no cadastro é `CLIENT`
-- As rotas protegidas usam `getServerSession` para validar autenticação antes de acessar ou alterar tickets
-- A validação de entrada nas rotas de API é feita com `Zod`, retornando erros detalhados por campo
-- O rate limiter é baseado em memória (Map) — funciona em instância única; para ambientes distribuídos, substituir por Redis (ex: Upstash)
-- Existe uma rota de `health` e um endpoint de `keep-alive` para suporte operacional
+## Autor
 
-## Documentação adicional
-
-- Guia de desenvolvimento local: `DEVELOPMENT.md`
-
-## Contato
-
-Tharcio Santos  
-[LinkedIn](https://www.linkedin.com/in/tharcio-santos/)  
-[tharciosantos09@gmail.com](mailto:tharciosantos09@gmail.com)
+**Nome:** Tharcio Santos  
+**GitHub:** [https://github.com/tharciosantos](https://github.com/tharciosantos)  
+**LinkedIn:** [https://www.linkedin.com/in/tharcio-santos-dev/](https://www.linkedin.com/in/tharcio-santos-dev/)  
+**Portfólio:** [https://tharcio-portfolio.vercel.app/](https://tharcio-portfolio.vercel.app/)
