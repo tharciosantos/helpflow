@@ -146,6 +146,10 @@ export async function PUT(req, { params }) {
 
     return NextResponse.json(updatedTicket, { status: 200 });
   } catch (error) {
+    if (error.code === 'P2025') {
+      return NextResponse.json({ message: 'Ticket não encontrado' }, { status: 404 });
+    }
+    console.error('Erro ao atualizar o ticket:', error);
     return NextResponse.json({ message: 'Erro interno' }, { status: 500 });
   }
 }
