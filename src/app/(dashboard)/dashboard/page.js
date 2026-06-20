@@ -13,6 +13,8 @@ export default function DashboardPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [openCount, setOpenCount] = useState(0);
+  const [inProgressCount, setInProgressCount] = useState(0);
 
   const fetchTickets = async (page = 1) => {
     setLoading(true);
@@ -25,6 +27,8 @@ export default function DashboardPage() {
       setTotalPages(data.pagination.totalPages);
       setCurrentPage(data.pagination.page);
       setTotalCount(data.pagination.total);
+      setOpenCount(data.summary.open);
+      setInProgressCount(data.summary.inProgress);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -49,9 +53,6 @@ export default function DashboardPage() {
       )
     );
   };
-
-  const openTickets = tickets.filter(t => t.status === 'OPEN').length;
-  const inProgressTickets = tickets.filter(t => t.status === 'IN_PROGRESS').length;
 
   return (
     <div className="space-y-8">
@@ -129,11 +130,11 @@ export default function DashboardPage() {
               </p>
               <p className="flex justify-between text-gray-300">
                 <span>Abertos</span>
-                <span className="font-semibold text-green-400">{openTickets}</span>
+                <span className="font-semibold text-green-400">{openCount}</span>
               </p>
               <p className="flex justify-between text-gray-300">
                 <span>Em progresso</span>
-                <span className="font-semibold text-yellow-300">{inProgressTickets}</span>
+                <span className="font-semibold text-yellow-300">{inProgressCount}</span>
               </p>
             </div>
           </div>
