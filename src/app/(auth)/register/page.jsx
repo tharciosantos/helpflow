@@ -32,7 +32,7 @@ export default function RegisterPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, confirmPassword }),
       });
 
       if (!res.ok) {

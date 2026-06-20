@@ -160,6 +160,7 @@ describe('registerSchema', () => {
             name: 'João Silva',
             email: 'joao@exemplo.com',
             password: 'senha1234',
+            confirmPassword: 'senha1234',
         });
         expect(result.success).toBe(true);
     });
@@ -168,6 +169,7 @@ describe('registerSchema', () => {
         const result = registerSchema.safeParse({
             email: 'joao@exemplo.com',
             password: 'senha1234',
+            confirmPassword: 'senha1234',
         });
         expect(result.success).toBe(true);
     });
