@@ -60,8 +60,8 @@ export async function GET(req) {
 
     const where = role === 'AGENT' ? {} : { authorId: session.user.id };
 
-    // Buscar tickets E total em paralelo
-    const [tickets, total] = await Promise.all([
+    // Buscar tickets E totais em paralelo
+    const [tickets, total, openCount, inProgressCount] = await Promise.all([
       prisma.ticket.findMany({
         where,
         include: { author: true },
@@ -70,6 +70,8 @@ export async function GET(req) {
         take: limit,
       }),
       prisma.ticket.count({ where }),
+      prisma.ticket.count({ where: { ...where, status: 'OPEN' } }),
+      prisma.ticket.count({ where: { ...where, status: 'IN_PROGRESS' } }),
     ]);
 
     return NextResponse.json({
@@ -81,6 +83,11 @@ export async function GET(req) {
         totalPages: Math.ceil(total / limit),
         hasNextPage: page < Math.ceil(total / limit),
         hasPrevPage: page > 1,
+      },
+      summary: {
+        total,
+        open: openCount,
+        inProgress: inProgressCount,
       },
     }, { status: 200 });
 
