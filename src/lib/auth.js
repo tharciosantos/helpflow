@@ -36,10 +36,6 @@ export const authOptions = {
           throw new Error("Invalid credentials");
         }
 
-        if (user.auth_provider && user.auth_provider !== "credentials") {
-          throw new Error("Invalid credentials");
-        }
-
         if (!user.password_hash) {
           throw new Error("Invalid credentials");
         }
