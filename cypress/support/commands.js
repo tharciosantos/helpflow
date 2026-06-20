@@ -8,6 +8,9 @@ Cypress.Commands.add("createTestUser", (overrides = {}) => {
     ...overrides,
   };
 
+  // IP único por criação para não estourar o rate limiter (register:${ip})
+  const testIp = `127.0.0.${Cypress._.random(1, 254)}`;
+
   return cy
     .request({
       method: "POST",
@@ -16,11 +19,12 @@ Cypress.Commands.add("createTestUser", (overrides = {}) => {
         name: user.name,
         email: user.email,
         password: user.password,
+        confirmPassword: user.password,
         role: user.role,
       },
-      // Envia o secret para permitir criação de AGENT em testes
       headers: {
         "x-test-secret": Cypress.env("testSecret") || "",
+        "x-forwarded-for": testIp,
       },
     })
     .then(() => user);
