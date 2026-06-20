@@ -36,11 +36,16 @@ O projeto também tem como foco o aprendizado de autenticação, autorização n
 ### Autenticação e segurança
 
 - Cadastro e login com e-mail e senha.
-- Armazenamento de senhas com hash gerado pelo `bcryptjs`.
+- Armazenamento de senhas com hash gerado por `bcryptjs`.
+- Validação de `confirmPassword` no backend durante o registro.
+- Mensagens de erro genéricas em todas as falhas de autenticação (sem enumeração de usuários).
+- Desativação de `allowDangerousEmailAccountLinking` no provedor GitHub.
 - Login social com GitHub por meio do NextAuth.js.
 - Sessões baseadas em JWT, com `id` e `role` disponíveis na sessão do usuário.
-- Limitação de tentativas nas rotas de login e cadastro por meio de um rate limiter em memória.
+- Rate limiter em memória com limpeza automática de entradas expiradas, aplicado nas rotas de login e cadastro.
 - Validação de entradas com Zod nas rotas de cadastro e tickets.
+- Headers de segurança HTTP: `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy` e `X-DNS-Prefetch-Control`.
+- Health check que não expõe mensagens de erro internas do banco.
 
 ### Controle de acesso
 
@@ -59,7 +64,7 @@ O projeto também tem como foco o aprendizado de autenticação, autorização n
 - Atualização de status diretamente pelo dashboard.
 - Exclusão de tickets com confirmação.
 - Listagem paginada de chamados.
-- Indicadores com resumo dos tickets por status.
+- Indicadores com resumo dos tickets por status, calculados pela API com base na visibilidade do usuário.
 
 ### Suporte operacional
 
@@ -100,7 +105,7 @@ O projeto também tem como foco o aprendizado de autenticação, autorização n
 - Vercel
 - Vercel Cron Jobs
 
-> As dependências do Upstash estão instaladas no projeto, mas o rate limiter utilizado atualmente é baseado em memória.
+> As dependências do Upstash estão instaladas no projeto, mas o rate limiter utilizado atualmente é baseado em memória com limpeza de entradas expiradas. Não é ideal para ambientes serverless distribuídos — a substituição por Redis está planejada.
 
 ## Estrutura geral do projeto
 
@@ -120,11 +125,11 @@ src/
 
 prisma/
 ├── migrations/              # Histórico de alterações do banco
-└── schema.prisma            # Modelos, relacionamentos e enums
+└── schema.prisma            # Modelos, relacionamentos e enums (Role, Status, Priority)
 
 cypress/
 ├── e2e/                     # Testes de autenticação, tickets e permissões
-└── support/                 # Comandos e seletores usados nos testes E2E
+└── support/                 # Comandos customizados usados nos testes E2E
 
 public/                      # Imagens e arquivos estáticos
 ```
@@ -229,6 +234,7 @@ Os testes unitários cobrem:
 - Schemas Zod de cadastro, criação e atualização de tickets.
 - Validação dos estados e das prioridades permitidas.
 - Funções de apresentação de status e prioridade.
+- Rate limiter em memória (limites, reset, identificadores isolados, limpeza de expirados).
 
 ### Testes E2E com Cypress
 
@@ -264,6 +270,8 @@ Os usuários de teste são criados pela rota `/api/register`. Os cenários que c
 ## Próximos passos
 
 - **Planejado:** substituir o rate limiter em memória por uma solução distribuída com Redis.
+- **Planejado:** remover o campo `auth_provider` do model `User`, já que o provider real fica na tabela `Account.provider` do NextAuth.
+- **Planejado:** adicionar Content-Security-Policy após auditoria de todos os recursos externos.
 - **Planejado:** ampliar a cobertura de testes unitários e E2E.
 - **Planejado:** adicionar testes E2E para tentativas de acesso cruzado entre usuários e para todas as operações autorizadas ao perfil `AGENT`.
 - **Planejado:** adicionar logs estruturados e monitoramento de erros.
