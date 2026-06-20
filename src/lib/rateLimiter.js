@@ -10,6 +10,13 @@ export function checkRateLimit(identifier) {
     const now = Date.now();
     const windowStart = now - WINDOW_MS;
 
+    // Limpar entradas expiradas para evitar memory leak
+    for (const [key, record] of requestCounts.entries()) {
+        if (record.firstRequest < windowStart) {
+            requestCounts.delete(key);
+        }
+    }
+
     // Pegar ou inicializar o registro do identifier
     const record = requestCounts.get(identifier) || { count: 0, firstRequest: now };
 
