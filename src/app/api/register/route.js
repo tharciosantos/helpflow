@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
-import { checkRateLimit } from '@/lib/rateLimiter';
+import { checkRateLimit, getClientIp } from '@/lib/rateLimiter';
 import { registerSchema } from '@/lib/schemas';
 
 
 export async function POST(req) {
 
-    const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    const ip = getClientIp(req);
     const { isLimited, remaining } = checkRateLimit(`register:${ip}`);
 
     if (isLimited) {
