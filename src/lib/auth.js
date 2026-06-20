@@ -1,0 +1,89 @@
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import CredentialsProvider from "next-auth/providers/credentials";
+import GitHubProvider from "next-auth/providers/github";
+import prisma from "@/lib/prisma";
+import bcrypt from "bcryptjs";
+import { checkRateLimit } from "@/lib/rateLimiter";
+
+export const authOptions = {
+  adapter: PrismaAdapter(prisma),
+  providers: [
+    GitHubProvider({
+      clientId: process.env.AUTH_GITHUB_ID,
+      clientSecret: process.env.AUTH_GITHUB_SECRET,
+      allowDangerousEmailAccountLinking: false,
+    }),
+    CredentialsProvider({
+      name: "Credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Invalid credentials");
+        }
+
+        const { isLimited } = checkRateLimit(`login:${credentials.email}`);
+        if (isLimited) {
+          throw new Error('Muitas tentativas de login. Tente novamente em 15 minutos.');
+        }
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email },
+        });
+
+        if (!user) {
+          throw new Error("Invalid credentials");
+        }
+
+        if (user.auth_provider && user.auth_provider !== "credentials") {
+          throw new Error("Invalid credentials");
+        }
+
+        if (!user.password_hash) {
+          throw new Error("Invalid credentials");
+        }
+
+        const isValid = await bcrypt.compare(
+          credentials.password,
+          user.password_hash,
+        );
+
+        if (!isValid) {
+          throw new Error("Invalid credentials");
+        }
+
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          image: user.image,
+          role: user.role,
+        };
+      },
+    }),
+  ],
+  session: {
+    strategy: "jwt",
+  },
+  callbacks: {
+    async jwt({ token, user, account }) {
+      if (user) {
+        token.id   = user.id;
+        token.role = user.role;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id   = token.id;
+        session.user.role = token.role;
+      }
+      return session;
+    },
+  },
+  pages: {
+    signIn: "/login",
+  },
+  secret: process.env.NEXTAUTH_SECRET,
+};
