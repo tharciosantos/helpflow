@@ -12,7 +12,7 @@ export const authOptions = {
     GitHubProvider({
       clientId: process.env.AUTH_GITHUB_ID,
       clientSecret: process.env.AUTH_GITHUB_SECRET,
-      allowDangerousEmailAccountLinking: true,
+      allowDangerousEmailAccountLinking: false,
     }),
     CredentialsProvider({
       name: "Credentials",
@@ -38,16 +38,15 @@ export const authOptions = {
 
         // Check if user exists and uses credentials provider
         if (!user) {
-          throw new Error("User not found");
+          throw new Error("Invalid credentials");
         }
 
-        // If user signed up with GitHub but trying to login with password, or vice versa if we were stricter
         if (user.auth_provider && user.auth_provider !== "credentials") {
-          throw new Error(`User registered with ${user.auth_provider}`);
+          throw new Error("Invalid credentials");
         }
 
         if (!user.password_hash) {
-          throw new Error("User has no password set");
+          throw new Error("Invalid credentials");
         }
 
         const isValid = await bcrypt.compare(
@@ -56,7 +55,7 @@ export const authOptions = {
         );
 
         if (!isValid) {
-          throw new Error("Invalid password");
+          throw new Error("Invalid credentials");
         }
 
         return {

@@ -27,22 +27,7 @@ export default function LoginPage() {
             });
 
             if (res?.error) {
-                const rawError = res.error || "";
-
-                if (rawError.includes("User not found")) {
-                    setError("Usuário não encontrado. Verifique o email ou crie uma conta.");
-                } else if (rawError.includes("User registered with")) {
-                    setError("Você se cadastrou usando GitHub. Use o botão \"Continuar com GitHub\" para entrar.");
-                } else if (rawError.includes("User has no password set")) {
-                    setError("Esta conta não possui senha definida. Entre com GitHub ou redefina sua senha.");
-                } else if (
-                    rawError.includes("Invalid password") ||
-                    rawError.includes("Invalid credentials")
-                ) {
-                    setError("Email ou senha inválidos.");
-                } else {
-                    setError("Não foi possível fazer login. Tente novamente.");
-                }
+                    setError("E-mail ou senha inválidos.");
             } else {
                 router.push("/dashboard");
                 router.refresh();
