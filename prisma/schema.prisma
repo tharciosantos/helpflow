@@ -15,7 +15,7 @@ model User {
   emailVerified DateTime?
   password_hash String?
   image         String?
-  role          String    @default("CLIENT")
+  role          Role      @default(CLIENT)
   auth_provider String    @default("credentials")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -57,6 +57,11 @@ enum Priority {
   MEDIUM
   HIGH
   URGENT
+}
+
+enum Role {
+  CLIENT
+  AGENT
 }
 
 model Account {
