@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { updateTicketStatusSchema, updateTicketSchema } from '@/lib/schemas';
+import { checkRateLimit } from '@/lib/rateLimiter';
 
 // FUNÇÃO GET
 export async function GET(req, { params }) {
@@ -44,6 +45,11 @@ export async function PATCH(req, { params }) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
+  }
+
+  const { isLimited } = checkRateLimit(`ticket:update:${session.user.id}`, { maxRequests: 30 });
+  if (isLimited) {
+    return NextResponse.json({ message: "Muitas requisições. Tente novamente mais tarde." }, { status: 429 });
   }
 
   const { id } = await params;
@@ -114,6 +120,11 @@ export async function DELETE(req, { params }) {
   if (!session) {
     // 401 = sem identidade (não logado)
     return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
+  }
+
+  const { isLimited } = checkRateLimit(`ticket:delete:${session.user.id}`, { maxRequests: 10 });
+  if (isLimited) {
+    return NextResponse.json({ message: "Muitas requisições. Tente novamente mais tarde." }, { status: 429 });
   }
 
   const { id } = await params;
