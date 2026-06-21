@@ -39,11 +39,10 @@ export async function GET(req, { params }) {
   }
 }
 
-// FUNÇÃO PATCH 
+// FUNÇÃO PATCH — atualização parcial (status, title, description, priority)
 export async function PATCH(req, { params }) {
   const session = await getServerSession(authOptions);
   if (!session) {
-    // 401 = sem identidade (não logado). 403 seria "logado mas sem permissão".
     return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
   }
 
@@ -52,75 +51,6 @@ export async function PATCH(req, { params }) {
   try {
     const body = await req.json();
 
-    // Validação com Zod — substitui o if manual de status
-    // updateTicketStatusSchema aceita apenas 'OPEN' | 'IN_PROGRESS' | 'CLOSED'
-    const validation = updateTicketStatusSchema.safeParse(body);
-    if (!validation.success) {
-      return NextResponse.json(
-        { message: 'Dados inválidos.', errors: validation.error.flatten().fieldErrors },
-        { status: 400 }
-      );
-    }
-
-    const { status } = validation.data;
-
-    // Verifica se o ticket existe
-    const ticket = await prisma.ticket.findUnique({
-      where: { id },
-    });
-
-    if (!ticket) {
-      return NextResponse.json({ message: 'Ticket não encontrado' }, { status: 404 });
-    }
-
-    // Verifica dono ou role de AGENT
-    const role = session.user.role || 'CLIENT';
-    const isOwner = ticket.authorId === session.user.id;
-    const isAgent = role === 'AGENT';
-
-    if (!isOwner && !isAgent) {
-      return NextResponse.json({ message: 'Não autorizado' }, { status: 403 });
-    }
-
-    // Atualiza
-    const updatedTicket = await prisma.ticket.update({
-      where: { id },
-      data: { status },
-    });
-
-    return NextResponse.json(updatedTicket, { status: 200 });
-
-  } catch (error) {
-    console.error("Erro ao atualizar o ticket:", error);
-    if (error.code === 'P2025') {
-      return NextResponse.json({ message: 'Ticket não encontrado para atualização' }, { status: 404 });
-    }
-    return NextResponse.json({ message: 'Erro interno do servidor' }, { status: 500 });
-  }
-}
-
-
-// FUNÇÃO PUT
-export async function PUT(req, { params }) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
-
-  const { id } = await params;
-
-  try {
-    const body = await req.json();
-
-    // Validação com Zod — title e description são opcionais no PUT
-    // (o usuário pode querer atualizar só o título, ou só a descrição)
-    const validation = updateTicketSchema.safeParse(body);
-    if (!validation.success) {
-      return NextResponse.json(
-        { message: 'Dados inválidos.', errors: validation.error.flatten().fieldErrors },
-        { status: 400 }
-      );
-    }
-
-    const { title, description, status, priority } = validation.data;
     const ticket = await prisma.ticket.findUnique({
       where: { id },
     });
@@ -137,20 +67,45 @@ export async function PUT(req, { params }) {
       return NextResponse.json({ message: 'Não autorizado' }, { status: 403 });
     }
 
+    let data;
+
+    if (body.status !== undefined && body.title === undefined && body.description === undefined && body.priority === undefined) {
+      const validation = updateTicketStatusSchema.safeParse(body);
+      if (!validation.success) {
+        return NextResponse.json(
+          { message: 'Dados inválidos.', errors: validation.error.flatten().fieldErrors },
+          { status: 400 }
+        );
+      }
+      data = { status: validation.data.status };
+    } else {
+      const validation = updateTicketSchema.safeParse(body);
+      if (!validation.success) {
+        return NextResponse.json(
+          { message: 'Dados inválidos.', errors: validation.error.flatten().fieldErrors },
+          { status: 400 }
+        );
+      }
+      data = {};
+      if (validation.data.title !== undefined) data.title = validation.data.title;
+      if (validation.data.description !== undefined) data.description = validation.data.description;
+      if (validation.data.status !== undefined) data.status = validation.data.status;
+      if (validation.data.priority !== undefined) data.priority = validation.data.priority;
+    }
+
     const updatedTicket = await prisma.ticket.update({
       where: { id },
-      // Só atualiza os campos que vieram no body — se um campo for undefined,
-      // o Prisma ignora e mantém o valor atual no banco
-      data: { title, description, status, priority },
+      data,
     });
 
     return NextResponse.json(updatedTicket, { status: 200 });
+
   } catch (error) {
     if (error.code === 'P2025') {
       return NextResponse.json({ message: 'Ticket não encontrado' }, { status: 404 });
     }
     console.error('Erro ao atualizar o ticket:', error);
-    return NextResponse.json({ message: 'Erro interno' }, { status: 500 });
+    return NextResponse.json({ message: 'Erro interno do servidor' }, { status: 500 });
   }
 }
 

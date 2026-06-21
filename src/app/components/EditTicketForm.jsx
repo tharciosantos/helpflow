@@ -19,7 +19,7 @@ export default function EditTicketForm({ ticket, onTicketUpdated }) {
 
         try {
             const res = await fetch(`/api/tickets/${ticket.id}`, {
-                method: 'PUT',
+                method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
                 },
