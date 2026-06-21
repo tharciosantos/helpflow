@@ -25,9 +25,9 @@ export function getClientIp(req) {
     return 'unknown';
 }
 
-export function checkRateLimit(identifier) {
+export function checkRateLimit(identifier, { windowMs = WINDOW_MS, maxRequests = MAX_REQUESTS } = {}) {
     const now = Date.now();
-    const windowStart = now - WINDOW_MS;
+    const windowStart = now - windowMs;
 
     // Limpar entradas expiradas para evitar memory leak
     for (const [key, record] of requestCounts.entries()) {
@@ -48,12 +48,12 @@ export function checkRateLimit(identifier) {
     record.count += 1;
     requestCounts.set(identifier, record);
 
-    const remaining = Math.max(0, MAX_REQUESTS - record.count);
-    const isLimited = record.count > MAX_REQUESTS;
+    const remaining = Math.max(0, maxRequests - record.count);
+    const isLimited = record.count > maxRequests;
 
     return {
         isLimited,
         remaining,
-        resetTime: record.firstRequest + WINDOW_MS,
+        resetTime: record.firstRequest + windowMs,
     };
 }
