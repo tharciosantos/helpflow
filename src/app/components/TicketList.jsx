@@ -54,7 +54,7 @@ export default function TicketList({
       const updatedTicket = await res.json();
       onTicketUpdated?.(updatedTicket);
     } catch (err) {
-      setErrorMessage(err.message || 'Erro ao excluir o ticket.');
+      setErrorMessage(err.message || 'Erro ao atualizar o status.');
     } finally {
       setUpdatingId(null);
     }
