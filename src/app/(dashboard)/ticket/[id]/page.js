@@ -137,7 +137,7 @@ export default function TicketDetailsPage() {
                     </div>
                 </div>
 
-                {session?.user?.role === 'AGENT' && (
+                {(session?.user?.role === 'AGENT' || session?.user?.id === ticket.authorId) && (
                     <div className="mt-6 p-6 bg-gray-800 rounded-lg shadow-md">
                         <h2 className="text-xl font-bold mb-4">Painel do Agente</h2>
                         <div className="flex flex-wrap items-center gap-4">
