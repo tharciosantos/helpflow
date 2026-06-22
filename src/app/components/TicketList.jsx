@@ -29,7 +29,8 @@ export default function TicketList({
           throw new Error("Falha ao excluir o ticket.");
         }
 
-        onTicketDeleted?.(ticketId);
+        const deletedTicket = tickets.find(t => t.id === ticketId);
+        onTicketDeleted?.(ticketId, deletedTicket?.status);
       } catch (err) {
         setErrorMessage(err.message || 'Erro ao excluir o ticket.');
       } finally {
