@@ -67,10 +67,7 @@ export async function POST(req) {
             },
         });
 
-        // Remove password from response
-        const { password_hash, ...userWithoutPassword } = newUser;
-
-        return NextResponse.json(userWithoutPassword, { status: 201 });
+        return NextResponse.json({ id: newUser.id, name: newUser.name, email: newUser.email }, { status: 201 });
     } catch (error) {
         console.error('Erro ao registrar usuário:', error);
         return NextResponse.json(
