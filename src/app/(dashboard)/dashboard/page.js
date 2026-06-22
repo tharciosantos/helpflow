@@ -42,8 +42,11 @@ export default function DashboardPage() {
     }
   }, [status]);
 
-  const handleTicketDeleted = (deletedTicketId) => {
+  const handleTicketDeleted = (deletedTicketId, deletedStatus) => {
     setTickets(prev => prev.filter(ticket => ticket.id !== deletedTicketId));
+    setTotalCount(prev => Math.max(0, prev - 1));
+    if (deletedStatus === 'OPEN') setOpenCount(prev => Math.max(0, prev - 1));
+    if (deletedStatus === 'IN_PROGRESS') setInProgressCount(prev => Math.max(0, prev - 1));
   };
 
   const handleTicketUpdated = (updatedTicket) => {
