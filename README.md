@@ -42,9 +42,10 @@ O projeto também tem como foco o aprendizado de autenticação, autorização n
 - Desativação de `allowDangerousEmailAccountLinking` no provedor GitHub.
 - Login social com GitHub por meio do NextAuth.js.
 - Sessões baseadas em JWT, com `id` e `role` disponíveis na sessão do usuário.
-- Rate limiter em memória com limpeza automática de entradas expiradas, aplicado nas rotas de login e cadastro.
+- Rate limiter em memória com limpeza automática de entradas expiradas, aplicado nas rotas de login, cadastro e operações de criação, atualização e exclusão de tickets.
 - Validação de entradas com Zod nas rotas de cadastro e tickets.
-- Headers de segurança HTTP: `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy` e `X-DNS-Prefetch-Control`.
+- Headers de segurança HTTP: `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `X-DNS-Prefetch-Control` e `Content-Security-Policy-Report-Only`.
+- Resposta da rota de registro limitada a `id`, `name` e `email`, sem expor campos internos como `role` ou `auth_provider`.
 - Health check que não expõe mensagens de erro internas do banco.
 
 ### Controle de acesso
@@ -61,7 +62,7 @@ O projeto também tem como foco o aprendizado de autenticação, autorização n
 - Prioridades disponíveis: baixa, média, alta e urgente.
 - Estados disponíveis: aberto, em progresso e fechado.
 - Edição de título, descrição, status e prioridade.
-- Atualização de status diretamente pelo dashboard.
+- Atualização de status diretamente pelo dashboard e pela página de detalhes do ticket.
 - Exclusão de tickets com confirmação.
 - Listagem paginada de chamados.
 - Indicadores com resumo dos tickets por status, calculados pela API com base na visibilidade do usuário.
@@ -271,7 +272,7 @@ Os usuários de teste são criados pela rota `/api/register`. Os cenários que c
 
 - **Planejado:** substituir o rate limiter em memória por uma solução distribuída com Redis.
 - **Planejado:** remover o campo `auth_provider` do model `User`, já que o provider real fica na tabela `Account.provider` do NextAuth.
-- **Planejado:** adicionar Content-Security-Policy após auditoria de todos os recursos externos.
+- **Planejado:** migrar Content-Security-Policy de Report-Only para modo enforcement após validação das diretivas.
 - **Planejado:** ampliar a cobertura de testes unitários e E2E.
 - **Planejado:** adicionar testes E2E para tentativas de acesso cruzado entre usuários e para todas as operações autorizadas ao perfil `AGENT`.
 - **Planejado:** adicionar logs estruturados e monitoramento de erros.
