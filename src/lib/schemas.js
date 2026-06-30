@@ -48,3 +48,26 @@ export const registerSchema = z.object({
     message: 'As senhas não coincidem.',
     path: ['confirmPassword'],
 });
+
+// Schema para solicitar reset de senha
+export const forgotPasswordSchema = z.object({
+    email: z
+        .string({ required_error: 'Email é obrigatório.' })
+        .email('Email inválido.'),
+});
+
+// Schema para redefinir senha
+export const resetPasswordSchema = z.object({
+    token: z
+        .string({ required_error: 'Token é obrigatório.' })
+        .min(1, 'Token inválido.'),
+    password: z
+        .string({ required_error: 'Senha é obrigatória.' })
+        .min(8, 'A senha deve ter pelo menos 8 caracteres.'),
+    confirmPassword: z
+        .string({ required_error: 'Confirmação é obrigatória.' })
+        .min(8, 'A confirmação deve ter pelo menos 8 caracteres.'),
+}).refine((data) => data.password === data.confirmPassword, {
+    message: 'As senhas não coincidem.',
+    path: ['confirmPassword'],
+});
