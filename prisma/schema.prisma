@@ -25,6 +25,7 @@ model User {
 
   accounts Account[]
   sessions Session[]
+  passwordResets PasswordReset[]
 }
 
 model Ticket {
@@ -89,4 +90,17 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PasswordReset {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([token])    // index para buscas rápidas por token
+  @@index([userId])   // index para buscas por usuário
 }
