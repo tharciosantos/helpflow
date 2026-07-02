@@ -127,7 +127,11 @@ export default function LoginPage() {
                             {loading ? "Entrando..." : "Entrar"}
                         </button>
                     </form>
-
+                    <p className="text-center text-sm text-gray-400 mt-2">
+                        <Link href="/forgot-password" className="text-teal-400 hover:text-teal-300">
+                            Esqueceu sua senha?
+                        </Link>
+                    </p>
                     <div className="my-4 flex items-center">
                         <div className="flex-grow border-t border-white/10"></div>
                         <span className="mx-4 text-sm text-gray-400">OU</span>
