@@ -1,5 +1,13 @@
-import MaintenanceNotice from "@/app/components/MaintenanceNotice";
+import ResetPasswordForm from "./ResetPasswordForm";
 
-export default function ResetPasswordPage() {
-    return <MaintenanceNotice />;
+export default async function ResetPasswordPage({ searchParams }) {
+
+    const params = await searchParams;
+    const token = params?.token;
+
+    return (
+        <>
+            <ResetPasswordForm token={token} />
+        </>
+    );
 }
