@@ -67,6 +67,16 @@ O projeto também tem como foco o aprendizado de autenticação, autorização n
 - Listagem paginada de chamados.
 - Indicadores com resumo dos tickets por status, calculados pela API com base na visibilidade do usuário.
 
+### Recuperação de senha
+
+- Página de solicitação de recuperação com formulário de email.
+- Geração de token seguro (256 bits de entropia) com expiração de 15 minutos.
+- Envio de email de recuperação via Nodemailer com template HTML.
+- Página de redefinição de senha com validação do token.
+- Rate limiter na rota de solicitação para prevenir abuso.
+- Mensagem genérica de resposta para prevenir enumeração de usuários.
+- Transação atômica para atualizar a senha e marcar o token como utilizado.
+
 ### Suporte operacional
 
 - Endpoint de health check para verificar a comunicação com o banco de dados.
@@ -87,6 +97,7 @@ O projeto também tem como foco o aprendizado de autenticação, autorização n
 - NextAuth.js
 - Prisma Adapter para NextAuth.js
 - bcryptjs
+- Nodemailer
 - Zod
 
 ### Banco de dados
@@ -113,12 +124,13 @@ O projeto também tem como foco o aprendizado de autenticação, autorização n
 ```text
 src/
 ├── app/
-│   ├── (auth)/              # Páginas de login e cadastro
+│   ├── (auth)/              # Páginas de login, cadastro e recuperação de senha
 │   ├── (dashboard)/         # Dashboard e páginas de gerenciamento de tickets
 │   ├── api/                 # Autenticação, cadastro, tickets, health e cron
 │   └── components/          # Componentes reutilizáveis da interface
 └── lib/
     ├── __tests__/           # Testes unitários
+    ├── email.js             # Configuração Nodemailer e envio de emails
     ├── prisma.js            # Instância compartilhada do Prisma Client
     ├── rateLimiter.js       # Limitação de requisições em memória
     ├── schemas.js           # Schemas de validação com Zod
@@ -214,6 +226,8 @@ O projeto fornece um arquivo `.env.example`. Nenhum valor sensível deve ser ver
 | `DIRECT_URL`          | Conexão direta com o PostgreSQL, utilizada principalmente pelas migrations do Prisma. |
 | `CRON_SECRET`         | Segredo enviado pelo Vercel Cron para autorizar o endpoint `/api/cron/keep-alive`.    |
 | `CYPRESS_TEST_SECRET` | Segredo usado apenas pelos testes E2E que precisam criar usuários com perfil `AGENT`. |
+| `EMAIL_USER`          | Email remetente para envio de recuperação de senha (Gmail).                           |
+| `EMAIL_PASS`          | Senha de app do Gmail para autenticação do Nodemailer.                                |
 
 Para utilizar o login com GitHub, configure uma OAuth App com os seguintes callbacks:
 

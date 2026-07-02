@@ -83,6 +83,19 @@ Para habilitar login com GitHub:
 3. Defina `Authorization callback URL` como `http://localhost:3000/api/auth/callback/github`
 4. Copie `Client ID` e `Client Secret` para `AUTH_GITHUB_ID` e `AUTH_GITHUB_SECRET`
 
+### Recuperação de senha
+
+Para testar o fluxo de recuperação de senha localmente:
+
+1. Configure `EMAIL_USER` e `EMAIL_PASS` no `.env`
+2. Para Gmail com 2FA habilitado, gere uma [Senha de App](https://myaccount.google.com/apppasswords)
+3. Acesse `/forgot-password` e insira um email cadastrado
+4. Verifique a caixa de entrada do email configurado em `EMAIL_USER`
+5. Clique no link recebido para acessar `/reset-password?token=...`
+6. Defina uma nova senha (mínimo de 8 caracteres)
+
+O token expira em 15 minutos por segurança.
+
 ## Executando o projeto
 
 ```bash
