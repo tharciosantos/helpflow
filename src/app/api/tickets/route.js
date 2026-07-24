@@ -60,24 +60,51 @@ export async function GET(req) {
 
     // Ler parâmetros de paginação da URL
     const { searchParams } = new URL(req.url);
-    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
-    const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '10', 10)));
+    const requestedPage = parseInt(searchParams.get('page') || '1', 10);
+    const requestedLimit = parseInt(searchParams.get('limit') || '10', 10);
+    const page = Number.isFinite(requestedPage) ? Math.max(1, requestedPage) : 1;
+    const limit = Number.isFinite(requestedLimit)
+      ? Math.min(50, Math.max(1, requestedLimit))
+      : 10;
     const skip = (page - 1) * limit;
 
-    const where = role === 'AGENT' ? {} : { authorId: session.user.id };
+    const status = searchParams.get('status');
+    const priority = searchParams.get('priority');
+    const search = searchParams.get('search')?.trim();
+    const validStatuses = ['OPEN', 'IN_PROGRESS', 'CLOSED'];
+    const validPriorities = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'];
+
+    const visibilityFilter = role === 'AGENT' ? {} : { authorId: session.user.id };
+    const where = {
+      ...visibilityFilter,
+      ...(validStatuses.includes(status) ? { status } : {}),
+      ...(validPriorities.includes(priority) ? { priority } : {}),
+      ...(search
+        ? {
+            OR: [
+              { title: { contains: search, mode: 'insensitive' } },
+              { description: { contains: search, mode: 'insensitive' } },
+            ],
+          }
+        : {}),
+    };
 
     // Buscar tickets E totais em paralelo
-    const [tickets, total, openCount, inProgressCount] = await Promise.all([
+    const [tickets, total, openCount, inProgressCount, closedCount] = await Promise.all([
       prisma.ticket.findMany({
         where,
-        include: { author: true },
+        include: {
+          author: { select: { id: true, name: true, email: true, image: true } },
+          agent: { select: { id: true, name: true, email: true, image: true } },
+        },
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
       }),
       prisma.ticket.count({ where }),
-      prisma.ticket.count({ where: { ...where, status: 'OPEN' } }),
-      prisma.ticket.count({ where: { ...where, status: 'IN_PROGRESS' } }),
+      prisma.ticket.count({ where: { ...visibilityFilter, status: 'OPEN' } }),
+      prisma.ticket.count({ where: { ...visibilityFilter, status: 'IN_PROGRESS' } }),
+      prisma.ticket.count({ where: { ...visibilityFilter, status: 'CLOSED' } }),
     ]);
 
     return NextResponse.json({
@@ -91,9 +118,10 @@ export async function GET(req) {
         hasPrevPage: page > 1,
       },
       summary: {
-        total,
+        total: openCount + inProgressCount + closedCount,
         open: openCount,
         inProgress: inProgressCount,
+        closed: closedCount,
       },
     }, { status: 200 });
 

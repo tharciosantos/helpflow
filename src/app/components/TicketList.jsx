@@ -11,6 +11,7 @@ export default function TicketList({
   onTicketDeleted,
   onTicketUpdated,
   session,
+  agents = [],
 }) {
   const [deletingId, setDeletingId] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
@@ -61,6 +62,26 @@ export default function TicketList({
     }
   };
 
+  const handleAgentChange = async (ticketId, agentId) => {
+    setUpdatingId(ticketId);
+
+    try {
+      const res = await fetch(`/api/tickets/${ticketId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ agentId: agentId || null }),
+      });
+
+      if (!res.ok) throw new Error('Falha ao atribuir o ticket.');
+
+      onTicketUpdated?.(await res.json());
+    } catch (err) {
+      setErrorMessage(err.message || 'Erro ao atribuir o ticket.');
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   // ======================= LOADING / ERROR =========================
   if (loading) {
     return (
@@ -88,7 +109,7 @@ export default function TicketList({
       )}
       <div className="mt-12">
         <h2 className="text-2xl font-semibold mb-6 text-white">
-          Meus tickets
+          {session?.user?.role === 'AGENT' ? 'Tickets' : 'Meus tickets'}
         </h2>
 
         {tickets.length === 0 ? (
@@ -172,6 +193,10 @@ export default function TicketList({
                     </span>
                   </p>
 
+                  <p className="mt-2 text-xs text-gray-500">
+                    Responsável: <span className="text-gray-300">{ticket.agent?.name || ticket.agent?.email || 'Não atribuído'}</span>
+                  </p>
+
                   {/* CONTROLES (dono ou AGENT) */}
                   {(session?.user?.id === ticket.authorId || session?.user?.role === 'AGENT') && (
                     <div className="mt-4 flex flex-col gap-3">
@@ -190,6 +215,26 @@ export default function TicketList({
                         <option value="IN_PROGRESS">Em Progresso</option>
                         <option value="CLOSED">Fechado</option>
                       </select>
+
+                      {session?.user?.role === 'AGENT' && (
+                        <label className="flex flex-col gap-1 text-sm text-gray-300">
+                          Responsável
+                          <select
+                            data-cy={`ticket-${ticket.id}-agent`}
+                            disabled={updatingId === ticket.id}
+                            value={ticket.agentId || ''}
+                            onChange={(e) => handleAgentChange(ticket.id, e.target.value)}
+                            className="bg-gray-700 text-white px-3 py-2 rounded-md text-sm border border-gray-600 w-56"
+                          >
+                            <option value="">Não atribuído</option>
+                            {agents.map((agent) => (
+                              <option key={agent.id} value={agent.id}>
+                                {agent.name || agent.email}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      )}
 
                       {/* EDITAR + EXCLUIR */}
                       <div className="flex gap-4 text-sm">
