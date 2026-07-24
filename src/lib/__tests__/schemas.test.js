@@ -149,6 +149,15 @@ describe('updateTicketSchema', () => {
         });
         expect(result.success).toBe(true);
     });
+
+    it('deve aceitar a atribuição a um agente ou a remoção do responsável', () => {
+        expect(updateTicketSchema.safeParse({ agentId: '550e8400-e29b-41d4-a716-446655440000' }).success).toBe(true);
+        expect(updateTicketSchema.safeParse({ agentId: null }).success).toBe(true);
+    });
+
+    it('deve rejeitar um identificador de agente inválido', () => {
+        expect(updateTicketSchema.safeParse({ agentId: 'agente-invalido' }).success).toBe(false);
+    });
 });
 
 // ─────────────────────────────────────────────

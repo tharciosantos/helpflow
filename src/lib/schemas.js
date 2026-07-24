@@ -37,6 +37,7 @@ export const updateTicketSchema = z.object({
     // Permite editar status e prioridade também pelo formulário de edição
     status: z.enum(['OPEN', 'IN_PROGRESS', 'CLOSED']).optional(),
     priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).optional(),
+    agentId: z.string().uuid().nullable().optional(),
 });
 
 export const registerSchema = z.object({

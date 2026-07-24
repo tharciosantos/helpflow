@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useSession } from "next-auth/react";
 import TicketList from "../../components/TicketList";
@@ -15,11 +15,21 @@ export default function DashboardPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [openCount, setOpenCount] = useState(0);
   const [inProgressCount, setInProgressCount] = useState(0);
+  const [closedCount, setClosedCount] = useState(0);
+  const [filters, setFilters] = useState({ search: '', status: '', priority: '' });
+  const [agents, setAgents] = useState([]);
 
-  const fetchTickets = async (page = 1) => {
+  const fetchTickets = useCallback(async (page = 1, activeFilters = {}) => {
     setLoading(true);
+    setError('');
     try {
-      const res = await fetch(`/api/tickets?page=${page}&limit=10`);
+      const { search = '', status = '', priority = '' } = activeFilters;
+      const params = new URLSearchParams({ page: String(page), limit: '10' });
+      if (search.trim()) params.set('search', search.trim());
+      if (status) params.set('status', status);
+      if (priority) params.set('priority', priority);
+
+      const res = await fetch(`/api/tickets?${params.toString()}`);
       if (!res.ok) throw new Error('Falha ao carregar tickets.');
 
       const data = await res.json();
@@ -29,32 +39,66 @@ export default function DashboardPage() {
       setTotalCount(data.pagination.total);
       setOpenCount(data.summary.open);
       setInProgressCount(data.summary.inProgress);
+      setClosedCount(data.summary.closed);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (status === 'authenticated') {
-      fetchTickets();
+      fetchTickets(1, {});
     }
-  }, [status]);
+  }, [status, fetchTickets]);
+
+  useEffect(() => {
+    if (status !== 'authenticated' || session?.user?.role !== 'AGENT') return;
+
+    const fetchAgents = async () => {
+      try {
+        const response = await fetch('/api/agents');
+        if (!response.ok) throw new Error('Falha ao carregar agentes.');
+        setAgents(await response.json());
+      } catch (err) {
+        console.error(err.message);
+      }
+    };
+
+    fetchAgents();
+  }, [status, session?.user?.role]);
 
   const handleTicketDeleted = (deletedTicketId, deletedStatus) => {
     setTickets(prev => prev.filter(ticket => ticket.id !== deletedTicketId));
     setTotalCount(prev => Math.max(0, prev - 1));
     if (deletedStatus === 'OPEN') setOpenCount(prev => Math.max(0, prev - 1));
     if (deletedStatus === 'IN_PROGRESS') setInProgressCount(prev => Math.max(0, prev - 1));
+    if (deletedStatus === 'CLOSED') setClosedCount(prev => Math.max(0, prev - 1));
   };
 
   const handleTicketUpdated = (updatedTicket) => {
-    setTickets(prev =>
-      prev.map(ticket =>
-        ticket.id === updatedTicket.id ? updatedTicket : ticket
-      )
-    );
+    const previousTicket = tickets.find(ticket => ticket.id === updatedTicket.id);
+    if (previousTicket?.status !== updatedTicket.status) {
+      if (previousTicket?.status === 'OPEN') setOpenCount(prev => Math.max(0, prev - 1));
+      if (previousTicket?.status === 'IN_PROGRESS') setInProgressCount(prev => Math.max(0, prev - 1));
+      if (previousTicket?.status === 'CLOSED') setClosedCount(prev => Math.max(0, prev - 1));
+      if (updatedTicket.status === 'OPEN') setOpenCount(prev => prev + 1);
+      if (updatedTicket.status === 'IN_PROGRESS') setInProgressCount(prev => prev + 1);
+      if (updatedTicket.status === 'CLOSED') setClosedCount(prev => prev + 1);
+    }
+    setTickets(prev => prev.map(ticket => (ticket.id === updatedTicket.id ? updatedTicket : ticket)));
+  };
+
+  const applyFilters = (event) => {
+    event.preventDefault();
+    fetchTickets(1, filters);
+  };
+
+  const clearFilters = () => {
+    const emptyFilters = { search: '', status: '', priority: '' };
+    setFilters(emptyFilters);
+    fetchTickets(1, emptyFilters);
   };
 
   return (
@@ -79,6 +123,40 @@ export default function DashboardPage() {
         </Link>
       </header>
 
+      <form onSubmit={applyFilters} className="grid gap-3 rounded-xl border border-gray-800 bg-gray-900/60 p-4 md:grid-cols-[minmax(0,1fr)_180px_180px_auto_auto] md:items-end">
+        <label className="flex flex-col gap-1 text-sm text-gray-300">
+          Buscar tickets
+          <input
+            data-cy="ticket-filter-search"
+            value={filters.search}
+            onChange={(event) => setFilters(prev => ({ ...prev, search: event.target.value }))}
+            placeholder="Título ou descrição"
+            className="rounded-md border border-gray-700 bg-gray-800 px-3 py-2 text-white placeholder:text-gray-500 focus:border-teal-400 focus:outline-none"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-sm text-gray-300">
+          Status
+          <select data-cy="ticket-filter-status" value={filters.status} onChange={(event) => setFilters(prev => ({ ...prev, status: event.target.value }))} className="rounded-md border border-gray-700 bg-gray-800 px-3 py-2 text-white focus:border-teal-400 focus:outline-none">
+            <option value="">Todos</option>
+            <option value="OPEN">Aberto</option>
+            <option value="IN_PROGRESS">Em progresso</option>
+            <option value="CLOSED">Fechado</option>
+          </select>
+        </label>
+        <label className="flex flex-col gap-1 text-sm text-gray-300">
+          Prioridade
+          <select data-cy="ticket-filter-priority" value={filters.priority} onChange={(event) => setFilters(prev => ({ ...prev, priority: event.target.value }))} className="rounded-md border border-gray-700 bg-gray-800 px-3 py-2 text-white focus:border-teal-400 focus:outline-none">
+            <option value="">Todas</option>
+            <option value="LOW">Baixa</option>
+            <option value="MEDIUM">Média</option>
+            <option value="HIGH">Alta</option>
+            <option value="URGENT">Urgente</option>
+          </select>
+        </label>
+        <button data-cy="ticket-filter-submit" type="submit" className="rounded-md bg-teal-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-400">Filtrar</button>
+        <button data-cy="ticket-filter-clear" type="button" onClick={clearFilters} className="rounded-md px-3 py-2 text-sm text-gray-300 transition hover:bg-gray-800 hover:text-white">Limpar</button>
+      </form>
+
       {/* Resumo rápido + lista */}
       <section className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(260px,1fr)]">
         {/* Lista de tickets + controles de paginação */}
@@ -91,6 +169,7 @@ export default function DashboardPage() {
               onTicketDeleted={handleTicketDeleted}
               onTicketUpdated={handleTicketUpdated}
               session={session}
+              agents={agents}
             />
           </div>
 
@@ -99,7 +178,7 @@ export default function DashboardPage() {
             <div className="flex items-center justify-center gap-4 py-2">
               <button
                 data-cy="pagination-prev"
-                onClick={() => fetchTickets(currentPage - 1)}
+                onClick={() => fetchTickets(currentPage - 1, filters)}
                 disabled={currentPage === 1}
                 className="px-4 py-2 rounded-md bg-gray-700 text-white text-sm disabled:opacity-40 hover:bg-gray-600 transition"
               >
@@ -110,7 +189,7 @@ export default function DashboardPage() {
               </span>
               <button
                 data-cy="pagination-next"
-                onClick={() => fetchTickets(currentPage + 1)}
+                onClick={() => fetchTickets(currentPage + 1, filters)}
                 disabled={currentPage === totalPages}
                 className="px-4 py-2 rounded-md bg-gray-700 text-white text-sm disabled:opacity-40 hover:bg-gray-600 transition"
               >
@@ -124,11 +203,11 @@ export default function DashboardPage() {
         <aside className="space-y-4">
           <div className="rounded-xl border border-gray-800 bg-gray-900/80 p-4 shadow-md">
             <h2 className="text-sm font-semibold text-gray-200 mb-3">
-              Resumo dos tickets
+              Resumo geral
             </h2>
             <div className="space-y-2 text-sm">
               <p className="flex justify-between text-gray-300">
-                <span>Total</span>
+                <span>Resultados</span>
                 <span className="font-semibold text-white">{totalCount}</span>
               </p>
               <p className="flex justify-between text-gray-300">
@@ -138,6 +217,10 @@ export default function DashboardPage() {
               <p className="flex justify-between text-gray-300">
                 <span>Em progresso</span>
                 <span className="font-semibold text-yellow-300">{inProgressCount}</span>
+              </p>
+              <p className="flex justify-between text-gray-300">
+                <span>Fechados</span>
+                <span className="font-semibold text-gray-300">{closedCount}</span>
               </p>
             </div>
           </div>

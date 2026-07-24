@@ -17,7 +17,10 @@ export async function GET(req, { params }) {
 
     const ticket = await prisma.ticket.findUnique({
       where: { id },
-      include: { author: true },
+      include: {
+        author: { select: { id: true, name: true, email: true, image: true } },
+        agent: { select: { id: true, name: true, email: true, image: true } },
+      },
     });
 
     if (!ticket) {
@@ -75,7 +78,11 @@ export async function PATCH(req, { params }) {
 
     let data;
 
-    if (body.status !== undefined && body.title === undefined && body.description === undefined && body.priority === undefined) {
+    if (body.agentId !== undefined && !isAgent) {
+      return NextResponse.json({ message: 'Apenas agentes podem atribuir tickets.' }, { status: 403 });
+    }
+
+    if (body.status !== undefined && body.title === undefined && body.description === undefined && body.priority === undefined && body.agentId === undefined) {
       const validation = updateTicketStatusSchema.safeParse(body);
       if (!validation.success) {
         return NextResponse.json(
@@ -97,11 +104,26 @@ export async function PATCH(req, { params }) {
       if (validation.data.description !== undefined) data.description = validation.data.description;
       if (validation.data.status !== undefined) data.status = validation.data.status;
       if (validation.data.priority !== undefined) data.priority = validation.data.priority;
+      if (validation.data.agentId !== undefined) data.agentId = validation.data.agentId;
+    }
+
+    if (data.agentId) {
+      const assignedAgent = await prisma.user.findFirst({
+        where: { id: data.agentId, role: 'AGENT' },
+        select: { id: true },
+      });
+      if (!assignedAgent) {
+        return NextResponse.json({ message: 'Agente selecionado inválido.' }, { status: 400 });
+      }
     }
 
     const updatedTicket = await prisma.ticket.update({
       where: { id },
       data,
+      include: {
+        author: { select: { id: true, name: true, email: true, image: true } },
+        agent: { select: { id: true, name: true, email: true, image: true } },
+      },
     });
 
     return NextResponse.json(updatedTicket, { status: 200 });
