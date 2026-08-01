@@ -4,7 +4,7 @@ Guia prático para configurar e rodar o HelpFlow localmente com `Next.js`, `Pris
 
 ## Pré-requisitos
 
-- `Node.js 18+`
+- `Node.js 20+`
 - `npm`
 - `Git`
 - Conta no [GitHub](https://github.com/)
