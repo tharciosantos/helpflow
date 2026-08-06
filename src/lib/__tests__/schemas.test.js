@@ -174,13 +174,14 @@ describe('registerSchema', () => {
         expect(result.success).toBe(true);
     });
 
-    it('deve aceitar registro sem nome (name é opcional)', () => {
+    it('deve rejeitar registro sem nome', () => {
         const result = registerSchema.safeParse({
             email: 'joao@exemplo.com',
             password: 'senha1234',
             confirmPassword: 'senha1234',
         });
-        expect(result.success).toBe(true);
+        expect(result.success).toBe(false);
+        expect(result.error.flatten().fieldErrors.name).toBeDefined();
     });
 
     it('deve rejeitar email inválido', () => {

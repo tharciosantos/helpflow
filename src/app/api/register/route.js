@@ -3,6 +3,7 @@ import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { checkRateLimit, getClientIp } from '@/lib/rateLimiter';
 import { registerSchema } from '@/lib/schemas';
+import { resolveRegistrationRole } from '@/lib/registrationRole';
 
 
 export async function POST(req) {
@@ -45,8 +46,8 @@ export async function POST(req) {
 
         if (existingUser) {
             return NextResponse.json(
-                { message: 'Este email já está em uso.' },
-                { status: 409 }
+                { message: 'Não foi possível criar a conta com os dados informados.' },
+                { status: 400 }
             );
         }
 
@@ -54,8 +55,11 @@ export async function POST(req) {
 
         // Permite definir role apenas em ambiente de testes (protegido por secret)
         const testSecret = req.headers.get('x-test-secret');
-        const isTestEnv = testSecret === process.env.CYPRESS_TEST_SECRET && process.env.CYPRESS_TEST_SECRET;
-        const userRole = isTestEnv && role === 'AGENT' ? 'AGENT' : 'CLIENT';
+        const userRole = resolveRegistrationRole({
+            requestedRole: role,
+            testSecret,
+            configuredTestSecret: process.env.CYPRESS_TEST_SECRET,
+        });
 
         const newUser = await prisma.user.create({
             data: {

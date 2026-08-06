@@ -39,6 +39,53 @@ describe('Testes de Permissão', () => {
     });
   });
 
+  describe('Matriz proprietário e não proprietário', () => {
+    let owner;
+    let otherClient;
+    let ticketId;
+
+    before(() => {
+      cy.createTestUser({ role: 'CLIENT' }).then((user) => {
+        owner = user;
+        cy.login(owner.email, owner.password);
+        cy.request('POST', '/api/tickets', {
+          title: 'Ticket para testar autorização',
+          description: 'Criado automaticamente pela suíte de permissões.',
+          priority: 'MEDIUM',
+        }).then((response) => {
+          ticketId = response.body.id;
+        });
+      });
+      cy.createTestUser({ role: 'CLIENT' }).then((user) => {
+        otherClient = user;
+      });
+    });
+
+    it('bloqueia alteração manipulada de status pelo CLIENT proprietário', () => {
+      cy.login(owner.email, owner.password);
+      cy.request({
+        method: 'PATCH',
+        url: `/api/tickets/${ticketId}`,
+        body: { status: 'CLOSED' },
+        failOnStatusCode: false,
+      }).its('status').should('equal', 403);
+    });
+
+    it('bloqueia leitura, edição e exclusão por CLIENT não proprietário', () => {
+      cy.login(otherClient.email, otherClient.password);
+      ['GET', 'DELETE'].forEach((method) => {
+        cy.request({ method, url: `/api/tickets/${ticketId}`, failOnStatusCode: false })
+          .its('status').should('equal', 403);
+      });
+      cy.request({
+        method: 'PATCH',
+        url: `/api/tickets/${ticketId}`,
+        body: { title: 'Tentativa de edição indevida' },
+        failOnStatusCode: false,
+      }).its('status').should('equal', 403);
+    });
+  });
+
   // ─────────────────────────────────────────────
   // Cenário 2: Acesso sem autenticação
   // ─────────────────────────────────────────────

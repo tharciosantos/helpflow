@@ -36,7 +36,7 @@ describe("Autenticação", () => {
             cy.get("[data-cy='login-submit']").click();
 
             cy.url().should("include", "/login");
-            cy.contains("Email ou senha inválidos").should("be.visible");
+            cy.contains("E-mail ou senha inválidos.").should("be.visible");
         });
     });
 

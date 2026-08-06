@@ -4,6 +4,12 @@ import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { updateTicketStatusSchema, updateTicketSchema } from '@/lib/schemas';
 import { checkRateLimit } from '@/lib/rateLimiter';
+import {
+  canDeleteTicket,
+  canEditTicketContent,
+  canViewTicket,
+  getForbiddenTicketFields,
+} from '@/lib/ticketAuthorization';
 
 // FUNÇÃO GET
 export async function GET(req, { params }) {
@@ -28,11 +34,7 @@ export async function GET(req, { params }) {
       return NextResponse.json({ message: 'Ticket não encontrado' }, { status: 404 });
     }
 
-    const role = session.user.role || 'CLIENT';
-    const isOwner = ticket.authorId === session.user.id;
-    const isAgent = role === 'AGENT';
-
-    if (!isOwner && !isAgent) {
+    if (!canViewTicket(session.user, ticket)) {
       return NextResponse.json({ message: 'Não autorizado' }, { status: 403 });
     }
 
@@ -68,19 +70,19 @@ export async function PATCH(req, { params }) {
       return NextResponse.json({ message: 'Ticket não encontrado' }, { status: 404 });
     }
 
-    const role = session.user.role || 'CLIENT';
-    const isOwner = ticket.authorId === session.user.id;
-    const isAgent = role === 'AGENT';
-
-    if (!isOwner && !isAgent) {
+    if (!canEditTicketContent(session.user, ticket)) {
       return NextResponse.json({ message: 'Não autorizado' }, { status: 403 });
     }
 
-    let data;
-
-    if (body.agentId !== undefined && !isAgent) {
-      return NextResponse.json({ message: 'Apenas agentes podem atribuir tickets.' }, { status: 403 });
+    const forbiddenFields = getForbiddenTicketFields(session.user, body);
+    if (forbiddenFields.length > 0) {
+      return NextResponse.json(
+        { message: 'Apenas agentes podem alterar status, prioridade ou responsável.' },
+        { status: 403 }
+      );
     }
+
+    let data;
 
     if (body.status !== undefined && body.title === undefined && body.description === undefined && body.priority === undefined && body.agentId === undefined) {
       const validation = updateTicketStatusSchema.safeParse(body);
@@ -160,11 +162,7 @@ export async function DELETE(req, { params }) {
       return NextResponse.json({ message: 'Ticket não encontrado' }, { status: 404 });
     }
 
-    const role = session.user.role || 'CLIENT';
-    const isOwner = ticket.authorId === session.user.id;
-    const isAgent = role === 'AGENT';
-
-    if (!isOwner && !isAgent) {
+    if (!canDeleteTicket(session.user, ticket)) {
       return NextResponse.json({ message: 'Não autorizado a excluir este ticket' }, { status: 403 });
     }
 
