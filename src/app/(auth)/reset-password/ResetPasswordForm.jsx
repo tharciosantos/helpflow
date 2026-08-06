@@ -152,7 +152,7 @@ export default function ResetPasswordForm({ token }) {
 
                     {/* Erro */}
                     {error && (
-                        <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 mb-4">
+                        <div role="alert" className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 mb-4">
                             <p className="text-red-200 text-sm">{error}</p>
                         </div>
                     )}
@@ -160,11 +160,14 @@ export default function ResetPasswordForm({ token }) {
                     {/* Formulário */}
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
-                            <label className="mb-1 block text-sm font-medium text-gray-200">
+                            <label htmlFor="reset-password" className="mb-1 block text-sm font-medium text-gray-200">
                                 Nova senha
                             </label>
                             <input
                                 type="password"
+                                id="reset-password"
+                                name="password"
+                                autoComplete="new-password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 className="w-full rounded-md border border-white/20 bg-slate-900/40 px-4 py-2 text-white placeholder-gray-400 focus:border-teal-400 focus:outline-none focus:ring-1 focus:ring-teal-400"
@@ -179,11 +182,14 @@ export default function ResetPasswordForm({ token }) {
                         </div>
 
                         <div>
-                            <label className="mb-1 block text-sm font-medium text-gray-200">
+                            <label htmlFor="reset-confirm-password" className="mb-1 block text-sm font-medium text-gray-200">
                                 Confirmar senha
                             </label>
                             <input
                                 type="password"
+                                id="reset-confirm-password"
+                                name="confirmPassword"
+                                autoComplete="new-password"
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 className="w-full rounded-md border border-white/20 bg-slate-900/40 px-4 py-2 text-white placeholder-gray-400 focus:border-teal-400 focus:outline-none focus:ring-1 focus:ring-teal-400"

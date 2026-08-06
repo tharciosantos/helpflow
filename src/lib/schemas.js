@@ -41,7 +41,7 @@ export const updateTicketSchema = z.object({
 });
 
 export const registerSchema = z.object({
-    name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres.').optional(),
+    name: z.string({ required_error: 'Nome é obrigatório.' }).trim().min(2, 'Nome deve ter pelo menos 2 caracteres.'),
     email: z.string().email('Email inválido.'),
     password: z.string().min(8, 'A senha deve ter pelo menos 8 caracteres.'),
     confirmPassword: z.string().min(8, 'A confirmação de senha deve ter pelo menos 8 caracteres.'),

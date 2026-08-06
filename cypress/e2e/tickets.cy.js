@@ -35,6 +35,10 @@ describe("Tickets", () => {
         it("deve atualizar o status de um ticket específico", () => {
             const title = `Ticket ${Date.now()}`;
 
+            cy.createTestUser({ role: 'AGENT' }).then((agent) => {
+                cy.login(agent.email, agent.password);
+            });
+
             cy.visit("/dashboard/tickets/new");
 
             cy.get('[data-cy="ticket-create-title"]').type(title);

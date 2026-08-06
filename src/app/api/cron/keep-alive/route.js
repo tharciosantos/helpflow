@@ -15,8 +15,6 @@ export async function GET(request) {
     try {
         await prisma.$queryRaw`SELECT 1`;
 
-        console.log('[Keep-Alive] Database ping successful:', new Date().toISOString());
-
         return Response.json({
             success: true,
             message: 'Database keepalive successful',

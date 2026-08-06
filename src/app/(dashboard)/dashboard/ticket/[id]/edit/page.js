@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import EditTicketForm from '../../../../../components/EditTicketForm';
+import { useSession } from 'next-auth/react';
 
 export default function EditTicketPage() {
     const { id } = useParams();
     const router = useRouter();
+    const { data: session } = useSession();
     const [ticket, setTicket] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -47,7 +49,7 @@ export default function EditTicketPage() {
     return (
         <div>
             <h1 className="text-3xl font-bold mb-6">Editar Ticket</h1>
-            {ticket && <EditTicketForm ticket={ticket} onTicketUpdated={handleTicketUpdated} />}
+            {ticket && <EditTicketForm ticket={ticket} onTicketUpdated={handleTicketUpdated} isAgent={session?.user?.role === 'AGENT'} />}
         </div>
     );
 }

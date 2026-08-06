@@ -12,14 +12,18 @@ export default function TicketList({
   onTicketUpdated,
   session,
   agents = [],
+  hasActiveFilters = false,
 }) {
   const [deletingId, setDeletingId] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   // ======================= DELETE =========================
   const handleDelete = async (ticketId) => {
     if (window.confirm("Tem certeza que deseja excluir este ticket?")) {
+      setErrorMessage('');
+      setSuccessMessage('');
       setDeletingId(ticketId);
       try {
         const res = await fetch(`/api/tickets/${ticketId}`, {
@@ -32,6 +36,7 @@ export default function TicketList({
 
         const deletedTicket = tickets.find(t => t.id === ticketId);
         onTicketDeleted?.(ticketId, deletedTicket?.status);
+        setSuccessMessage('Ticket excluído com sucesso.');
       } catch (err) {
         setErrorMessage(err.message || 'Erro ao excluir o ticket.');
       } finally {
@@ -42,6 +47,8 @@ export default function TicketList({
 
   // ======================= UPDATE STATUS =========================
   const handleStatusChange = async (ticketId, newStatus) => {
+    setErrorMessage('');
+    setSuccessMessage('');
     setUpdatingId(ticketId);
 
     try {
@@ -55,6 +62,7 @@ export default function TicketList({
 
       const updatedTicket = await res.json();
       onTicketUpdated?.(updatedTicket);
+      setSuccessMessage('Status atualizado com sucesso.');
     } catch (err) {
       setErrorMessage(err.message || 'Erro ao atualizar o status.');
     } finally {
@@ -63,6 +71,8 @@ export default function TicketList({
   };
 
   const handleAgentChange = async (ticketId, agentId) => {
+    setErrorMessage('');
+    setSuccessMessage('');
     setUpdatingId(ticketId);
 
     try {
@@ -75,6 +85,7 @@ export default function TicketList({
       if (!res.ok) throw new Error('Falha ao atribuir o ticket.');
 
       onTicketUpdated?.(await res.json());
+      setSuccessMessage('Responsável atualizado com sucesso.');
     } catch (err) {
       setErrorMessage(err.message || 'Erro ao atribuir o ticket.');
     } finally {
@@ -85,7 +96,15 @@ export default function TicketList({
   // ======================= LOADING / ERROR =========================
   if (loading) {
     return (
-      <p className="text-center text-gray-400 mt-12">Carregando tickets...</p>
+      <div aria-label="Carregando tickets" aria-busy="true" className="mt-8 space-y-4">
+        {[1, 2, 3].map((item) => (
+          <div key={item} className="animate-pulse rounded-xl border border-gray-800 bg-gray-800/40 p-5">
+            <div className="h-5 w-2/3 rounded bg-gray-700" />
+            <div className="mt-4 h-3 w-full rounded bg-gray-700" />
+            <div className="mt-2 h-3 w-1/2 rounded bg-gray-700" />
+          </div>
+        ))}
+      </div>
     );
   }
 
@@ -97,15 +116,21 @@ export default function TicketList({
   return (
     <>
       {errorMessage && (
-        <div className="mb-4 p-3 bg-red-900/40 border border-red-700 rounded-lg text-sm text-red-300 flex items-center justify-between">
+        <div role="alert" className="mb-4 p-3 bg-red-900/40 border border-red-700 rounded-lg text-sm text-red-300 flex items-center justify-between">
           <span>{errorMessage}</span>
           <button
+            aria-label="Fechar mensagem de erro"
             onClick={() => setErrorMessage('')}
             className="ml-4 text-red-400 hover:text-red-200 font-bold"
           >
             ✕
           </button>
         </div>
+      )}
+      {successMessage && (
+        <p role="status" className="mb-4 rounded-lg border border-teal-700 bg-teal-900/30 p-3 text-sm text-teal-200">
+          {successMessage}
+        </p>
       )}
       <div className="mt-12">
         <h2 className="text-2xl font-semibold mb-6 text-white">
@@ -115,15 +140,15 @@ export default function TicketList({
         {tickets.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-center">
             <p className="text-gray-400 mb-3">
-              Você ainda não tem nenhum ticket aberto.
+              {hasActiveFilters ? 'Nenhum ticket corresponde aos filtros atuais.' : 'Você ainda não tem tickets.'}
             </p>
-            <Link
+            {!hasActiveFilters && <Link
               data-cy="ticket-empty-create-link"
               href="/dashboard/tickets/new"
               className="inline-flex items-center justify-center rounded-md bg-teal-500 px-4 py-2 text-sm font-medium text-white hover:bg-teal-400 transition"
             >
               + Criar primeiro ticket
-            </Link>
+            </Link>}
           </div>
         ) : (
           <div>
@@ -202,6 +227,8 @@ export default function TicketList({
                     <div className="mt-4 flex flex-col gap-3">
 
                       {/* SELECT STATUS (agora pequeno e minimalista) */}
+                      {session?.user?.role === 'AGENT' && <label className="flex flex-col gap-1 text-sm text-gray-300">
+                        Status
                       <select
                         data-cy={`ticket-${ticket.id}-status`}
                         disabled={updatingId === ticket.id}
@@ -215,6 +242,7 @@ export default function TicketList({
                         <option value="IN_PROGRESS">Em Progresso</option>
                         <option value="CLOSED">Fechado</option>
                       </select>
+                      </label>}
 
                       {session?.user?.role === 'AGENT' && (
                         <label className="flex flex-col gap-1 text-sm text-gray-300">
