@@ -7,9 +7,12 @@ export default function CreateTicketForm({ onTicketCreated }) {
   const [description, setDescription] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
   const [priority, setPriority] = useState('MEDIUM');
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return;
+    setLoading(true);
     setStatusMessage('Enviando...');
 
     try {
@@ -34,6 +37,8 @@ export default function CreateTicketForm({ onTicketCreated }) {
       // Erro de rede, timeout, servidor offline, etc.
       setStatusMessage('Erro de conexão. Verifique sua internet e tente novamente.');
       console.error('Erro ao criar ticket:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -47,6 +52,7 @@ export default function CreateTicketForm({ onTicketCreated }) {
             data-cy="ticket-create-title"
             type="text"
             id="title"
+            name="title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
@@ -61,6 +67,7 @@ export default function CreateTicketForm({ onTicketCreated }) {
           <textarea
             data-cy="ticket-create-description"
             id="description"
+            name="description"
             rows={4}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -80,6 +87,7 @@ export default function CreateTicketForm({ onTicketCreated }) {
           <select
             data-cy="ticket-create-priority"
             id="priority"
+            name="priority"
             value={priority}
             onChange={(e) => setPriority(e.target.value)}
             className="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
@@ -95,12 +103,13 @@ export default function CreateTicketForm({ onTicketCreated }) {
         <button
           data-cy="ticket-create-submit"
           type="submit"
+          disabled={loading}
           className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-teal-600 hover:bg-teal-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors"
         >
-          Criar Ticket
+          {loading ? 'Criando ticket...' : 'Criar ticket'}
         </button>
       </div>
-      {statusMessage && <p className="mt-4 text-center text-sm text-gray-400">{statusMessage}</p>}
+      {statusMessage && <p role="status" aria-live="polite" className="mt-4 text-center text-sm text-gray-300">{statusMessage}</p>}
     </form>
   );
 }

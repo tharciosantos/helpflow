@@ -13,6 +13,7 @@ export default function DashboardPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [summaryTotal, setSummaryTotal] = useState(0);
   const [openCount, setOpenCount] = useState(0);
   const [inProgressCount, setInProgressCount] = useState(0);
   const [closedCount, setClosedCount] = useState(0);
@@ -37,6 +38,7 @@ export default function DashboardPage() {
       setTotalPages(data.pagination.totalPages);
       setCurrentPage(data.pagination.page);
       setTotalCount(data.pagination.total);
+      setSummaryTotal(data.summary.total);
       setOpenCount(data.summary.open);
       setInProgressCount(data.summary.inProgress);
       setClosedCount(data.summary.closed);
@@ -72,6 +74,7 @@ export default function DashboardPage() {
   const handleTicketDeleted = (deletedTicketId, deletedStatus) => {
     setTickets(prev => prev.filter(ticket => ticket.id !== deletedTicketId));
     setTotalCount(prev => Math.max(0, prev - 1));
+    setSummaryTotal(prev => Math.max(0, prev - 1));
     if (deletedStatus === 'OPEN') setOpenCount(prev => Math.max(0, prev - 1));
     if (deletedStatus === 'IN_PROGRESS') setInProgressCount(prev => Math.max(0, prev - 1));
     if (deletedStatus === 'CLOSED') setClosedCount(prev => Math.max(0, prev - 1));
@@ -170,6 +173,7 @@ export default function DashboardPage() {
               onTicketUpdated={handleTicketUpdated}
               session={session}
               agents={agents}
+              hasActiveFilters={Boolean(filters.search || filters.status || filters.priority)}
             />
           </div>
 
@@ -205,23 +209,13 @@ export default function DashboardPage() {
             <h2 className="text-sm font-semibold text-gray-200 mb-3">
               Resumo geral
             </h2>
-            <div className="space-y-2 text-sm">
-              <p className="flex justify-between text-gray-300">
-                <span>Resultados</span>
-                <span className="font-semibold text-white">{totalCount}</span>
-              </p>
-              <p className="flex justify-between text-gray-300">
-                <span>Abertos</span>
-                <span className="font-semibold text-green-400">{openCount}</span>
-              </p>
-              <p className="flex justify-between text-gray-300">
-                <span>Em progresso</span>
-                <span className="font-semibold text-yellow-300">{inProgressCount}</span>
-              </p>
-              <p className="flex justify-between text-gray-300">
-                <span>Fechados</span>
-                <span className="font-semibold text-gray-300">{closedCount}</span>
-              </p>
+            <p className="mb-3 text-xs text-gray-500">Os status consideram todos os tickets visíveis; resultados refletem os filtros atuais.</p>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <p className="rounded-lg bg-gray-800 p-3 text-gray-300"><span className="block text-xs">Total visível</span><span className="text-2xl font-bold text-white">{summaryTotal}</span></p>
+              <p className="rounded-lg bg-gray-800 p-3 text-gray-300"><span className="block text-xs">Resultados</span><span className="text-2xl font-bold text-white">{totalCount}</span></p>
+              <p className="rounded-lg bg-gray-800 p-3 text-gray-300"><span className="block text-xs">● Abertos</span><span className="text-2xl font-bold text-green-400">{openCount}</span></p>
+              <p className="rounded-lg bg-gray-800 p-3 text-gray-300"><span className="block text-xs">◐ Em progresso</span><span className="text-2xl font-bold text-yellow-300">{inProgressCount}</span></p>
+              <p className="col-span-2 rounded-lg bg-gray-800 p-3 text-gray-300"><span className="block text-xs">✓ Fechados</span><span className="text-2xl font-bold text-gray-200">{closedCount}</span></p>
             </div>
           </div>
 

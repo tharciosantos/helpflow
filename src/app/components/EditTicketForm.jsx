@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-export default function EditTicketForm({ ticket, onTicketUpdated }) {
+export default function EditTicketForm({ ticket, onTicketUpdated, isAgent = false }) {
     // Inicializa cada estado com o valor atual do ticket
     // Assim o formulário já abre preenchido com os dados existentes
     const [title, setTitle] = useState(ticket.title);
@@ -23,8 +23,9 @@ export default function EditTicketForm({ ticket, onTicketUpdated }) {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                // Envia os 4 campos — a API e o Zod aceitam todos
-                body: JSON.stringify({ title, description, status, priority }),
+                body: JSON.stringify(isAgent
+                    ? { title, description, status, priority }
+                    : { title, description }),
             });
 
             if (!res.ok) {
@@ -45,7 +46,7 @@ export default function EditTicketForm({ ticket, onTicketUpdated }) {
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
-            {error && <p className="text-red-500 text-sm">{error}</p>}
+            {error && <p role="alert" className="text-red-500 text-sm">{error}</p>}
 
             {/* TÍTULO */}
             <div>
@@ -56,6 +57,7 @@ export default function EditTicketForm({ ticket, onTicketUpdated }) {
                     data-cy="ticket-edit-title"
                     type="text"
                     id="title"
+                    name="title"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
@@ -71,6 +73,7 @@ export default function EditTicketForm({ ticket, onTicketUpdated }) {
                 <textarea
                     data-cy="ticket-edit-description"
                     id="description"
+                    name="description"
                     rows="4"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
@@ -80,7 +83,7 @@ export default function EditTicketForm({ ticket, onTicketUpdated }) {
             </div>
 
             {/* STATUS + PRIORIDADE lado a lado em telas maiores */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {isAgent && <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label htmlFor="status" className="block text-sm font-medium text-gray-300">
                         Status
@@ -115,7 +118,7 @@ export default function EditTicketForm({ ticket, onTicketUpdated }) {
                         <option value="URGENT">🔴 Urgente</option>
                     </select>
                 </div>
-            </div>
+            </div>}
 
             <div className="flex justify-end">
                 <button

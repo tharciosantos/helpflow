@@ -16,10 +16,14 @@ export default function TicketDetailsPage() {
     const [error, setError] = useState('');
     const [newStatus, setNewStatus] = useState('OPEN');
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isUpdating, setIsUpdating] = useState(false);
+    const [success, setSuccess] = useState('');
 
     const fetchTicket = useCallback(async () => {
         setLoading(true);
         setError('');
+        setSuccess('');
+        setIsUpdating(true);
         try {
             const res = await fetch(`/api/tickets/${id}`);
             if (!res.ok) {
@@ -64,9 +68,12 @@ export default function TicketDetailsPage() {
             const updated = await res.json();
             setTicket(updated);
             setNewStatus(updated.status);
+            setSuccess('Status atualizado com sucesso.');
         } catch (err) {
             console.error('Erro ao atualizar status:', err);
             setError(err.message || 'Erro ao atualizar status');
+        } finally {
+            setIsUpdating(false);
         }
     };
 
@@ -92,7 +99,16 @@ export default function TicketDetailsPage() {
     };
 
     if (loading || sessionStatus === 'loading') {
-        return <div className="p-8 text-white text-center">Carregando...</div>;
+        return (
+            <main aria-label="Carregando detalhes do ticket" aria-busy="true" className="mx-auto max-w-4xl p-8">
+                <div className="animate-pulse rounded-xl bg-gray-800 p-6">
+                    <div className="h-8 w-2/3 rounded bg-gray-700" />
+                    <div className="mt-8 h-4 w-full rounded bg-gray-700" />
+                    <div className="mt-3 h-4 w-4/5 rounded bg-gray-700" />
+                    <div className="mt-8 h-4 w-1/2 rounded bg-gray-700" />
+                </div>
+            </main>
+        );
     }
 
     if (error && !isDeleting) {
@@ -131,29 +147,36 @@ export default function TicketDetailsPage() {
                     </div>
                     <div className="border-t border-gray-700 my-4"></div>
                     <p className="text-gray-300 whitespace-pre-wrap">{ticket.description}</p>
-                    <div className="mt-6 flex justify-between text-sm text-gray-500">
+                    <div className="mt-6 flex flex-col gap-2 text-sm text-gray-400 sm:flex-row sm:justify-between">
                         <span>Criado por: {ticket.author?.name || 'Desconhecido'}</span>
                         <span>Em: {new Date(ticket.createdAt).toLocaleString()}</span>
+                    </div>
+                    <div className="mt-2 flex flex-col gap-2 text-sm text-gray-400 sm:flex-row sm:justify-between">
+                        <span>Responsável: {ticket.agent?.name || ticket.agent?.email || 'Não atribuído'}</span>
+                        <span>Atualizado em: {new Date(ticket.updatedAt).toLocaleString()}</span>
                     </div>
                 </div>
 
                 {(session?.user?.role === 'AGENT' || session?.user?.id === ticket.authorId) && (
                     <div className="mt-6 p-6 bg-gray-800 rounded-lg shadow-md">
-                        <h2 className="text-xl font-bold mb-4">Painel do Agente</h2>
+                        <h2 className="text-xl font-bold mb-4">Ações do ticket</h2>
                         <div className="flex flex-wrap items-center gap-4">
-                            <div className="flex items-center gap-2">
+                            {session?.user?.role === 'AGENT' && <div className="flex items-end gap-2">
+                                <label className="flex flex-col gap-1 text-sm text-gray-300">Status
                                 <select
                                     data-cy="ticket-detail-status"
                                     value={newStatus}
                                     onChange={(e) => setNewStatus(e.target.value)}
                                     className="bg-gray-700 border border-gray-600 rounded-md py-2 px-3 text-white focus:outline-none"
+                                    disabled={isUpdating}
                                 >
                                     <option value="OPEN">Aberto</option>
                                     <option value="IN_PROGRESS">Em Progresso</option>
                                     <option value="CLOSED">Fechado</option>
                                 </select>
-                                <button data-cy="ticket-detail-status-submit" onClick={handleStatusUpdate} className="py-2 px-4 bg-teal-600 hover:bg-teal-700 rounded-md font-semibold">Atualizar Status</button>
-                            </div>
+                                </label>
+                                <button disabled={isUpdating} data-cy="ticket-detail-status-submit" onClick={handleStatusUpdate} className="py-2 px-4 bg-teal-600 hover:bg-teal-700 rounded-md font-semibold disabled:opacity-50">{isUpdating ? 'Atualizando...' : 'Atualizar status'}</button>
+                            </div>}
 
                             <button
                                 data-cy="ticket-detail-delete"
@@ -164,7 +187,8 @@ export default function TicketDetailsPage() {
                                 {isDeleting ? 'Deletando...' : 'Deletar Ticket'}
                             </button>
                         </div>
-                        {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+                        {error && <p role="alert" className="text-red-500 text-sm mt-2">{error}</p>}
+                        {success && <p role="status" className="text-teal-300 text-sm mt-2">{success}</p>}
                     </div>
                 )}
             </div>

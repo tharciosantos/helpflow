@@ -19,6 +19,8 @@ O projeto também tem como foco o aprendizado de autenticação, autorização n
 - **Aplicação em produção:** [https://helpflow.vercel.app/](https://helpflow.vercel.app/)
 - **Repositório:** [https://github.com/tharciosantos/helpflow](https://github.com/tharciosantos/helpflow)
 
+A página pública apresenta os fluxos de `CLIENT` e `AGENT`. Para evitar credenciais compartilhadas, acesso administrativo indevido e mistura de dados, cada visitante pode criar sua própria conta `CLIENT` e usar dados fictícios. O projeto não fornece uma conta `AGENT` pública. Dados de demonstração podem ser removidos pelo próprio autor usando a exclusão normal do ticket; não há limpeza direta no banco.
+
 ### Dashboard
 
 ![Dashboard do HelpFlow](public/screenshot.PNG)
@@ -52,9 +54,23 @@ O projeto também tem como foco o aprendizado de autenticação, autorização n
 
 - Controle de acesso baseado nos perfis `CLIENT` e `AGENT`.
 - Validação de autenticação, perfil e propriedade do ticket nas rotas da API.
-- Usuários `CLIENT` podem criar tickets, visualizar os próprios chamados e editar ou excluir os tickets que abriram.
-- Usuários `AGENT` podem visualizar e gerenciar todos os tickets.
+- Usuários `CLIENT` podem criar tickets, visualizar os próprios chamados, editar título e descrição e excluir os tickets que abriram.
+- Usuários `CLIENT` não podem alterar status, prioridade ou responsável, inclusive por requisições manipuladas diretamente contra a API.
+- Usuários `AGENT` podem visualizar todos os tickets e gerenciar conteúdo, status, prioridade, responsável e exclusão.
 - Novos usuários cadastrados recebem o perfil `CLIENT` por padrão.
+
+#### Matriz de permissões
+
+| Operação | CLIENT proprietário | CLIENT não proprietário | AGENT |
+| --- | --- | --- | --- |
+| Criar ticket | Sim | Sim | Sim |
+| Listar/visualizar | Próprios | Não | Todos |
+| Editar título/descrição | Sim | Não | Sim |
+| Alterar status/prioridade | Não | Não | Sim |
+| Atribuir responsável | Não | Não | Sim |
+| Excluir | Sim | Não | Sim |
+
+As decisões são aplicadas nas rotas da API; ocultar controles na interface é apenas uma camada adicional de experiência.
 
 ### Gestão de tickets
 
@@ -265,7 +281,24 @@ Os testes E2E verificam:
 - Acesso básico dos perfis `CLIENT` e `AGENT` à listagem de tickets.
 - Proteção das rotas da API contra requisições sem sessão.
 
-> As regras de RBAC são aplicadas pelas rotas da API, mas a suíte E2E atual ainda não cobre todos os cenários de autorização entre usuários diferentes, como um `CLIENT` tentar consultar, editar ou excluir o ticket de outro usuário.
+> As regras de RBAC são aplicadas pelas rotas da API. A suíte E2E cobre o bloqueio de leitura, edição e exclusão entre dois clientes, além da tentativa manipulada de um proprietário alterar o status.
+
+Os testes unitários também cobrem a matriz de autorização, os campos administrativos bloqueados para `CLIENT` e a atribuição de `CLIENT` por padrão no cadastro público. A ampliação futura deve cobrir todas as operações administrativas do agente em cenários cruzados.
+
+## Decisões desta revisão
+
+- Nome passou a ser obrigatório no cadastro por credenciais porque identifica autoria, saudação e atendimento; o campo permanece opcional no banco para compatibilidade com OAuth e registros existentes.
+- Status, prioridade e atribuição são administrativos e exclusivos de `AGENT`. Clientes proprietários continuam podendo corrigir título e descrição e excluir o próprio ticket.
+- A demonstração usa apresentação pública e contas individuais, sem credenciais compartilhadas ou seed misturado ao banco real.
+- Resumos de status representam todo o conjunto visível ao usuário; “Resultados” representa apenas o filtro atual.
+- Skeletons, mensagens anunciáveis, foco visível e redução de movimento foram adicionados sem novas dependências.
+
+## Limitações conhecidas
+
+- O rate limiter em memória não é compartilhado entre instâncias serverless.
+- Não há ambiente demo descartável nem restauração automática; uma versão futura pode usar banco isolado e reset agendado.
+- A criação de usuários `AGENT` permanece restrita ao fluxo de testes protegido por segredo; não existe painel público de promoção de papel.
+- A suíte E2E ainda depende de banco configurado e não cobre todas as combinações administrativas de agente em execução headless.
 
 Os usuários de teste são criados pela rota `/api/register`. Os cenários que criam um usuário `AGENT` exigem que `CYPRESS_TEST_SECRET` esteja configurado com o mesmo valor no servidor e no ambiente do Cypress.
 
