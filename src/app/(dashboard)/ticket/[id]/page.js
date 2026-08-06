@@ -23,7 +23,6 @@ export default function TicketDetailsPage() {
         setLoading(true);
         setError('');
         setSuccess('');
-        setIsUpdating(true);
         try {
             const res = await fetch(`/api/tickets/${id}`);
             if (!res.ok) {
@@ -51,6 +50,8 @@ export default function TicketDetailsPage() {
             return setError('Selecione um status válido');
         }
         setError('');
+        setSuccess('');
+        setIsUpdating(true);
         try {
             const res = await fetch(`/api/tickets/${id}`, {
                 method: 'PATCH',
@@ -111,7 +112,7 @@ export default function TicketDetailsPage() {
         );
     }
 
-    if (error && !isDeleting) {
+    if (error && !ticket && !isDeleting) {
         return <div className="p-8 text-red-400 text-center">{error}</div>;
     }
 
@@ -160,7 +161,7 @@ export default function TicketDetailsPage() {
                 {(session?.user?.role === 'AGENT' || session?.user?.id === ticket.authorId) && (
                     <div className="mt-6 p-6 bg-gray-800 rounded-lg shadow-md">
                         <h2 className="text-xl font-bold mb-4">Ações do ticket</h2>
-                        <div className="flex flex-wrap items-center gap-4">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                             {session?.user?.role === 'AGENT' && <div className="flex items-end gap-2">
                                 <label className="flex flex-col gap-1 text-sm text-gray-300">Status
                                 <select
@@ -175,14 +176,14 @@ export default function TicketDetailsPage() {
                                     <option value="CLOSED">Fechado</option>
                                 </select>
                                 </label>
-                                <button disabled={isUpdating} data-cy="ticket-detail-status-submit" onClick={handleStatusUpdate} className="py-2 px-4 bg-teal-600 hover:bg-teal-700 rounded-md font-semibold disabled:opacity-50">{isUpdating ? 'Atualizando...' : 'Atualizar status'}</button>
+                                <button disabled={isUpdating} data-cy="ticket-detail-status-submit" onClick={handleStatusUpdate} className="h-10 rounded-md bg-teal-600 px-4 font-semibold hover:bg-teal-700 disabled:cursor-wait disabled:opacity-50">{isUpdating ? 'Atualizando...' : 'Atualizar status'}</button>
                             </div>}
 
                             <button
                                 data-cy="ticket-detail-delete"
                                 onClick={handleDeleteTicket}
                                 disabled={isDeleting}
-                                className={`py-2 px-4 rounded-md font-semibold ${isDeleting ? 'bg-gray-600 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'}`}
+                                className={`h-10 self-start rounded-md px-4 font-semibold sm:self-end ${isDeleting ? 'bg-gray-600 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'}`}
                             >
                                 {isDeleting ? 'Deletando...' : 'Deletar Ticket'}
                             </button>

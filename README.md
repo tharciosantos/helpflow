@@ -21,17 +21,25 @@ O projeto também tem como foco o aprendizado de autenticação, autorização n
 
 A página pública apresenta os fluxos de `CLIENT` e `AGENT`. Para evitar credenciais compartilhadas, acesso administrativo indevido e mistura de dados, cada visitante pode criar sua própria conta `CLIENT` e usar dados fictícios. O projeto não fornece uma conta `AGENT` pública. Dados de demonstração podem ser removidos pelo próprio autor usando a exclusão normal do ticket; não há limpeza direta no banco.
 
-### Dashboard
+### Apresentação pública
 
-![Dashboard do HelpFlow](public/screenshot.PNG)
+![Apresentação pública do HelpFlow](docs/screenshots/home-demonstracao.png)
 
-### Criação de ticket
+### Tela de login
 
-![Formulário de criação de ticket](public/create-ticket.PNG)
+![Tela de login responsiva do HelpFlow](docs/screenshots/login-mobile.png)
 
-### Detalhes do ticket
+### Dashboard do cliente
 
-![Tela de detalhes do ticket](public/detail-ticket.PNG)
+![Dashboard do cliente com ticket](docs/screenshots/dashboard-client-com-ticket.png)
+
+### Dashboard do agente
+
+![Dashboard do agente](docs/screenshots/dashboard-agent.png)
+
+### Detalhes e ações do ticket
+
+![Detalhes do ticket para agente](docs/screenshots/detalhe-ticket-agent.png)
 
 ## Funcionalidades implementadas
 
