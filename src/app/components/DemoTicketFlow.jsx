@@ -7,24 +7,23 @@ import {
     stagger,
     utils,
 } from "animejs";
+import {
+    DEMO_TICKET_STATUS_SEQUENCE,
+    getDemoInitialStep,
+} from "@/lib/demoTicketFlow";
+import {
+    getStatusBadgeClasses,
+    getStatusDisplayNamePT,
+} from "@/lib/ticketUtils";
 
-const statuses = [
-    {
-        label: "Aberto",
-        badgeClasses: "bg-emerald-500/15 text-emerald-300",
-    },
-    {
-        label: "Em progresso",
-        badgeClasses: "bg-amber-500/15 text-amber-300",
-    },
-    {
-        label: "Resolvido",
-        badgeClasses: "bg-teal-500/15 text-teal-300",
-    },
-];
+const statuses = DEMO_TICKET_STATUS_SEQUENCE.map((status) => ({
+    code: status,
+    label: getStatusDisplayNamePT(status),
+    badgeClasses: getStatusBadgeClasses(status),
+}));
 
 export default function DemoTicketFlow() {
-    const [currentStep, setCurrentStep] = useState(0);
+    const [currentStep, setCurrentStep] = useState(() => getDemoInitialStep(false));
     const rootRef = useRef(null);
 
     useLayoutEffect(() => {
@@ -33,6 +32,7 @@ export default function DemoTicketFlow() {
         ).matches;
 
         if (prefersReducedMotion) {
+            setCurrentStep(getDemoInitialStep(true));
             return undefined;
         }
 
@@ -89,7 +89,10 @@ export default function DemoTicketFlow() {
             className="relative mx-auto w-full max-w-md"
             aria-labelledby="demo-ticket-title"
         >
-            <div className="absolute -inset-6 rounded-full bg-teal-500/10 blur-3xl" />
+            <div
+                className="absolute -inset-6 rounded-full bg-teal-500/10 blur-3xl"
+                aria-hidden="true"
+            />
 
             <div
                 data-ticket-card
@@ -112,6 +115,9 @@ export default function DemoTicketFlow() {
                     <span
                         data-ticket-badge
                         className={`rounded-full px-3 py-1 text-sm font-semibold transition-colors duration-300 ${statuses[currentStep].badgeClasses}`}
+                        role="status"
+                        aria-live="polite"
+                        aria-atomic="true"
                     >
                         {statuses[currentStep].label}
                     </span>
@@ -133,8 +139,9 @@ export default function DemoTicketFlow() {
 
                             return (
                                 <li
-                                    key={status.label}
+                                    key={status.code}
                                     data-flow-step
+                                    aria-current={isCurrent ? "step" : undefined}
                                     className={`flex items-center gap-3 text-sm transition-colors duration-300 ${isCurrent || isCompleted
                                         ? "text-slate-200"
                                         : "text-slate-400"
@@ -149,7 +156,16 @@ export default function DemoTicketFlow() {
                                             }`}
                                     />
 
-                                    <span>{status.label}</span>
+                                    <span>
+                                        <span className="sr-only">
+                                            {isCurrent
+                                                ? "Etapa atual: "
+                                                : isCompleted
+                                                    ? "Etapa concluída: "
+                                                    : "Próxima etapa: "}
+                                        </span>
+                                        {status.label}
+                                    </span>
                                 </li>
                             );
                         })}
