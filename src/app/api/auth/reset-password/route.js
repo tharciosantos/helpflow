@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import prisma from '@/lib/prisma';
+import {
+    PasswordResetUnavailableError,
+    updatePasswordWithResetToken,
+} from '@/lib/passwordReset';
 import { resetPasswordSchema } from '@/lib/schemas';
 
 export async function POST(req) {
@@ -35,20 +39,22 @@ export async function POST(req) {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // Transação garante que ambas as operações ocorram juntas
-        await prisma.$transaction([
-            prisma.user.update({
-                where: { id: passwordReset.userId },
-                data: { password_hash: hashedPassword },
-            }),
-            prisma.passwordReset.update({
-                where: { id: passwordReset.id },
-                data: { used: true },
-            }),
-        ]);
+        await updatePasswordWithResetToken({
+            prisma,
+            passwordReset,
+            hashedPassword,
+        });
 
         return NextResponse.json({ message: 'Senha redefinida com sucesso.' });
 
     } catch (error) {
+        if (error instanceof PasswordResetUnavailableError) {
+            return NextResponse.json(
+                { message: 'Este token já foi utilizado ou expirou. Solicite um novo.' },
+                { status: 400 }
+            );
+        }
+
         return NextResponse.json({ message: 'Erro interno do servidor.' }, { status: 500 });
     }
 }

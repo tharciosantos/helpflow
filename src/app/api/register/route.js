@@ -59,6 +59,7 @@ export async function POST(req) {
             requestedRole: role,
             testSecret,
             configuredTestSecret: process.env.CYPRESS_TEST_SECRET,
+            environment: process.env.NODE_ENV,
         });
 
         const newUser = await prisma.user.create({

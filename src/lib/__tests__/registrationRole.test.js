@@ -12,11 +12,22 @@ describe('papel no cadastro', () => {
       requestedRole: 'AGENT',
       testSecret: 'correto',
       configuredTestSecret: 'correto',
+      environment: 'test',
     })).toBe('AGENT');
     expect(resolveRegistrationRole({
       requestedRole: 'AGENT',
       testSecret: 'errado',
       configuredTestSecret: 'correto',
+      environment: 'test',
+    })).toBe('CLIENT');
+  });
+
+  it('nunca permite criar AGENT em produção', () => {
+    expect(resolveRegistrationRole({
+      requestedRole: 'AGENT',
+      testSecret: 'correto',
+      configuredTestSecret: 'correto',
+      environment: 'production',
     })).toBe('CLIENT');
   });
 });
