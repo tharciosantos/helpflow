@@ -1,6 +1,12 @@
-export function resolveRegistrationRole({ requestedRole, testSecret, configuredTestSecret }) {
+export function resolveRegistrationRole({
+  requestedRole,
+  testSecret,
+  configuredTestSecret,
+  environment,
+}) {
   const canCreateAgent = Boolean(
-    configuredTestSecret
+    environment !== 'production'
+    && configuredTestSecret
     && testSecret === configuredTestSecret
     && requestedRole === 'AGENT'
   );
