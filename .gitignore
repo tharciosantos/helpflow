@@ -45,3 +45,6 @@ next-env.d.ts
 /src/generated/prisma
 
 /src/generated/prisma
+
+# documentos de trabalho pessoal
+/docs/Plano de Evolução Completo.md
