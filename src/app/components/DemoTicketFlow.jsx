@@ -24,7 +24,9 @@ const statuses = DEMO_TICKET_STATUS_SEQUENCE.map((status) => ({
 
 export default function DemoTicketFlow() {
     const [currentStep, setCurrentStep] = useState(0);
+    const [isPaused, setIsPaused] = useState(false);
     const rootRef = useRef(null);
+    const timelineRef = useRef(null);
 
     useEffect(() => {
         const scope = createScope({ root: rootRef }).add(() => {
@@ -104,10 +106,25 @@ export default function DemoTicketFlow() {
                 });
             }
             timeline.add({ val: 0 }, { val: 1, duration: 3000 });
+
+            // Armazenar referência da timeline
+            timelineRef.current = timeline;
         });
 
         return () => scope.revert();
     }, []);
+
+    // Função para pausar/retomar animação
+    const toggleAnimation = () => {
+        if (!timelineRef.current) return;
+
+        if (isPaused) {
+            timelineRef.current.play();
+        } else {
+            timelineRef.current.pause();
+        }
+        setIsPaused(!isPaused);
+    };
 
     return (
         <section
@@ -123,7 +140,17 @@ export default function DemoTicketFlow() {
 
             <div
                 data-ticket-card
-                className="relative overflow-hidden rounded-2xl border border-slate-700 bg-slate-900/95 p-6 shadow-2xl shadow-black/30"
+                onClick={toggleAnimation}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        toggleAnimation();
+                    }
+                }}
+                role="button"
+                tabIndex={0}
+                aria-label={isPaused ? "Clique para retomar animação" : "Clique para pausar animação"}
+                className="relative cursor-pointer overflow-hidden rounded-2xl border border-slate-700 bg-slate-900/95 p-6 shadow-2xl shadow-black/30 transition-shadow hover:shadow-teal-500/10"
             >
                 <div className="flex items-start justify-between gap-4">
                     <div>
@@ -206,6 +233,43 @@ export default function DemoTicketFlow() {
                     </span>
                 </div>
             </div>
+
+            {/* Controle de Animação */}
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    toggleAnimation();
+                }}
+                className="relative z-10 mx-auto mt-6 flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-800/80 px-4 py-2 text-sm font-medium text-slate-300 transition-all hover:border-teal-500/50 hover:bg-slate-800 hover:text-teal-300 focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:ring-offset-2 focus:ring-offset-slate-900"
+                aria-label={isPaused ? "Retomar animação" : "Pausar animação"}
+                aria-pressed={isPaused}
+            >
+                {isPaused ? (
+                    <>
+                        <svg
+                            className="h-4 w-4"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                            aria-hidden="true"
+                        >
+                            <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                        </svg>
+                        <span>Retomar</span>
+                    </>
+                ) : (
+                    <>
+                        <svg
+                            className="h-4 w-4"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                            aria-hidden="true"
+                        >
+                            <path d="M5.75 3a.75.75 0 00-.75.75v12.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75V3.75A.75.75 0 007.25 3h-1.5zM12.75 3a.75.75 0 00-.75.75v12.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75V3.75a.75.75 0 00-.75-.75h-1.5z" />
+                        </svg>
+                        <span>Pausar</span>
+                    </>
+                )}
+            </button>
         </section>
     );
 }
