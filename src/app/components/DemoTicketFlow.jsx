@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
     createScope,
     createTimeline,
@@ -23,61 +23,87 @@ const statuses = DEMO_TICKET_STATUS_SEQUENCE.map((status) => ({
 }));
 
 export default function DemoTicketFlow() {
-    const [currentStep, setCurrentStep] = useState(() => getDemoInitialStep(false));
+    const [currentStep, setCurrentStep] = useState(0);
     const rootRef = useRef(null);
 
-    useLayoutEffect(() => {
-        const prefersReducedMotion = window.matchMedia(
-            "(prefers-reduced-motion: reduce)",
-        ).matches;
-
-        if (prefersReducedMotion) {
-            setCurrentStep(getDemoInitialStep(true));
-            return undefined;
-        }
-
+    useEffect(() => {
         const scope = createScope({ root: rootRef }).add(() => {
-            const steps = rootRef.current.querySelectorAll("[data-flow-step]");
+            const steps = rootRef.current?.querySelectorAll("[data-flow-step]");
+            if (!steps || steps.length === 0) return;
 
             utils.set(steps, {
                 opacity: 0,
                 x: -12,
             });
 
-            const timeline = createTimeline({
-                defaults: {
-                    ease: "out(3)",
-                },
+            utils.set("[data-ticket-card]", {
+                opacity: 0,
+                y: 20,
+                scale: 0.97,
             });
 
+            const timeline = createTimeline({
+                defaults: {
+                    ease: "outQuart",
+                },
+                loop: true,
+                loopDelay: 2000,
+            });
+
+            // Entrada inicial do card e dos passos
             timeline
+                .call(() => {
+                    setCurrentStep(0);
+                }, 0)
                 .add("[data-ticket-card]", {
                     opacity: [0, 1],
-                    y: [24, 0],
-                    scale: [0.96, 1],
-                    duration: 850,
+                    y: [20, 0],
+                    scale: [0.97, 1],
+                    duration: 500,
                 })
                 .add(
                     steps,
                     {
-                        opacity: 1,
-                        x: 0,
-                        duration: 450,
-                        delay: stagger(140),
+                        opacity: [0, 1],
+                        x: [-12, 0],
+                        duration: 400,
+                        delay: stagger(100),
                     },
-                    "-=350",
+                    "-=300",
                 );
 
-            steps.forEach((step, index) => {
-                timeline.add(step, {
-                    scale: [1, 1.08, 1],
-                    duration: 420,
-                    delay: index === 0 ? 250 : 450,
-                    onBegin: () => {
-                        setCurrentStep(index);
-                    },
+            // Etapa 0: Aberto (destaque e pausa de 2.5s)
+            if (steps[0]) {
+                timeline.add(steps[0], {
+                    scale: [1, 1.05, 1],
+                    duration: 350,
                 });
+            }
+            timeline.add({ val: 0 }, { val: 1, duration: 1500 });
+
+            // Transição para Etapa 1: Em Progresso (destaque e pausa de 2.5s)
+            timeline.call(() => {
+                setCurrentStep(1);
             });
+            if (steps[1]) {
+                timeline.add(steps[1], {
+                    scale: [1, 1.05, 1],
+                    duration: 350,
+                });
+            }
+            timeline.add({ val: 0 }, { val: 1, duration: 1500 });
+
+            // Transição para Etapa 2: Fechado (destaque e pausa de 3s)
+            timeline.call(() => {
+                setCurrentStep(2);
+            });
+            if (steps[2]) {
+                timeline.add(steps[2], {
+                    scale: [1, 1.05, 1],
+                    duration: 350,
+                });
+            }
+            timeline.add({ val: 0 }, { val: 1, duration: 3000 });
         });
 
         return () => scope.revert();
@@ -86,6 +112,7 @@ export default function DemoTicketFlow() {
     return (
         <section
             ref={rootRef}
+            data-demo-flow
             className="relative mx-auto w-full max-w-md"
             aria-labelledby="demo-ticket-title"
         >
@@ -114,7 +141,7 @@ export default function DemoTicketFlow() {
 
                     <span
                         data-ticket-badge
-                        className={`rounded-full px-3 py-1 text-sm font-semibold transition-colors duration-300 ${statuses[currentStep].badgeClasses}`}
+                        className={`rounded-full px-3 py-1 text-sm font-semibold transition-all duration-500 ${statuses[currentStep].badgeClasses}`}
                         role="status"
                         aria-live="polite"
                         aria-atomic="true"
@@ -142,16 +169,16 @@ export default function DemoTicketFlow() {
                                     key={status.code}
                                     data-flow-step
                                     aria-current={isCurrent ? "step" : undefined}
-                                    className={`flex items-center gap-3 text-sm transition-colors duration-300 ${isCurrent || isCompleted
-                                        ? "text-slate-200"
-                                        : "text-slate-400"
+                                    className={`flex items-center gap-3 text-sm transition-all duration-500 ${isCurrent || isCompleted
+                                        ? "text-slate-200 font-medium"
+                                        : "text-slate-500"
                                         }`}
                                 >
                                     <span
-                                        className={`h-3 w-3 rounded-full transition-all duration-300 ${isCurrent
-                                            ? "bg-teal-400 ring-4 ring-teal-400/15"
+                                        className={`h-3 w-3 rounded-full transition-all duration-500 ${isCurrent
+                                            ? "bg-teal-400 ring-4 ring-teal-400/20 scale-110"
                                             : isCompleted
-                                                ? "bg-teal-700"
+                                                ? "bg-teal-600"
                                                 : "bg-slate-700"
                                             }`}
                                     />

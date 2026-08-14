@@ -40,7 +40,9 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *:not([data-demo-flow], [data-demo-flow] *),
+  *:not([data-demo-flow], [data-demo-flow] *)::before,
+  *:not([data-demo-flow], [data-demo-flow] *)::after {
     scroll-behavior: auto !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
