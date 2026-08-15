@@ -1,11 +1,20 @@
+"use client";
+
 import DemoTicketFlow from "./components/DemoTicketFlow";
 import ThemeToggle from "./components/ThemeToggle";
 import FeatureCard from "./components/FeatureCard";
+import { useTheme } from "./components/ThemeProvider";
 import Link from "next/link";
 
 export default function Home() {
+  const { theme } = useTheme();
+  
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-12 text-white dark:bg-slate-950 dark:text-white light:bg-slate-50 light:text-slate-900 sm:px-6 sm:py-16">
+    <main className={`min-h-screen px-4 py-12 sm:px-6 sm:py-16 ${
+      theme === "light" 
+        ? "bg-slate-50 text-slate-900" 
+        : "bg-slate-950 text-white"
+    }`}>
       {/* Header com Theme Toggle */}
       <div className="fixed right-4 top-4 z-50 sm:right-6 sm:top-6">
         <ThemeToggle />
@@ -15,7 +24,9 @@ export default function Home() {
         {/* Hero Section com animações */}
         <div className="grid items-center gap-10 sm:gap-12 lg:grid-cols-[1.15fr_0.85fr] lg:gap-14">
           <div>
-            <p className="fade-in text-sm font-semibold text-teal-300 dark:text-teal-300 light:text-teal-600 sm:text-base">
+            <p className={`fade-in text-sm font-semibold sm:text-base ${
+              theme === "light" ? "text-teal-600" : "text-teal-300"
+            }`}>
               HelpFlow · demonstração de produto
             </p>
 
@@ -23,7 +34,9 @@ export default function Home() {
               Suporte organizado, com cada pessoa vendo e fazendo apenas o que precisa.
             </h1>
 
-            <p className="fade-in-delay-2 mt-4 max-w-2xl text-base leading-7 text-slate-300 dark:text-slate-300 light:text-slate-600 sm:mt-6 sm:text-lg sm:leading-8">
+            <p className={`fade-in-delay-2 mt-4 max-w-2xl text-base leading-7 sm:mt-6 sm:text-lg sm:leading-8 ${
+              theme === "light" ? "text-slate-600" : "text-slate-300"
+            }`}>
               Conheça os principais fluxos com dados fictícios criados na sua
               própria conta. Nenhuma credencial compartilhada ou dado real é
               exposto nesta demonstração.
@@ -39,7 +52,11 @@ export default function Home() {
 
               <Link
                 href="/login"
-                className="rounded-lg border border-slate-600 px-5 py-3 text-center font-semibold transition-all hover:border-teal-400 hover:shadow-md dark:border-slate-600 dark:hover:border-teal-400 light:border-slate-300 light:hover:border-teal-500"
+                className={`rounded-lg border px-5 py-3 text-center font-semibold transition-all hover:shadow-md ${
+                  theme === "light"
+                    ? "border-slate-300 hover:border-teal-500"
+                    : "border-slate-600 hover:border-teal-400"
+                }`}
               >
                 Entrar
               </Link>
@@ -49,7 +66,7 @@ export default function Home() {
           
           {/* Demo Card */}
           <div className="fade-in-delay-2 mt-8 lg:mt-0">
-            <DemoTicketFlow />
+            <DemoTicketFlow theme={theme} />
           </div>
         </div>
 
@@ -59,12 +76,14 @@ export default function Home() {
             title="Fluxo de cliente"
             description="Abra e acompanhe seus próprios chamados, edite o conteúdo e veja responsável e andamento."
             delay={0}
+            theme={theme}
           />
 
           <FeatureCard
             title="Fluxo de agente"
             description="Triagem de todos os chamados, atualização de status, prioridade e atribuição de responsável."
             delay={100}
+            theme={theme}
           />
 
           <div className="md:col-span-2 lg:col-span-1">
@@ -72,6 +91,7 @@ export default function Home() {
               title="Segurança por padrão"
               description="Autorização validada no servidor, propriedade dos dados e respostas seguras para acessos indevidos."
               delay={200}
+              theme={theme}
             />
           </div>
         </div>
