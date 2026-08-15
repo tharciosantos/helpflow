@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { useTheme } from './ThemeProvider';
 
 export default function EditTicketForm({ ticket, onTicketUpdated, isAgent = false }) {
+    const { theme } = useTheme();
     // Inicializa cada estado com o valor atual do ticket
     // Assim o formulário já abre preenchido com os dados existentes
     const [title, setTitle] = useState(ticket.title);
@@ -46,11 +48,13 @@ export default function EditTicketForm({ ticket, onTicketUpdated, isAgent = fals
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
-            {error && <p role="alert" className="text-red-500 text-sm">{error}</p>}
+            {error && <p role="alert" className={`text-sm ${theme === 'light' ? 'text-red-600' : 'text-red-500'}`}>{error}</p>}
 
             {/* TÍTULO */}
             <div>
-                <label htmlFor="title" className="block text-sm font-medium text-gray-300">
+                <label htmlFor="title" className={`block text-sm font-medium ${
+                    theme === 'light' ? 'text-slate-700' : 'text-gray-300'
+                }`}>
                     Título
                 </label>
                 <input
@@ -60,14 +64,20 @@ export default function EditTicketForm({ ticket, onTicketUpdated, isAgent = fals
                     name="title"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
+                    className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm ${
+                        theme === 'light'
+                            ? 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'
+                            : 'bg-gray-700 border-gray-600 text-white'
+                    }`}
                     required
                 />
             </div>
 
             {/* DESCRIÇÃO */}
             <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-300">
+                <label htmlFor="description" className={`block text-sm font-medium ${
+                    theme === 'light' ? 'text-slate-700' : 'text-gray-300'
+                }`}>
                     Descrição
                 </label>
                 <textarea
@@ -77,7 +87,11 @@ export default function EditTicketForm({ ticket, onTicketUpdated, isAgent = fals
                     rows="4"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
+                    className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm ${
+                        theme === 'light'
+                            ? 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'
+                            : 'bg-gray-700 border-gray-600 text-white'
+                    }`}
                     required
                 ></textarea>
             </div>
@@ -85,7 +99,9 @@ export default function EditTicketForm({ ticket, onTicketUpdated, isAgent = fals
             {/* STATUS + PRIORIDADE lado a lado em telas maiores */}
             {isAgent && <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label htmlFor="status" className="block text-sm font-medium text-gray-300">
+                    <label htmlFor="status" className={`block text-sm font-medium ${
+                        theme === 'light' ? 'text-slate-700' : 'text-gray-300'
+                    }`}>
                         Status
                     </label>
                     <select
@@ -93,7 +109,11 @@ export default function EditTicketForm({ ticket, onTicketUpdated, isAgent = fals
                         id="status"
                         value={status}
                         onChange={(e) => setStatus(e.target.value)}
-                        className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
+                        className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm ${
+                            theme === 'light'
+                                ? 'bg-white border-slate-300 text-slate-900'
+                                : 'bg-gray-700 border-gray-600 text-white'
+                        }`}
                     >
                         <option value="OPEN">Aberto</option>
                         <option value="IN_PROGRESS">Em Progresso</option>
@@ -102,7 +122,9 @@ export default function EditTicketForm({ ticket, onTicketUpdated, isAgent = fals
                 </div>
 
                 <div>
-                    <label htmlFor="priority" className="block text-sm font-medium text-gray-300">
+                    <label htmlFor="priority" className={`block text-sm font-medium ${
+                        theme === 'light' ? 'text-slate-700' : 'text-gray-300'
+                    }`}>
                         Prioridade
                     </label>
                     <select
@@ -110,7 +132,11 @@ export default function EditTicketForm({ ticket, onTicketUpdated, isAgent = fals
                         id="priority"
                         value={priority}
                         onChange={(e) => setPriority(e.target.value)}
-                        className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
+                        className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm ${
+                            theme === 'light'
+                                ? 'bg-white border-slate-300 text-slate-900'
+                                : 'bg-gray-700 border-gray-600 text-white'
+                        }`}
                     >
                         <option value="LOW">🟢 Baixa</option>
                         <option value="MEDIUM">🟡 Média</option>
