@@ -4,9 +4,11 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useSession } from "next-auth/react";
 import TicketList from "../../components/TicketList";
+import { useTheme } from "../../components/ThemeProvider";
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
+  const { theme } = useTheme();
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -109,10 +111,14 @@ export default function DashboardPage() {
       {/* Cabeçalho / boas-vindas */}
       <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-white">
+          <h1 className={`text-3xl md:text-4xl font-bold ${
+            theme === 'light' ? 'text-slate-900' : 'text-white'
+          }`}>
             Olá, {session?.user?.name || 'bem-vindo(a)'} 👋
           </h1>
-          <p className="mt-2 text-gray-400 text-sm md:text-base">
+          <p className={`mt-2 text-sm md:text-base ${
+            theme === 'light' ? 'text-slate-600' : 'text-gray-400'
+          }`}>
             Organize e acompanhe os tickets do seu suporte em um só lugar.
           </p>
         </div>
@@ -126,29 +132,61 @@ export default function DashboardPage() {
         </Link>
       </header>
 
-      <form onSubmit={applyFilters} className="grid gap-3 rounded-xl border border-gray-800 bg-gray-900/60 p-4 md:grid-cols-[minmax(0,1fr)_180px_180px_auto_auto] md:items-end">
-        <label className="flex flex-col gap-1 text-sm text-gray-300">
+      <form onSubmit={applyFilters} className={`grid gap-3 rounded-xl border p-4 md:grid-cols-[minmax(0,1fr)_180px_180px_auto_auto] md:items-end ${
+        theme === 'light'
+          ? 'bg-white border-slate-200 shadow-sm'
+          : 'border-gray-800 bg-gray-900/60'
+      }`}>
+        <label className={`flex flex-col gap-1 text-sm ${
+          theme === 'light' ? 'text-slate-700' : 'text-gray-300'
+        }`}>
           Buscar tickets
           <input
             data-cy="ticket-filter-search"
             value={filters.search}
             onChange={(event) => setFilters(prev => ({ ...prev, search: event.target.value }))}
             placeholder="Título ou descrição"
-            className="rounded-md border border-gray-700 bg-gray-800 px-3 py-2 text-white placeholder:text-gray-500 focus:border-teal-400 focus:outline-none"
+            className={`rounded-md border px-3 py-2 focus:outline-none ${
+              theme === 'light'
+                ? 'border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:border-teal-500'
+                : 'border-gray-700 bg-gray-800 text-white placeholder:text-gray-500 focus:border-teal-400'
+            }`}
           />
         </label>
-        <label className="flex flex-col gap-1 text-sm text-gray-300">
+        <label className={`flex flex-col gap-1 text-sm ${
+          theme === 'light' ? 'text-slate-700' : 'text-gray-300'
+        }`}>
           Status
-          <select data-cy="ticket-filter-status" value={filters.status} onChange={(event) => setFilters(prev => ({ ...prev, status: event.target.value }))} className="rounded-md border border-gray-700 bg-gray-800 px-3 py-2 text-white focus:border-teal-400 focus:outline-none">
+          <select 
+            data-cy="ticket-filter-status" 
+            value={filters.status} 
+            onChange={(event) => setFilters(prev => ({ ...prev, status: event.target.value }))} 
+            className={`rounded-md border px-3 py-2 focus:outline-none ${
+              theme === 'light'
+                ? 'border-slate-300 bg-white text-slate-900 focus:border-teal-500'
+                : 'border-gray-700 bg-gray-800 text-white focus:border-teal-400'
+            }`}
+          >
             <option value="">Todos</option>
             <option value="OPEN">Aberto</option>
             <option value="IN_PROGRESS">Em progresso</option>
             <option value="CLOSED">Fechado</option>
           </select>
         </label>
-        <label className="flex flex-col gap-1 text-sm text-gray-300">
+        <label className={`flex flex-col gap-1 text-sm ${
+          theme === 'light' ? 'text-slate-700' : 'text-gray-300'
+        }`}>
           Prioridade
-          <select data-cy="ticket-filter-priority" value={filters.priority} onChange={(event) => setFilters(prev => ({ ...prev, priority: event.target.value }))} className="rounded-md border border-gray-700 bg-gray-800 px-3 py-2 text-white focus:border-teal-400 focus:outline-none">
+          <select 
+            data-cy="ticket-filter-priority" 
+            value={filters.priority} 
+            onChange={(event) => setFilters(prev => ({ ...prev, priority: event.target.value }))} 
+            className={`rounded-md border px-3 py-2 focus:outline-none ${
+              theme === 'light'
+                ? 'border-slate-300 bg-white text-slate-900 focus:border-teal-500'
+                : 'border-gray-700 bg-gray-800 text-white focus:border-teal-400'
+            }`}
+          >
             <option value="">Todas</option>
             <option value="LOW">Baixa</option>
             <option value="MEDIUM">Média</option>
@@ -157,14 +195,20 @@ export default function DashboardPage() {
           </select>
         </label>
         <button data-cy="ticket-filter-submit" type="submit" className="rounded-md bg-teal-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-400">Filtrar</button>
-        <button data-cy="ticket-filter-clear" type="button" onClick={clearFilters} className="rounded-md px-3 py-2 text-sm text-gray-300 transition hover:bg-gray-800 hover:text-white">Limpar</button>
+        <button data-cy="ticket-filter-clear" type="button" onClick={clearFilters} className={`rounded-md px-3 py-2 text-sm transition ${
+          theme === 'light' ? 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+        }`}>Limpar</button>
       </form>
 
       {/* Resumo rápido + lista */}
       <section className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(260px,1fr)]">
         {/* Lista de tickets + controles de paginação */}
         <div className="flex flex-col gap-4">
-          <div className="bg-gray-900/60 border border-gray-800 rounded-xl p-4 md:p-6 shadow-lg">
+          <div className={`rounded-xl border p-4 md:p-6 shadow-lg ${
+            theme === 'light'
+              ? 'bg-white border-slate-200'
+              : 'border-gray-800 bg-gray-900/60'
+          }`}>
             <TicketList
               tickets={tickets}
               loading={loading}
@@ -184,18 +228,28 @@ export default function DashboardPage() {
                 data-cy="pagination-prev"
                 onClick={() => fetchTickets(currentPage - 1, filters)}
                 disabled={currentPage === 1}
-                className="px-4 py-2 rounded-md bg-gray-700 text-white text-sm disabled:opacity-40 hover:bg-gray-600 transition"
+                className={`px-4 py-2 rounded-md text-sm transition disabled:opacity-40 ${
+                  theme === 'light'
+                    ? 'bg-slate-200 text-slate-800 hover:bg-slate-300'
+                    : 'bg-gray-700 text-white hover:bg-gray-600'
+                }`}
               >
                 ← Anterior
               </button>
-              <span className="text-sm text-gray-400">
+              <span className={`text-sm ${
+                theme === 'light' ? 'text-slate-600' : 'text-gray-400'
+              }`}>
                 Página {currentPage} de {totalPages}
               </span>
               <button
                 data-cy="pagination-next"
                 onClick={() => fetchTickets(currentPage + 1, filters)}
                 disabled={currentPage === totalPages}
-                className="px-4 py-2 rounded-md bg-gray-700 text-white text-sm disabled:opacity-40 hover:bg-gray-600 transition"
+                className={`px-4 py-2 rounded-md text-sm transition disabled:opacity-40 ${
+                  theme === 'light'
+                    ? 'bg-slate-200 text-slate-800 hover:bg-slate-300'
+                    : 'bg-gray-700 text-white hover:bg-gray-600'
+                }`}
               >
                 Próxima →
               </button>
@@ -205,22 +259,46 @@ export default function DashboardPage() {
 
         {/* Painel lateral com resumo e dicas */}
         <aside className="space-y-4">
-          <div className="rounded-xl border border-gray-800 bg-gray-900/80 p-4 shadow-md">
-            <h2 className="text-sm font-semibold text-gray-200 mb-3">
+          <div className={`rounded-xl border p-4 shadow-md ${
+            theme === 'light' ? 'bg-white border-slate-200' : 'border-gray-800 bg-gray-900/80'
+          }`}>
+            <h2 className={`text-sm font-semibold mb-3 ${
+              theme === 'light' ? 'text-slate-900' : 'text-gray-200'
+            }`}>
               Resumo geral
             </h2>
-            <p className="mb-3 text-xs text-gray-500">Os status consideram todos os tickets visíveis; resultados refletem os filtros atuais.</p>
+            <p className={`mb-3 text-xs ${theme === 'light' ? 'text-slate-500' : 'text-gray-500'}`}>Os status consideram todos os tickets visíveis; resultados refletem os filtros atuais.</p>
             <div className="grid grid-cols-2 gap-2 text-sm">
-              <p className="rounded-lg bg-gray-800 p-3 text-gray-300"><span className="block text-xs">Total visível</span><span className="text-2xl font-bold text-white">{summaryTotal}</span></p>
-              <p className="rounded-lg bg-gray-800 p-3 text-gray-300"><span className="block text-xs">Resultados</span><span className="text-2xl font-bold text-white">{totalCount}</span></p>
-              <p className="rounded-lg bg-gray-800 p-3 text-gray-300"><span className="block text-xs">● Abertos</span><span className="text-2xl font-bold text-green-400">{openCount}</span></p>
-              <p className="rounded-lg bg-gray-800 p-3 text-gray-300"><span className="block text-xs">◐ Em progresso</span><span className="text-2xl font-bold text-yellow-300">{inProgressCount}</span></p>
-              <p className="col-span-2 rounded-lg bg-gray-800 p-3 text-gray-300"><span className="block text-xs">✓ Fechados</span><span className="text-2xl font-bold text-gray-200">{closedCount}</span></p>
+              <p className={`rounded-lg p-3 ${
+                theme === 'light' ? 'bg-slate-50 text-slate-700 border border-slate-200' : 'bg-gray-800 text-gray-300'
+              }`}><span className="block text-xs">Total visível</span><span className={`text-2xl font-bold ${
+                theme === 'light' ? 'text-slate-900' : 'text-white'
+              }`}>{summaryTotal}</span></p>
+              <p className={`rounded-lg p-3 ${
+                theme === 'light' ? 'bg-slate-50 text-slate-700 border border-slate-200' : 'bg-gray-800 text-gray-300'
+              }`}><span className="block text-xs">Resultados</span><span className={`text-2xl font-bold ${
+                theme === 'light' ? 'text-slate-900' : 'text-white'
+              }`}>{totalCount}</span></p>
+              <p className={`rounded-lg p-3 ${
+                theme === 'light' ? 'bg-slate-50 text-slate-700 border border-slate-200' : 'bg-gray-800 text-gray-300'
+              }`}><span className="block text-xs">● Abertos</span><span className="text-2xl font-bold text-teal-600 dark:text-green-400">{openCount}</span></p>
+              <p className={`rounded-lg p-3 ${
+                theme === 'light' ? 'bg-slate-50 text-slate-700 border border-slate-200' : 'bg-gray-800 text-gray-300'
+              }`}><span className="block text-xs">◐ Em progresso</span><span className="text-2xl font-bold text-amber-500 dark:text-yellow-300">{inProgressCount}</span></p>
+              <p className={`col-span-2 rounded-lg p-3 ${
+                theme === 'light' ? 'bg-slate-50 text-slate-700 border border-slate-200' : 'bg-gray-800 text-gray-300'
+              }`}><span className="block text-xs">✓ Fechados</span><span className={`text-2xl font-bold ${
+                theme === 'light' ? 'text-slate-900' : 'text-gray-200'
+              }`}>{closedCount}</span></p>
             </div>
           </div>
 
-          <div className="rounded-xl border border-gray-800 bg-gray-900/60 p-4 text-sm text-gray-300 leading-relaxed">
-            <h3 className="text-sm font-semibold text-gray-100 mb-2">
+          <div className={`rounded-xl border p-4 text-sm leading-relaxed ${
+            theme === 'light' ? 'bg-white border-slate-200 text-slate-600' : 'border-gray-800 bg-gray-900/60 text-gray-300'
+          }`}>
+            <h3 className={`text-sm font-semibold mb-2 ${
+              theme === 'light' ? 'text-slate-900' : 'text-gray-100'
+            }`}>
               Dica rápida
             </h3>
             <p>
