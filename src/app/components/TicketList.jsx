@@ -1,8 +1,9 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useState } from "react";
 import { getStatusDisplayNamePT, getStatusBadgeClasses, getPriorityBadge } from '@/lib/ticketUtils';
+import { useTheme } from "./ThemeProvider";
 
 export default function TicketList({
   tickets,
@@ -14,26 +15,20 @@ export default function TicketList({
   agents = [],
   hasActiveFilters = false,
 }) {
+  const { theme } = useTheme();
   const [deletingId, setDeletingId] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
-  // ======================= DELETE =========================
   const handleDelete = async (ticketId) => {
     if (window.confirm("Tem certeza que deseja excluir este ticket?")) {
       setErrorMessage('');
       setSuccessMessage('');
       setDeletingId(ticketId);
       try {
-        const res = await fetch(`/api/tickets/${ticketId}`, {
-          method: "DELETE",
-        });
-
-        if (!res.ok) {
-          throw new Error("Falha ao excluir o ticket.");
-        }
-
+        const res = await fetch(`/api/tickets/${ticketId}`, { method: "DELETE" });
+        if (!res.ok) throw new Error("Falha ao excluir o ticket.");
         const deletedTicket = tickets.find(t => t.id === ticketId);
         onTicketDeleted?.(ticketId, deletedTicket?.status);
         setSuccessMessage('Ticket excluído com sucesso.');
@@ -45,21 +40,17 @@ export default function TicketList({
     }
   };
 
-  // ======================= UPDATE STATUS =========================
   const handleStatusChange = async (ticketId, newStatus) => {
     setErrorMessage('');
     setSuccessMessage('');
     setUpdatingId(ticketId);
-
     try {
       const res = await fetch(`/api/tickets/${ticketId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       });
-
       if (!res.ok) throw new Error("Falha ao atualizar o status.");
-
       const updatedTicket = await res.json();
       onTicketUpdated?.(updatedTicket);
       setSuccessMessage('Status atualizado com sucesso.');
@@ -74,16 +65,13 @@ export default function TicketList({
     setErrorMessage('');
     setSuccessMessage('');
     setUpdatingId(ticketId);
-
     try {
       const res = await fetch(`/api/tickets/${ticketId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ agentId: agentId || null }),
       });
-
       if (!res.ok) throw new Error('Falha ao atribuir o ticket.');
-
       onTicketUpdated?.(await res.json());
       setSuccessMessage('Responsável atualizado com sucesso.');
     } catch (err) {
@@ -93,15 +81,14 @@ export default function TicketList({
     }
   };
 
-  // ======================= LOADING / ERROR =========================
   if (loading) {
     return (
       <div aria-label="Carregando tickets" aria-busy="true" className="mt-8 space-y-4">
         {[1, 2, 3].map((item) => (
-          <div key={item} className="animate-pulse rounded-xl border border-gray-800 bg-gray-800/40 p-5">
-            <div className="h-5 w-2/3 rounded bg-gray-700" />
-            <div className="mt-4 h-3 w-full rounded bg-gray-700" />
-            <div className="mt-2 h-3 w-1/2 rounded bg-gray-700" />
+          <div key={item} className={"animate-pulse rounded-xl border p-5 " + (theme === "light" ? "bg-slate-50 border-slate-200" : "bg-gray-800/40 border-gray-800")}>
+            <div className={"h-5 w-2/3 rounded " + (theme === "light" ? "bg-slate-200" : "bg-gray-700")} />
+            <div className={"mt-4 h-3 w-full rounded " + (theme === "light" ? "bg-slate-200" : "bg-gray-700")} />
+            <div className={"mt-2 h-3 w-1/2 rounded " + (theme === "light" ? "bg-slate-200" : "bg-gray-700")} />
           </div>
         ))}
       </div>
@@ -109,183 +96,105 @@ export default function TicketList({
   }
 
   if (error) {
-    return <p className="text-center text-red-500 mt-12">{error}</p>;
+    return (
+      <div role="alert" className={"mt-8 rounded-xl border p-6 text-center " + (theme === "light" ? "bg-red-50 border-red-200 text-red-600" : "bg-red-500/10 border-red-500/50 text-red-400")}>
+        <p className="font-semibold">Erro ao carregar tickets</p>
+        <p className="mt-2 text-sm opacity-90">{error}</p>
+      </div>
+    );
   }
 
-  // ======================= UI =========================
   return (
     <>
-      {errorMessage && (
-        <div role="alert" className="mb-4 p-3 bg-red-900/40 border border-red-700 rounded-lg text-sm text-red-300 flex items-center justify-between">
-          <span>{errorMessage}</span>
-          <button
-            aria-label="Fechar mensagem de erro"
-            onClick={() => setErrorMessage('')}
-            className="ml-4 text-red-400 hover:text-red-200 font-bold"
-          >
-            ✕
-          </button>
-        </div>
-      )}
-      {successMessage && (
-        <p role="status" className="mb-4 rounded-lg border border-teal-700 bg-teal-900/30 p-3 text-sm text-teal-200">
-          {successMessage}
-        </p>
-      )}
-      <div className="mt-12">
-        <h2 className="text-2xl font-semibold mb-6 text-white">
-          {session?.user?.role === 'AGENT' ? 'Tickets' : 'Meus tickets'}
-        </h2>
+      <div className="space-y-4">
+        {errorMessage && (
+          <div role="alert" className={"rounded-md p-3 text-sm border " + (theme === "light" ? "bg-red-50 border-red-200 text-red-700" : "bg-red-500/20 border-red-500/50 text-red-200")}>
+            {errorMessage}
+          </div>
+        )}
+        {successMessage && (
+          <div role="status" className={"rounded-md p-3 text-sm border " + (theme === "light" ? "bg-green-50 border-green-200 text-green-700" : "bg-green-500/20 border-green-500/50 text-green-200")}>
+            {successMessage}
+          </div>
+        )}
 
         {tickets.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-10 text-center">
-            <p className="text-gray-400 mb-3">
-              {hasActiveFilters ? 'Nenhum ticket corresponde aos filtros atuais.' : 'Você ainda não tem tickets.'}
+          <div className={"rounded-xl border border-dashed p-12 text-center " + (theme === "light" ? "border-slate-300 bg-slate-50" : "border-gray-700 bg-gray-900/40")}>
+            <p className={theme === "light" ? "text-slate-500" : "text-gray-400"}>
+              {hasActiveFilters ? "Nenhum ticket encontrado para os filtros selecionados." : "Você ainda não possui tickets abertos."}
             </p>
-            {!hasActiveFilters && <Link
-              data-cy="ticket-empty-create-link"
-              href="/dashboard/tickets/new"
-              className="inline-flex items-center justify-center rounded-md bg-teal-500 px-4 py-2 text-sm font-medium text-white hover:bg-teal-400 transition"
-            >
-              + Criar primeiro ticket
-            </Link>}
+            {!hasActiveFilters && (
+              <Link href="/dashboard/tickets/new" className="mt-4 inline-block text-teal-500 hover:text-teal-400 font-medium">
+                Criar meu primeiro ticket →
+              </Link>
+            )}
           </div>
         ) : (
-          <div>
+          <div className="grid gap-4">
             {tickets.map((ticket) => (
-              <div
-                key={ticket.id}
-                data-cy="ticket-card"
-                data-ticket-id={ticket.id}
-                className="mt-6"
-              >
-                <div className="p-5 bg-gray-800/40 border border-gray-700 rounded-xl hover:bg-gray-800/60 transition-colors">
-
-                  {/* TÍTULO + BADGES */}
-                  <div className="flex items-center justify-between mb-2">
-                    <Link
-                      data-cy={`ticket-${ticket.id}-detail-link`}
-                      href={`/ticket/${ticket.id}`}
-                      className="hover:underline"
-                    >
-                      <h3 data-cy="ticket-title" className="text-lg font-medium text-white">
+              <div key={ticket.id} data-cy={`ticket-card-${ticket.id}`} className={"group relative rounded-xl border p-5 shadow-sm transition-all hover:shadow-md " + (theme === "light" ? "bg-white border-slate-200 hover:border-slate-300" : "bg-gray-800/40 border-gray-800 hover:border-gray-700")}>
+                <div className="flex flex-col gap-4">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <h3 className={"text-lg font-semibold leading-snug " + (theme === "light" ? "text-slate-900" : "text-white")}>
+                      <Link href={`/ticket/${ticket.id}`} className="hover:text-teal-500 transition-colors">
                         {ticket.title}
-                      </h3>
-                    </Link>
-
-                    {/* Os dois badges ficam juntos à direita */}
+                      </Link>
+                    </h3>
                     <div className="flex items-center gap-2">
-                      {/* BADGE DE STATUS */}
-                      <span
-                        data-cy="ticket-status-badge"
-                        className={`px-3 py-1 text-xs rounded-full font-medium ${getStatusBadgeClasses(ticket.status)}`}
-                      >
+                      <span className={"rounded-full px-2.5 py-0.5 text-xs font-medium border " + getStatusBadgeClasses(ticket.status, theme)}>
                         {getStatusDisplayNamePT(ticket.status)}
                       </span>
-
-                      {/*
-                        BADGE DE PRIORIDADE
-                        getPriorityBadge retorna { label, classes } —
-                        desestruturamos direto para usar as duas propriedades
-                      */}
-                      {ticket.priority && (() => {
-                        const { label, classes } = getPriorityBadge(ticket.priority);
-                        return (
-                          <span
-                            data-cy="ticket-priority-badge"
-                            className={`px-3 py-1 text-xs rounded-full font-medium ${classes}`}
-                          >
-                            {label}
-                          </span>
-                        );
-                      })()}
+                      <span className="flex items-center">{(() => { const badge = getPriorityBadge(ticket.priority, theme); return <span className={"px-2.5 py-0.5 rounded-full text-xs font-medium border " + badge.classes}>{badge.label}</span>; })()}</span>
                     </div>
                   </div>
-
-                  {/* DESCRIÇÃO */}
-                  <p className="text-sm text-gray-400 leading-relaxed">
+                  <p className={"line-clamp-2 text-sm leading-relaxed " + (theme === "light" ? "text-slate-600" : "text-gray-400")}>
                     {ticket.description}
                   </p>
-
-                  {/* AUTOR + DATA */}
-                  <p className="mt-3 text-xs text-gray-500">
-                    <span>
-                      Criado por: {ticket.author?.name || ticket.author?.email || 'Desconhecido'}
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
+                    <span className={theme === "light" ? "text-slate-500" : "text-gray-500"}>
+                      ID: <span className={theme === "light" ? "text-slate-700 font-mono" : "text-gray-300 font-mono"}>#{ticket.id.slice(-6)}</span>
                     </span>
-                    {" "} em {" "}
-                    <span className="text-gray-400">
-                      {new Date(ticket.createdAt).toLocaleDateString("pt-BR")}
+                    <span className={theme === "light" ? "text-slate-500" : "text-gray-500"}>
+                      Criado por: <span className={theme === "light" ? "text-slate-700 font-medium" : "text-gray-300 font-medium"}>{ticket.author?.name || ticket.author?.email}</span>
                     </span>
+                    <span className={theme === "light" ? "text-slate-500" : "text-gray-500"}>
+                      Em: {new Date(ticket.createdAt).toLocaleDateString('pt-BR')}
+                    </span>
+                  </div>
+                  <p className={"mt-2 text-xs " + (theme === "light" ? "text-slate-500" : "text-gray-500")}>
+                    Responsável: <span className={theme === "light" ? "text-slate-700 font-medium" : "text-gray-300 font-medium"}>{ticket.agent?.name || ticket.agent?.email || 'Não atribuído'}</span>
                   </p>
-
-                  <p className="mt-2 text-xs text-gray-500">
-                    Responsável: <span className="text-gray-300">{ticket.agent?.name || ticket.agent?.email || 'Não atribuído'}</span>
-                  </p>
-
-                  {/* CONTROLES (dono ou AGENT) */}
                   {(session?.user?.id === ticket.authorId || session?.user?.role === 'AGENT') && (
-                    <div className="mt-4 flex flex-col gap-3">
-
-                      {/* SELECT STATUS (agora pequeno e minimalista) */}
-                      {session?.user?.role === 'AGENT' && <label className="flex flex-col gap-1 text-sm text-gray-300">
-                        Status
-                      <select
-                        data-cy={`ticket-${ticket.id}-status`}
-                        disabled={updatingId === ticket.id}
-                        value={ticket.status}
-                        onChange={(e) =>
-                          handleStatusChange(ticket.id, e.target.value)
-                        }
-                        className="bg-gray-700 text-white px-3 py-2 rounded-md text-sm border border-gray-600 w-40"
-                      >
-                        <option value="OPEN">Aberto</option>
-                        <option value="IN_PROGRESS">Em Progresso</option>
-                        <option value="CLOSED">Fechado</option>
-                      </select>
-                      </label>}
-
-                      {session?.user?.role === 'AGENT' && (
-                        <label className="flex flex-col gap-1 text-sm text-gray-300">
-                          Responsável
-                          <select
-                            data-cy={`ticket-${ticket.id}-agent`}
-                            disabled={updatingId === ticket.id}
-                            value={ticket.agentId || ''}
-                            onChange={(e) => handleAgentChange(ticket.id, e.target.value)}
-                            className="bg-gray-700 text-white px-3 py-2 rounded-md text-sm border border-gray-600 w-56"
-                          >
-                            <option value="">Não atribuído</option>
-                            {agents.map((agent) => (
-                              <option key={agent.id} value={agent.id}>
-                                {agent.name || agent.email}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                      )}
-
-                      {/* EDITAR + EXCLUIR */}
-                      <div className="flex gap-4 text-sm">
-                        <Link
-                          data-cy={`ticket-${ticket.id}-edit-link`}
-                          href={`/dashboard/ticket/${ticket.id}/edit`}
-                          className="text-blue-400 hover:text-blue-300"
-                        >
-                          Editar
-                        </Link>
-
-                        <button
-                          data-cy={`ticket-${ticket.id}-delete`}
-                          onClick={() => handleDelete(ticket.id)}
-                          disabled={deletingId === ticket.id}
-                          className="text-red-400 hover:text-red-300 disabled:opacity-50"
-                        >
+                    <div className="mt-4 flex flex-col gap-4 pt-4 border-t border-dashed border-slate-200 dark:border-gray-700">
+                      <div className="flex flex-wrap gap-4">
+                        {session?.user?.role === 'AGENT' && (
+                          <label className={"flex flex-col gap-1 text-sm " + (theme === "light" ? "text-slate-700" : "text-gray-300")}>
+                            Status
+                            <select disabled={updatingId === ticket.id} value={ticket.status} onChange={(e) => handleStatusChange(ticket.id, e.target.value)} className={"rounded-md px-3 py-1.5 text-sm border focus:outline-none focus:ring-1 focus:ring-teal-500 w-40 " + (theme === "light" ? "bg-slate-50 border-slate-300 text-slate-900" : "bg-gray-700 border-gray-600 text-white")}>
+                              <option value="OPEN">Aberto</option>
+                              <option value="IN_PROGRESS">Em Progresso</option>
+                              <option value="CLOSED">Fechado</option>
+                            </select>
+                          </label>
+                        )}
+                        {session?.user?.role === 'AGENT' && (
+                          <label className={"flex flex-col gap-1 text-sm " + (theme === "light" ? "text-slate-700" : "text-gray-300")}>
+                            Responsável
+                            <select disabled={updatingId === ticket.id} value={ticket.agentId || ''} onChange={(e) => handleAgentChange(ticket.id, e.target.value)} className={"rounded-md px-3 py-1.5 text-sm border focus:outline-none focus:ring-1 focus:ring-teal-500 w-56 " + (theme === "light" ? "bg-slate-50 border-slate-300 text-slate-900" : "bg-gray-700 border-gray-600 text-white")}>
+                              <option value="">Não atribuído</option>
+                              {agents.map((agent) => <option key={agent.id} value={agent.id}>{agent.name || agent.email}</option>)}
+                            </select>
+                          </label>
+                        )}
+                      </div>
+                      <div className="flex gap-4 text-sm mt-1">
+                        <Link href={`/dashboard/ticket/${ticket.id}/edit`} className="text-teal-600 dark:text-teal-400 hover:underline font-medium">Editar Ticket</Link>
+                        <button onClick={() => handleDelete(ticket.id)} disabled={deletingId === ticket.id} className="text-red-600 dark:text-red-400 hover:underline font-medium disabled:opacity-50">
                           {deletingId === ticket.id ? "Excluindo..." : "Excluir"}
                         </button>
                       </div>
                     </div>
                   )}
-
                 </div>
               </div>
             ))}
@@ -295,3 +204,4 @@ export default function TicketList({
     </>
   );
 }
+

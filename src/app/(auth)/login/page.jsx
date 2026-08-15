@@ -6,9 +6,12 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { FaGithub } from "react-icons/fa";
+import { useTheme } from "@/app/components/ThemeProvider";
+import ThemeToggle from "@/app/components/ThemeToggle";
 
 export default function LoginPage() {
     const router = useRouter();
+    const { theme } = useTheme();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
@@ -48,16 +51,33 @@ export default function LoginPage() {
     };
 
     return (
-        <main className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
+        <main className={`min-h-screen flex items-center justify-center p-4 relative overflow-hidden ${
+            theme === "light"
+                ? "bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50"
+                : "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"
+        }`}>
+            {/* Theme Toggle */}
+            <div className="fixed right-4 top-4 z-50 sm:right-6 sm:top-6">
+                <ThemeToggle />
+            </div>
+
             {/* Background blobs */}
             <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-0 left-1/4 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl" />
-                <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
+                <div className={`absolute top-0 left-1/4 w-96 h-96 rounded-full blur-3xl ${
+                    theme === "light" ? "bg-teal-200/30" : "bg-teal-500/10"
+                }`} />
+                <div className={`absolute bottom-0 right-1/4 w-96 h-96 rounded-full blur-3xl ${
+                    theme === "light" ? "bg-blue-200/30" : "bg-blue-500/10"
+                }`} />
             </div>
 
             {/* Card */}
             <div className="relative w-full max-w-md">
-                <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl shadow-2xl p-8">
+                <div className={`backdrop-blur-xl border rounded-2xl shadow-2xl p-8 ${
+                    theme === "light"
+                        ? "bg-white/80 border-slate-200"
+                        : "bg-white/10 border-white/20"
+                }`}>
                     {/* Header */}
                     <div className="text-center mb-8">
                         <Image
@@ -68,28 +88,46 @@ export default function LoginPage() {
                             className="mx-auto mb-4"
                             priority
                         />
-                        <h1 className="text-4xl font-bold text-white mb-2">HelpFlow</h1>
-                        <p className="text-gray-400">Sistema de suporte simplificado</p>
+                        <h1 className={`text-4xl font-bold mb-2 ${
+                            theme === "light" ? "text-slate-900" : "text-white"
+                        }`}>HelpFlow</h1>
+                        <p className={theme === "light" ? "text-slate-600" : "text-gray-400"}>
+                            Sistema de suporte simplificado
+                        </p>
                     </div>
 
                     {/* Description */}
-                    <div className="bg-white/5 border border-white/10 rounded-lg p-4 mb-6">
-                        <p className="text-sm text-gray-300 text-center">
+                    <div className={`border rounded-lg p-4 mb-6 ${
+                        theme === "light"
+                            ? "bg-slate-50 border-slate-200"
+                            : "bg-white/5 border-white/10"
+                    }`}>
+                        <p className={`text-sm text-center ${
+                            theme === "light" ? "text-slate-600" : "text-gray-300"
+                        }`}>
                             Faça login com email ou GitHub para acessar o dashboard e gerenciar seus tickets.
                         </p>
                     </div>
 
                     {/* Error */}
                     {error && (
-                        <div role="alert" className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 mb-4">
-                            <p className="text-red-200 text-sm">{error}</p>
+                        <div role="alert" className={`border rounded-lg p-3 mb-4 ${
+                            theme === "light"
+                                ? "bg-red-50 border-red-300"
+                                : "bg-red-500/20 border-red-500/50"
+                        }`}>
+                            <p className={`text-sm ${
+                                theme === "light" ? "text-red-700" : "text-red-200"
+                            }`}>{error}</p>
                         </div>
                     )}
 
                     {/* Form */}
                     <form onSubmit={handleSubmit} className="space-y-4 mb-4">
                         <div>
-                            <label htmlFor="login-email" className="mb-1 block text-sm font-medium text-gray-200">
+                            <label htmlFor="login-email" className={`mb-1 block text-sm font-medium ${
+                                theme === "light" ? "text-slate-700" : "text-gray-200"
+                            }`}>
                                 Email
                             </label>
                             <input
@@ -100,14 +138,20 @@ export default function LoginPage() {
                                 autoComplete="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="w-full rounded-md border border-white/20 bg-slate-900/40 px-4 py-2 text-white placeholder-gray-400 focus:border-teal-400 focus:outline-none focus:ring-1 focus:ring-teal-400"
+                                className={`w-full rounded-md border px-4 py-2 focus:outline-none focus:ring-1 focus:ring-teal-400 ${
+                                    theme === "light"
+                                        ? "border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-teal-500"
+                                        : "border-white/20 bg-slate-900/40 text-white placeholder-gray-400 focus:border-teal-400"
+                                }`}
                                 placeholder="voce@exemplo.com"
                                 required
                             />
                         </div>
 
                         <div>
-                            <label htmlFor="login-password" className="mb-1 block text-sm font-medium text-gray-200">
+                            <label htmlFor="login-password" className={`mb-1 block text-sm font-medium ${
+                                theme === "light" ? "text-slate-700" : "text-gray-200"
+                            }`}>
                                 Senha
                             </label>
                             <input
@@ -118,7 +162,11 @@ export default function LoginPage() {
                                 autoComplete="current-password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full rounded-md border border-white/20 bg-slate-900/40 px-4 py-2 text-white placeholder-gray-400 focus:border-teal-400 focus:outline-none focus:ring-1 focus:ring-teal-400"
+                                className={`w-full rounded-md border px-4 py-2 focus:outline-none focus:ring-1 focus:ring-teal-400 ${
+                                    theme === "light"
+                                        ? "border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-teal-500"
+                                        : "border-white/20 bg-slate-900/40 text-white placeholder-gray-400 focus:border-teal-400"
+                                }`}
                                 placeholder="••••••••"
                                 required
                             />
@@ -133,15 +181,23 @@ export default function LoginPage() {
                             {loading ? "Entrando..." : "Entrar"}
                         </button>
                     </form>
-                    <p className="text-center text-sm text-gray-400 mt-2">
-                        <Link href="/forgot-password" className="text-teal-400 hover:text-teal-300">
+                    <p className={`text-center text-sm mt-2 ${
+                        theme === "light" ? "text-slate-600" : "text-gray-400"
+                    }`}>
+                        <Link href="/forgot-password" className="text-teal-500 hover:text-teal-400">
                             Esqueceu sua senha?
                         </Link>
                     </p>
                     <div className="my-4 flex items-center">
-                        <div className="flex-grow border-t border-white/10"></div>
-                        <span className="mx-4 text-sm text-gray-400">OU</span>
-                        <div className="flex-grow border-t border-white/10"></div>
+                        <div className={`flex-grow border-t ${
+                            theme === "light" ? "border-slate-300" : "border-white/10"
+                        }`}></div>
+                        <span className={`mx-4 text-sm ${
+                            theme === "light" ? "text-slate-500" : "text-gray-400"
+                        }`}>OU</span>
+                        <div className={`flex-grow border-t ${
+                            theme === "light" ? "border-slate-300" : "border-white/10"
+                        }`}></div>
                     </div>
 
                     <button
@@ -149,15 +205,21 @@ export default function LoginPage() {
                         data-cy="login-github"
                         disabled={loading}
                         onClick={handleGitHubLogin}
-                        className="flex w-full items-center justify-center gap-2 rounded-md border border-white/20 bg-slate-900/60 px-4 py-2 font-medium text-white transition hover:bg-slate-800"
+                        className={`flex w-full items-center justify-center gap-2 rounded-md border px-4 py-2 font-medium transition ${
+                            theme === "light"
+                                ? "border-slate-300 bg-white text-slate-900 hover:bg-slate-50"
+                                : "border-white/20 bg-slate-900/60 text-white hover:bg-slate-800"
+                        }`}
                     >
                         <FaGithub className="text-xl" />
                         Continuar com GitHub
                     </button>
 
-                    <p className="mt-6 text-center text-sm text-gray-300">
+                    <p className={`mt-6 text-center text-sm ${
+                        theme === "light" ? "text-slate-600" : "text-gray-300"
+                    }`}>
                         Não tem uma conta?{" "}
-                        <Link href="/register" data-cy="login-register-link" className="font-medium text-teal-400 hover:text-teal-300">
+                        <Link href="/register" data-cy="login-register-link" className="font-medium text-teal-500 hover:text-teal-400">
                             Criar conta
                         </Link>
                     </p>

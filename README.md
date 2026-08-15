@@ -1,6 +1,6 @@
 # HelpFlow
 
-Sistema de help desk para abertura, acompanhamento e gerenciamento de chamados. O projeto reúne autenticação por credenciais e GitHub, controle de acesso por perfil e persistência de dados com Prisma e PostgreSQL.
+Sistema de help desk para abertura, acompanhamento e gerenciamento de chamados. O projeto reúne autenticação por credenciais e GitHub, controle de acesso por perfil, persistência de dados com Prisma e PostgreSQL, além de experiência responsiva com tema claro/escuro persistido.
 
 ## Status do projeto
 
@@ -33,6 +33,10 @@ A página pública apresenta os fluxos de `CLIENT` e `AGENT`. Para evitar creden
 
 ![Dashboard do cliente com ticket](docs/screenshots/dashboard-client-com-ticket.png)
 
+### Dashboard do cliente vazio
+
+![Dashboard do cliente sem tickets](docs/screenshots/dashboard-client-vazio.png)
+
 ### Dashboard do agente
 
 ![Dashboard do agente](docs/screenshots/dashboard-agent.png)
@@ -40,6 +44,8 @@ A página pública apresenta os fluxos de `CLIENT` e `AGENT`. Para evitar creden
 ### Detalhes e ações do ticket
 
 ![Detalhes do ticket para agente](docs/screenshots/detalhe-ticket-agent.png)
+
+![Detalhes do ticket para cliente](docs/screenshots/detalhe-ticket-client.png)
 
 ## Funcionalidades implementadas
 
@@ -106,6 +112,16 @@ As decisões são aplicadas nas rotas da API; ocultar controles na interface é 
 - Endpoint de health check para verificar a comunicação com o banco de dados.
 - Endpoint protegido de keep-alive configurado no Vercel Cron para execução periódica.
 
+### Experiência e tema
+
+- Tema claro/escuro com persistência conjunta em cookie e `localStorage`.
+- Tema renderizado no servidor (SSR baseado no cookie `helpflow-theme`): o `<html>` já sai com a classe correta, eliminando o flash (FOUC) em recargas.
+- Script de inicialização no `<head>` detecta preferência salva, cookie ou `prefers-color-scheme` do sistema no primeiro acesso.
+- Sincronização entre abas via evento `storage` do navegador.
+- Responsividade mobile em todas as telas: menu hamburger com sidebar deslizante no dashboard, formulários empilhados e landing otimizada para dispositivos móveis.
+- Animações de scroll reveal com `Intersection Observer`, respeitando `prefers-reduced-motion`.
+- Acessibilidade: foco visível, `aria-labels`, estados de carregamento/erro anunciáveis e micro-interações com `transition`.
+
 ## Tecnologias utilizadas
 
 ### Front-end
@@ -151,7 +167,13 @@ src/
 │   ├── (auth)/              # Páginas de login, cadastro e recuperação de senha
 │   ├── (dashboard)/         # Dashboard e páginas de gerenciamento de tickets
 │   ├── api/                 # Autenticação, cadastro, tickets, health e cron
+│   ├── hooks/               # useScrollReveal (animação de entrada na landing)
 │   └── components/          # Componentes reutilizáveis da interface
+│       ├── DashboardShell   # Layout do dashboard (sidebar fixa + header mobile)
+│       ├── ThemeProvider    # Contexto do tema claro/escuro e sincronização entre abas
+│       ├── ThemeInitScript  # Script de bloqueio que aplica o tema antes do 1º paint
+│       ├── ThemeToggle      # Botão de alternância do tema com ícones animados
+│       └── ...              # Demais componentes de UI e formulários
 └── lib/
     ├── __tests__/           # Testes unitários
     ├── email.js             # Configuração Nodemailer e envio de emails
@@ -295,6 +317,8 @@ Os testes unitários também cobrem a matriz de autorização, os campos adminis
 
 ## Decisões desta revisão
 
+- Tema persistido via cookie `helpflow-theme` e `localStorage`: o servidor lê o cookie no SSR e injeta a classe no `<html>` desde o primeiro byte, eliminando o flash (FOUC) visual em recargas sem depender exclusivamente de scripts do cliente.
+- O uso de `cookies()` no layout raiz converte a renderização das páginas para o modo dinâmico no servidor (ƒ Dynamic) — um trade-off aceito para garantir consistência visual no primeiro paint em aplicações autenticadas.
 - Nome passou a ser obrigatório no cadastro por credenciais porque identifica autoria, saudação e atendimento; o campo permanece opcional no banco para compatibilidade com OAuth e registros existentes.
 - Status, prioridade e atribuição são administrativos e exclusivos de `AGENT`. Clientes proprietários continuam podendo corrigir título e descrição e excluir o próprio ticket.
 - A demonstração usa apresentação pública e contas individuais, sem credenciais compartilhadas ou seed misturado ao banco real.
@@ -331,6 +355,7 @@ Os usuários de teste são criados pela rota `/api/register`. Os cenários que c
 - **Planejado:** ampliar a cobertura de testes unitários e E2E.
 - **Planejado:** adicionar testes E2E para tentativas de acesso cruzado entre usuários e para todas as operações autorizadas ao perfil `AGENT`.
 - **Planejado:** adicionar logs estruturados e monitoramento de erros.
+- **Planejado:** cobrir a alternância de tema claro/escuro e a persistência do cookie em testes E2E.
 - **Planejado:** evoluir o fluxo de atribuição de tickets aos agentes.
 - **Planejado:** melhorar a documentação das rotas da API.
 

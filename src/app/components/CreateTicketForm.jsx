@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { useTheme } from './ThemeProvider';
 
 export default function CreateTicketForm({ onTicketCreated }) {
+  const { theme } = useTheme();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
@@ -43,11 +45,19 @@ export default function CreateTicketForm({ onTicketCreated }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-6 bg-gray-800 rounded-lg shadow-md max-w-md mx-auto mt-10">
-      <h2 className="text-2xl font-bold mb-6 text-white text-center">Abrir Novo Ticket</h2>
+    <form onSubmit={handleSubmit} className={`p-6 rounded-lg shadow-md max-w-md mx-auto mt-10 border ${
+      theme === 'light'
+        ? 'bg-white border-slate-200'
+        : 'bg-gray-800 border-gray-700'
+    }`}>
+      <h2 className={`text-2xl font-bold mb-6 text-center ${
+        theme === 'light' ? 'text-slate-900' : 'text-white'
+      }`}>Abrir Novo Ticket</h2>
       <div className="space-y-4">
         <div>
-          <label htmlFor="title" className="block text-sm font-medium text-gray-300">Título</label>
+          <label htmlFor="title" className={`block text-sm font-medium ${
+            theme === 'light' ? 'text-slate-700' : 'text-gray-300'
+          }`}>Título</label>
           <input
             data-cy="ticket-create-title"
             type="text"
@@ -59,11 +69,17 @@ export default function CreateTicketForm({ onTicketCreated }) {
             minLength={5}
             maxLength={100}
             placeholder="Descreva brevemente o problema (mín. 5 caracteres)"
-            className="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
+            className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm ${
+              theme === 'light'
+                ? 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'
+                : 'bg-gray-700 border-gray-600 text-white placeholder:text-gray-500'
+            }`}
           />
         </div>
         <div>
-          <label htmlFor="description" className="block text-sm font-medium text-gray-300">Descrição do Problema</label>
+          <label htmlFor="description" className={`block text-sm font-medium ${
+            theme === 'light' ? 'text-slate-700' : 'text-gray-300'
+          }`}>Descrição do Problema</label>
           <textarea
             data-cy="ticket-create-description"
             id="description"
@@ -72,7 +88,11 @@ export default function CreateTicketForm({ onTicketCreated }) {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             required
-            className="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
+            className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm ${
+              theme === 'light'
+                ? 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'
+                : 'bg-gray-700 border-gray-600 text-white placeholder:text-gray-500'
+            }`}
           ></textarea>
         </div>
 
@@ -83,14 +103,20 @@ export default function CreateTicketForm({ onTicketCreated }) {
           e no submit esse valor vai junto no body do fetch.
         */}
         <div>
-          <label htmlFor="priority" className="block text-sm font-medium text-gray-300">Prioridade</label>
+          <label htmlFor="priority" className={`block text-sm font-medium ${
+            theme === 'light' ? 'text-slate-700' : 'text-gray-300'
+          }`}>Prioridade</label>
           <select
             data-cy="ticket-create-priority"
             id="priority"
             name="priority"
             value={priority}
             onChange={(e) => setPriority(e.target.value)}
-            className="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
+            className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm ${
+              theme === 'light'
+                ? 'bg-white border-slate-300 text-slate-900'
+                : 'bg-gray-700 border-gray-600 text-white'
+            }`}
           >
             <option value="LOW">🟢 Baixa</option>
             <option value="MEDIUM">🟡 Média</option>
@@ -109,7 +135,17 @@ export default function CreateTicketForm({ onTicketCreated }) {
           {loading ? 'Criando ticket...' : 'Criar ticket'}
         </button>
       </div>
-      {statusMessage && <p role="status" aria-live="polite" className="mt-4 text-center text-sm text-gray-300">{statusMessage}</p>}
+      {statusMessage && (
+        <p
+          role="status"
+          aria-live="polite"
+          className={`mt-4 text-center text-sm ${
+            statusMessage.startsWith('Erro')
+              ? (theme === 'light' ? 'text-red-600' : 'text-red-400')
+              : (theme === 'light' ? 'text-green-600' : 'text-green-300')
+          }`}
+        >{statusMessage}</p>
+      )}
     </form>
   );
 }
