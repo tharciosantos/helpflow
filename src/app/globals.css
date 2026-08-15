@@ -12,46 +12,20 @@
   --color-secondary: #0f172a;
 }
 
-/* Tema claro (padrão) */
-:root,
+/* Tema escuro (padrão) */
+:root {
+  --background: #020617;
+  --foreground: #f8fafc;
+  color-scheme: dark;
+}
+
+/* Tema claro */
 :root.light {
-  --background: #ffffff;
-  --foreground: #171717;
-  --bg-primary: #ffffff;
-  --bg-secondary: #f8fafc;
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --border-color: #e2e8f0;
+  --background: #f8fafc;
+  --foreground: #020617;
+  color-scheme: light;
 }
 
-/* Tema escuro */
-:root.dark {
-  --background: #0a0a0a;
-  --foreground: #ededed;
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --text-primary: #f1f5f9;
-  --text-secondary: #cbd5e1;
-  --border-color: #334155;
-}
-
-/* Fallback para preferência do sistema quando não há escolha explícita */
-@media (prefers-color-scheme: dark) {
-  :root:not(.light):not(.dark) {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --bg-primary: #0f172a;
-    --bg-secondary: #1e293b;
-    --text-primary: #f1f5f9;
-    --text-secondary: #cbd5e1;
-    --border-color: #334155;
-  }
-}
-
-/* No Tailwind v4, estilos globais básicos geralmente não precisam 
-  repetir as variáveis se o @theme estiver configurado, 
-  mas para garantir o reset correto:
-*/
 body {
   background-color: var(--background);
   color: var(--foreground);

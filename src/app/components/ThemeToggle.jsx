@@ -8,7 +8,11 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="relative flex h-10 w-10 items-center justify-center rounded-lg border border-slate-700 bg-slate-800/80 text-slate-300 transition-all hover:border-teal-500/50 hover:bg-slate-800 hover:text-teal-300 focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:ring-offset-2 focus:ring-offset-slate-900 dark:border-slate-700 dark:bg-slate-800/80 light:border-slate-300 light:bg-white light:text-slate-700 light:hover:border-teal-500 light:focus:ring-offset-white"
+      className={`relative flex h-10 w-10 items-center justify-center rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:ring-offset-2 ${
+        theme === "light"
+          ? "border-slate-300 bg-white text-slate-700 hover:border-teal-500 focus:ring-offset-white"
+          : "border-slate-700 bg-slate-800/80 text-slate-300 hover:border-teal-500/50 hover:bg-slate-800 hover:text-teal-300 focus:ring-offset-slate-900"
+      }`}
       aria-label={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"}
       title={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"}
     >
