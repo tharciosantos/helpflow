@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+import { LuHeadphones } from 'react-icons/lu';
 import { useTheme } from './ThemeProvider';
 import ThemeToggle from './ThemeToggle';
 import SidebarNav from './SidebarNav';
@@ -21,9 +23,16 @@ export default function DashboardShell({ children }) {
       }`}>
         <div>
           <div className="flex items-center justify-between mb-8">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-teal-400 to-blue-500 bg-clip-text text-transparent">
-              HelpFlow
-            </h1>
+            <Link href="/dashboard" className="flex items-center gap-2.5 group">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-600 text-white shadow-xs transition-transform duration-200 group-hover:scale-105">
+                <LuHeadphones size={17} />
+              </div>
+              <span className={`text-xl font-bold tracking-tight ${
+                theme === 'light' ? 'text-slate-900' : 'text-white'
+              }`}>
+                HelpFlow
+              </span>
+            </Link>
             <ThemeToggle />
           </div>
           <SidebarNav /> 

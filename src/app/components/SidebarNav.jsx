@@ -13,12 +13,12 @@ export default function SidebarNav({ dataCyPrefix = 'sidebar' }) {
     const isActive = pathname === path;
     if (theme === 'light') {
       return isActive 
-        ? 'bg-teal-600 text-white font-medium shadow-sm' 
-        : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900';
+        ? 'bg-teal-50 text-teal-700 font-semibold shadow-xs border border-teal-200/90' 
+        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900';
     } else {
       return isActive 
-        ? 'bg-teal-600 text-white font-medium shadow-sm' 
-        : 'text-gray-300 hover:bg-slate-700 hover:text-white';
+        ? 'bg-teal-500/15 text-teal-300 font-semibold shadow-xs border border-teal-500/30' 
+        : 'text-slate-300 hover:bg-slate-700/60 hover:text-white';
     }
   };
 

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useSession } from "next-auth/react";
+import { LuPlus, LuSearch, LuLayers, LuClock, LuListFilter, LuCircleCheck } from 'react-icons/lu';
 import TicketList from "../../components/TicketList";
 import { useTheme } from "../../components/ThemeProvider";
 
@@ -109,15 +110,15 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       {/* Cabeçalho / boas-vindas */}
-      <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className={`text-3xl md:text-4xl font-bold ${
+          <h1 className={`text-2xl sm:text-3xl font-bold tracking-tight ${
             theme === 'light' ? 'text-slate-900' : 'text-white'
           }`}>
             Olá, {session?.user?.name || 'bem-vindo(a)'} 👋
           </h1>
-          <p className={`mt-2 text-sm md:text-base ${
-            theme === 'light' ? 'text-slate-600' : 'text-gray-400'
+          <p className={`mt-1 text-sm ${
+            theme === 'light' ? 'text-slate-600' : 'text-slate-400'
           }`}>
             Organize e acompanhe os tickets do seu suporte em um só lugar.
           </p>
@@ -126,45 +127,53 @@ export default function DashboardPage() {
         <Link
           data-cy="dashboard-new-ticket-link"
           href="/dashboard/tickets/new"
-          className="inline-flex items-center justify-center rounded-lg bg-teal-500 px-4 py-2 text-sm font-semibold text-white shadow-md hover:bg-teal-400 transition"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-teal-500 px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-sm hover:bg-teal-400 transition active:scale-[0.98]"
         >
-          + Novo ticket
+          <LuPlus size={18} />
+          Novo ticket
         </Link>
       </header>
 
-      <form onSubmit={applyFilters} className={`grid gap-3 rounded-xl border p-4 md:grid-cols-[minmax(0,1fr)_180px_180px_auto_auto] md:items-end ${
+      {/* Barra de Filtros */}
+      <form onSubmit={applyFilters} className={`grid gap-3 rounded-xl border p-4 sm:grid-cols-2 md:grid-cols-[minmax(0,1fr)_160px_160px_auto_auto] md:items-end ${
         theme === 'light'
-          ? 'bg-white border-slate-200 shadow-sm'
-          : 'border-gray-800 bg-gray-900/60'
+          ? 'bg-white border-slate-200 shadow-xs'
+          : 'border-slate-800 bg-slate-900/70'
       }`}>
-        <label className={`flex flex-col gap-1 text-sm ${
-          theme === 'light' ? 'text-slate-700' : 'text-gray-300'
+        <label className={`flex flex-col gap-1 text-xs font-semibold uppercase tracking-wider ${
+          theme === 'light' ? 'text-slate-600' : 'text-slate-400'
         }`}>
           Buscar tickets
-          <input
-            data-cy="ticket-filter-search"
-            value={filters.search}
-            onChange={(event) => setFilters(prev => ({ ...prev, search: event.target.value }))}
-            placeholder="Título ou descrição"
-            className={`rounded-md border px-3 py-2 focus:outline-none ${
-              theme === 'light'
-                ? 'border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:border-teal-500'
-                : 'border-gray-700 bg-gray-800 text-white placeholder:text-gray-500 focus:border-teal-400'
-            }`}
-          />
+          <div className="relative">
+            <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+              <LuSearch size={16} />
+            </span>
+            <input
+              data-cy="ticket-filter-search"
+              value={filters.search}
+              onChange={(event) => setFilters(prev => ({ ...prev, search: event.target.value }))}
+              placeholder="Título ou descrição..."
+              className={`w-full rounded-lg border py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-1 ${
+                theme === 'light'
+                  ? 'border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:ring-teal-500'
+                  : 'border-slate-700 bg-slate-800 text-white placeholder:text-slate-500 focus:border-teal-400 focus:ring-teal-400'
+              }`}
+            />
+          </div>
         </label>
-        <label className={`flex flex-col gap-1 text-sm ${
-          theme === 'light' ? 'text-slate-700' : 'text-gray-300'
+
+        <label className={`flex flex-col gap-1 text-xs font-semibold uppercase tracking-wider ${
+          theme === 'light' ? 'text-slate-600' : 'text-slate-400'
         }`}>
           Status
           <select 
             data-cy="ticket-filter-status" 
             value={filters.status} 
             onChange={(event) => setFilters(prev => ({ ...prev, status: event.target.value }))} 
-            className={`rounded-md border px-3 py-2 focus:outline-none ${
+            className={`rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
               theme === 'light'
-                ? 'border-slate-300 bg-white text-slate-900 focus:border-teal-500'
-                : 'border-gray-700 bg-gray-800 text-white focus:border-teal-400'
+                ? 'border-slate-300 bg-white text-slate-900 focus:border-teal-500 focus:ring-teal-500'
+                : 'border-slate-700 bg-slate-800 text-white focus:border-teal-400 focus:ring-teal-400'
             }`}
           >
             <option value="">Todos</option>
@@ -173,18 +182,19 @@ export default function DashboardPage() {
             <option value="CLOSED">Fechado</option>
           </select>
         </label>
-        <label className={`flex flex-col gap-1 text-sm ${
-          theme === 'light' ? 'text-slate-700' : 'text-gray-300'
+
+        <label className={`flex flex-col gap-1 text-xs font-semibold uppercase tracking-wider ${
+          theme === 'light' ? 'text-slate-600' : 'text-slate-400'
         }`}>
           Prioridade
           <select 
             data-cy="ticket-filter-priority" 
             value={filters.priority} 
             onChange={(event) => setFilters(prev => ({ ...prev, priority: event.target.value }))} 
-            className={`rounded-md border px-3 py-2 focus:outline-none ${
+            className={`rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
               theme === 'light'
-                ? 'border-slate-300 bg-white text-slate-900 focus:border-teal-500'
-                : 'border-gray-700 bg-gray-800 text-white focus:border-teal-400'
+                ? 'border-slate-300 bg-white text-slate-900 focus:border-teal-500 focus:ring-teal-500'
+                : 'border-slate-700 bg-slate-800 text-white focus:border-teal-400 focus:ring-teal-400'
             }`}
           >
             <option value="">Todas</option>
@@ -194,20 +204,27 @@ export default function DashboardPage() {
             <option value="URGENT">Urgente</option>
           </select>
         </label>
-        <button data-cy="ticket-filter-submit" type="submit" className="rounded-md bg-teal-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-400">Filtrar</button>
-        <button data-cy="ticket-filter-clear" type="button" onClick={clearFilters} className={`rounded-md px-3 py-2 text-sm transition ${
-          theme === 'light' ? 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-        }`}>Limpar</button>
+
+        <button data-cy="ticket-filter-submit" type="submit" className="rounded-lg bg-teal-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-teal-400 shadow-xs active:scale-[0.98]">
+          Filtrar
+        </button>
+        <button data-cy="ticket-filter-clear" type="button" onClick={clearFilters} className={`rounded-lg border px-3.5 py-2 text-sm font-medium transition ${
+          theme === 'light' 
+            ? 'border-slate-300 text-slate-600 hover:bg-slate-100 hover:text-slate-900' 
+            : 'border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white'
+        }`}>
+          Limpar
+        </button>
       </form>
 
       {/* Resumo rápido + lista */}
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(260px,1fr)]">
+      <section className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
         {/* Lista de tickets + controles de paginação */}
         <div className="flex flex-col gap-4">
-          <div className={`rounded-xl border p-4 md:p-6 shadow-lg ${
+          <div className={`rounded-xl border p-4 md:p-6 shadow-sm ${
             theme === 'light'
               ? 'bg-white border-slate-200'
-              : 'border-gray-800 bg-gray-900/60'
+              : 'border-slate-800 bg-slate-900/60'
           }`}>
             <TicketList
               tickets={tickets}
@@ -228,16 +245,16 @@ export default function DashboardPage() {
                 data-cy="pagination-prev"
                 onClick={() => fetchTickets(currentPage - 1, filters)}
                 disabled={currentPage === 1}
-                className={`px-4 py-2 rounded-md text-sm transition disabled:opacity-40 ${
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition disabled:opacity-40 ${
                   theme === 'light'
                     ? 'bg-slate-200 text-slate-800 hover:bg-slate-300'
-                    : 'bg-gray-700 text-white hover:bg-gray-600'
+                    : 'bg-slate-800 text-white hover:bg-slate-700 border border-slate-700'
                 }`}
               >
                 ← Anterior
               </button>
-              <span className={`text-sm ${
-                theme === 'light' ? 'text-slate-600' : 'text-gray-400'
+              <span className={`text-sm font-medium ${
+                theme === 'light' ? 'text-slate-600' : 'text-slate-400'
               }`}>
                 Página {currentPage} de {totalPages}
               </span>
@@ -245,10 +262,10 @@ export default function DashboardPage() {
                 data-cy="pagination-next"
                 onClick={() => fetchTickets(currentPage + 1, filters)}
                 disabled={currentPage === totalPages}
-                className={`px-4 py-2 rounded-md text-sm transition disabled:opacity-40 ${
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition disabled:opacity-40 ${
                   theme === 'light'
                     ? 'bg-slate-200 text-slate-800 hover:bg-slate-300'
-                    : 'bg-gray-700 text-white hover:bg-gray-600'
+                    : 'bg-slate-800 text-white hover:bg-slate-700 border border-slate-700'
                 }`}
               >
                 Próxima →
@@ -259,53 +276,107 @@ export default function DashboardPage() {
 
         {/* Painel lateral com resumo e dicas */}
         <aside className="space-y-4">
-          <div className={`rounded-xl border p-4 shadow-md ${
-            theme === 'light' ? 'bg-white border-slate-200' : 'border-gray-800 bg-gray-900/80'
+          <div className={`rounded-xl border p-4 shadow-sm ${
+            theme === 'light' ? 'bg-white border-slate-200' : 'border-slate-800 bg-slate-900/80'
           }`}>
-            <h2 className={`text-sm font-semibold mb-3 ${
-              theme === 'light' ? 'text-slate-900' : 'text-gray-200'
-            }`}>
-              Resumo geral
-            </h2>
-            <p className={`mb-3 text-xs ${theme === 'light' ? 'text-slate-500' : 'text-gray-500'}`}>Os status consideram todos os tickets visíveis; resultados refletem os filtros atuais.</p>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <p className={`rounded-lg p-3 ${
-                theme === 'light' ? 'bg-slate-50 text-slate-700 border border-slate-200' : 'bg-gray-800 text-gray-300'
-              }`}><span className="block text-xs">Total visível</span><span className={`text-2xl font-bold ${
-                theme === 'light' ? 'text-slate-900' : 'text-white'
-              }`}>{summaryTotal}</span></p>
-              <p className={`rounded-lg p-3 ${
-                theme === 'light' ? 'bg-slate-50 text-slate-700 border border-slate-200' : 'bg-gray-800 text-gray-300'
-              }`}><span className="block text-xs">Resultados</span><span className={`text-2xl font-bold ${
-                theme === 'light' ? 'text-slate-900' : 'text-white'
-              }`}>{totalCount}</span></p>
-              <p className={`rounded-lg p-3 ${
-                theme === 'light' ? 'bg-slate-50 text-slate-700 border border-slate-200' : 'bg-gray-800 text-gray-300'
-              }`}><span className="block text-xs">● Abertos</span><span className="text-2xl font-bold text-teal-600 dark:text-green-400">{openCount}</span></p>
-              <p className={`rounded-lg p-3 ${
-                theme === 'light' ? 'bg-slate-50 text-slate-700 border border-slate-200' : 'bg-gray-800 text-gray-300'
-              }`}><span className="block text-xs">◐ Em progresso</span><span className="text-2xl font-bold text-amber-500 dark:text-yellow-300">{inProgressCount}</span></p>
-              <p className={`col-span-2 rounded-lg p-3 ${
-                theme === 'light' ? 'bg-slate-50 text-slate-700 border border-slate-200' : 'bg-gray-800 text-gray-300'
-              }`}><span className="block text-xs">✓ Fechados</span><span className={`text-2xl font-bold ${
-                theme === 'light' ? 'text-slate-900' : 'text-gray-200'
-              }`}>{closedCount}</span></p>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className={`text-sm font-bold uppercase tracking-wider ${
+                theme === 'light' ? 'text-slate-900' : 'text-slate-200'
+              }`}>
+                Resumo Geral
+              </h2>
+              <span className="font-mono text-xs text-slate-500">
+                {totalCount} {totalCount === 1 ? 'ticket' : 'tickets'}
+              </span>
+            </div>
+            <p className={`mb-4 text-xs ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
+              Status consolidados de acordo com os filtros selecionados.
+            </p>
+
+            <div className="grid grid-cols-2 gap-2.5">
+              <div className={`rounded-lg p-3 border transition-colors ${
+                theme === 'light' ? 'bg-slate-50/80 border-slate-200' : 'bg-slate-800/60 border-slate-700/60'
+              }`}>
+                <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
+                  <span>Total</span>
+                  <LuLayers size={14} className="text-teal-500" />
+                </div>
+                <span className={`text-2xl font-extrabold ${
+                  theme === 'light' ? 'text-slate-900' : 'text-white'
+                }`}>{summaryTotal}</span>
+              </div>
+
+              <div className={`rounded-lg p-3 border transition-colors ${
+                theme === 'light' ? 'bg-slate-50/80 border-slate-200' : 'bg-slate-800/60 border-slate-700/60'
+              }`}>
+                <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
+                  <span>Filtrados</span>
+                  <LuSearch size={14} className="text-blue-500" />
+                </div>
+                <span className={`text-2xl font-extrabold ${
+                  theme === 'light' ? 'text-slate-900' : 'text-white'
+                }`}>{totalCount}</span>
+              </div>
+
+              <div className={`rounded-lg p-3 border transition-colors ${
+                theme === 'light' ? 'bg-slate-50/80 border-slate-200' : 'bg-slate-800/60 border-slate-700/60'
+              }`}>
+                <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
+                  <span className="flex items-center gap-1.5 font-medium">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+                    Abertos
+                  </span>
+                  <LuClock size={14} className="text-slate-400" />
+                </div>
+                <span className={`text-2xl font-extrabold ${
+                  theme === 'light' ? 'text-slate-900' : 'text-white'
+                }`}>{openCount}</span>
+              </div>
+
+              <div className={`rounded-lg p-3 border transition-colors ${
+                theme === 'light' ? 'bg-slate-50/80 border-slate-200' : 'bg-slate-800/60 border-slate-700/60'
+              }`}>
+                <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
+                  <span className="flex items-center gap-1.5 font-medium">
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden="true" />
+                    Em progresso
+                  </span>
+                  <LuListFilter size={14} className="text-slate-400" />
+                </div>
+                <span className={`text-2xl font-extrabold ${
+                  theme === 'light' ? 'text-slate-900' : 'text-white'
+                }`}>{inProgressCount}</span>
+              </div>
+
+              <div className={`col-span-2 rounded-lg p-3 border transition-colors ${
+                theme === 'light' ? 'bg-slate-50/80 border-slate-200' : 'bg-slate-800/60 border-slate-700/60'
+              }`}>
+                <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
+                  <span className="flex items-center gap-1.5 font-medium">
+                    <span className="h-1.5 w-1.5 rounded-full bg-slate-400" aria-hidden="true" />
+                    Fechados
+                  </span>
+                  <LuCircleCheck size={14} className="text-slate-400" />
+                </div>
+                <span className={`text-2xl font-extrabold ${
+                  theme === 'light' ? 'text-slate-900' : 'text-white'
+                }`}>{closedCount}</span>
+              </div>
             </div>
           </div>
 
-          <div className={`rounded-xl border p-4 text-sm leading-relaxed ${
-            theme === 'light' ? 'bg-white border-slate-200 text-slate-600' : 'border-gray-800 bg-gray-900/60 text-gray-300'
+          <div className={`rounded-xl border p-4 text-xs leading-relaxed ${
+            theme === 'light' ? 'bg-white border-slate-200 text-slate-600' : 'border-slate-800 bg-slate-900/60 text-slate-300'
           }`}>
-            <h3 className={`text-sm font-semibold mb-2 ${
-              theme === 'light' ? 'text-slate-900' : 'text-gray-100'
+            <h3 className={`text-xs font-bold uppercase tracking-wider mb-2 ${
+              theme === 'light' ? 'text-slate-900' : 'text-slate-100'
             }`}>
-              Dica rápida
+              💡 Dica rápida
             </h3>
             <p>
-              Use os status <span className="font-semibold">Aberto</span>,{' '}
-              <span className="font-semibold">Em Progresso</span> e{' '}
-              <span className="font-semibold">Fechado</span> para organizar o fluxo de trabalho.
-              Mantenha o título claro e a descrição detalhada para facilitar o atendimento.
+              Use os status <span className="font-semibold text-teal-600 dark:text-teal-400">Aberto</span>,{' '}
+              <span className="font-semibold text-amber-600 dark:text-amber-400">Em Progresso</span> e{' '}
+              <span className="font-semibold">Fechado</span> para organizar o fluxo de atendimento da equipe.
             </p>
           </div>
         </aside>

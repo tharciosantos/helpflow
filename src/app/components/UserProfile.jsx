@@ -27,6 +27,27 @@ export default function UserProfile() {
           <p className={`text-xs truncate ${
             theme === 'light' ? 'text-slate-500' : 'text-gray-400'
           }`}>{session.user.email}</p>
+          <div className="mt-1.5 flex items-center">
+            {session.user.role === 'AGENT' ? (
+              <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium border ${
+                theme === 'light'
+                  ? 'bg-slate-100 text-slate-700 border-slate-200'
+                  : 'bg-slate-800 text-slate-300 border-slate-700'
+              }`}>
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+                Agente de Suporte
+              </span>
+            ) : (
+              <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium border ${
+                theme === 'light'
+                  ? 'bg-slate-100 text-slate-700 border-slate-200'
+                  : 'bg-slate-800 text-slate-300 border-slate-700'
+              }`}>
+                <span className="h-1.5 w-1.5 rounded-full bg-blue-500" aria-hidden="true" />
+                Solicitante
+              </span>
+            )}
+          </div>
         </div>
       </div>
       <button
