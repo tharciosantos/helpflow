@@ -37,10 +37,6 @@ Além disso, cada visitante pode criar sua própria conta individual pelo fluxo 
 
 ![Dashboard do cliente com ticket](docs/screenshots/dashboard-client-com-ticket.png)
 
-### Dashboard do cliente vazio
-
-![Dashboard do cliente sem tickets](docs/screenshots/dashboard-client-vazio.png)
-
 ### Dashboard do agente
 
 ![Dashboard do agente](docs/screenshots/dashboard-agent.png)
