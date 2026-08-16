@@ -10,93 +10,146 @@ export default function Home() {
   const { theme } = useTheme();
   
   return (
-    <main className={`min-h-screen px-4 py-12 sm:px-6 sm:py-16 ${
+    <div className={`min-h-screen lg:h-screen lg:overflow-hidden flex flex-col justify-between ${
       theme === "light" 
         ? "bg-slate-50 text-slate-900" 
         : "bg-slate-950 text-white"
     }`}>
-      {/* Header com Theme Toggle */}
-      <div className="fixed right-4 top-4 z-50 sm:right-6 sm:top-6">
-        <ThemeToggle />
-      </div>
-
-      <section className="mx-auto max-w-5xl">
-        {/* Hero Section com animações */}
-        <div className="grid items-center gap-10 sm:gap-12 lg:grid-cols-[1.15fr_0.85fr] lg:gap-14">
-          <div>
-            <p className={`fade-in text-sm font-semibold sm:text-base ${
-              theme === "light" ? "text-teal-600" : "text-teal-300"
+      {/* Header com Logo, Badge de Demonstração e Theme Toggle */}
+      <header className={`shrink-0 z-50 backdrop-blur-md transition-colors border-b px-4 py-2.5 sm:px-6 md:px-8 ${
+        theme === "light"
+          ? "bg-white/80 border-slate-200"
+          : "bg-slate-950/80 border-slate-800"
+      }`}>
+        <div className="mx-auto flex max-w-5xl items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-xl font-bold bg-gradient-to-r from-teal-400 to-blue-500 bg-clip-text text-transparent">
+              HelpFlow
+            </span>
+            <span className={`hidden sm:inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold border ${
+              theme === "light"
+                ? "bg-teal-50 text-teal-700 border-teal-200"
+                : "bg-teal-950/60 text-teal-300 border-teal-800/60"
             }`}>
-              HelpFlow · demonstração de produto
-            </p>
+              Demonstração Aberta
+            </span>
+          </div>
 
-            <h1 className="fade-in-delay-1 mt-3 text-3xl font-bold leading-tight tracking-tight sm:mt-4 sm:text-4xl md:text-5xl lg:text-6xl">
-              Suporte organizado, com cada pessoa vendo e fazendo apenas o que precisa.
-            </h1>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/login"
+              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+                theme === "light"
+                  ? "text-slate-700 hover:text-teal-600"
+                  : "text-slate-300 hover:text-teal-400"
+              }`}
+            >
+              Entrar
+            </Link>
+            <Link
+              href="/register"
+              className="rounded-lg bg-teal-500 px-3.5 py-1.5 text-sm font-semibold text-slate-950 transition hover:bg-teal-400 shadow-sm"
+            >
+              Criar Conta
+            </Link>
+            <div className="border-l pl-3 ml-1 border-slate-300 dark:border-slate-700">
+              <ThemeToggle />
+            </div>
+          </div>
+        </div>
+      </header>
 
-            <p className={`fade-in-delay-2 mt-4 max-w-2xl text-base leading-7 sm:mt-6 sm:text-lg sm:leading-8 ${
-              theme === "light" ? "text-slate-600" : "text-slate-300"
-            }`}>
-              Conheça os principais fluxos com dados fictícios criados na sua
-              própria conta. Nenhuma credencial compartilhada ou dado real é
-              exposto nesta demonstração.
-            </p>
+      {/* Main Content calibrado para caber em 100vh */}
+      <main className="flex-1 flex flex-col justify-center px-4 py-3 sm:px-6 md:py-4 max-w-5xl mx-auto w-full">
+        <section className="w-full space-y-4 md:space-y-6">
+          {/* Hero Section */}
+          <div className="grid items-center gap-6 md:gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+            <div>
+              <div className={`inline-flex items-center gap-2 rounded-full px-3 py-0.5 text-xs font-semibold border mb-2.5 ${
+                theme === "light"
+                  ? "bg-teal-50 text-teal-700 border-teal-200"
+                  : "bg-teal-950/60 text-teal-300 border-teal-800/60"
+              }`}>
+                <span>🚀</span> HelpFlow · Demonstração de Produto
+              </div>
 
-            <div className="fade-in-delay-3 mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:flex-wrap">
-              <Link
-                href="/register"
-                className="rounded-lg bg-teal-500 px-5 py-3 text-center font-semibold text-slate-950 transition-all hover:bg-teal-400 hover:shadow-lg hover:shadow-teal-500/20"
-              >
-                Criar conta de demonstração
-              </Link>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[2.5rem] font-bold leading-tight tracking-tight">
+                Suporte organizado, com cada pessoa vendo e fazendo apenas o que precisa.
+              </h1>
 
-              <Link
-                href="/login"
-                className={`rounded-lg border px-5 py-3 text-center font-semibold transition-all hover:shadow-md ${
-                  theme === "light"
-                    ? "border-slate-300 hover:border-teal-500"
-                    : "border-slate-600 hover:border-teal-400"
-                }`}
-              >
-                Entrar
-              </Link>
+              <p className={`mt-2.5 max-w-xl text-sm sm:text-base leading-relaxed ${
+                theme === "light" ? "text-slate-600" : "text-slate-300"
+              }`}>
+                Conheça os principais fluxos com dados fictícios criados na sua
+                própria conta. Nenhuma credencial compartilhada ou dado real é
+                exposto nesta demonstração.
+              </p>
+
+              <div className="mt-4 flex flex-col gap-2.5 sm:flex-row sm:items-center">
+                <Link
+                  href="/register"
+                  className="rounded-xl bg-teal-500 px-5 py-2.5 text-center text-sm font-semibold text-slate-950 transition-all hover:bg-teal-400 hover:shadow-lg hover:shadow-teal-500/20 active:scale-[0.98]"
+                >
+                  Criar conta de demonstração
+                </Link>
+
+                <Link
+                  href="/login"
+                  className={`rounded-xl border px-5 py-2.5 text-center text-sm font-semibold transition-all hover:shadow-sm active:scale-[0.98] ${
+                    theme === "light"
+                      ? "border-slate-300 bg-white hover:border-teal-500 text-slate-800"
+                      : "border-slate-700 bg-slate-900/60 hover:border-teal-400 text-slate-200"
+                  }`}
+                >
+                  Entrar
+                </Link>
+              </div>
             </div>
 
+            {/* Demo Card */}
+            <div>
+              <DemoTicketFlow theme={theme} />
+            </div>
           </div>
-          
-          {/* Demo Card */}
-          <div className="fade-in-delay-2 mt-8 lg:mt-0">
-            <DemoTicketFlow theme={theme} />
-          </div>
-        </div>
 
-        {/* Features Grid com scroll reveal */}
-        <div className="mt-12 grid gap-4 sm:mt-16 sm:gap-5 md:grid-cols-2 lg:grid-cols-3">
-          <FeatureCard
-            title="Fluxo de cliente"
-            description="Abra e acompanhe seus próprios chamados, edite o conteúdo e veja responsável e andamento."
-            delay={0}
-            theme={theme}
-          />
-
-          <FeatureCard
-            title="Fluxo de agente"
-            description="Triagem de todos os chamados, atualização de status, prioridade e atribuição de responsável."
-            delay={100}
-            theme={theme}
-          />
-
-          <div className="md:col-span-2 lg:col-span-1">
+          {/* Features Grid */}
+          <div className="grid gap-3 sm:gap-3.5 md:grid-cols-3">
             <FeatureCard
-              title="Segurança por padrão"
-              description="Autorização validada no servidor, propriedade dos dados e respostas seguras para acessos indevidos."
-              delay={200}
+              title="Fluxo de cliente"
+              description="Abra e acompanhe seus próprios chamados, edite o conteúdo e veja responsável e andamento."
+              delay={0}
               theme={theme}
             />
+
+            <FeatureCard
+              title="Fluxo de agente"
+              description="Triagem de todos os chamados, atualização de status, prioridade e atribuição de responsável."
+              delay={100}
+              theme={theme}
+            />
+
+            <div className="md:col-span-1">
+              <FeatureCard
+                title="Segurança por padrão"
+                description="Autorização validada no servidor, propriedade dos dados e respostas seguras para acessos indevidos."
+                delay={200}
+                theme={theme}
+              />
+            </div>
           </div>
+        </section>
+      </main>
+
+      {/* Footer minimalista discreto */}
+      <footer className={`shrink-0 py-2 text-center text-[11px] border-t transition-colors ${
+        theme === "light" ? "border-slate-200/80 text-slate-400" : "border-slate-800/80 text-slate-500"
+      }`}>
+        <div className="max-w-5xl mx-auto px-4 flex items-center justify-between">
+          <span>HelpFlow © {new Date().getFullYear()} — Plataforma de Atendimento</span>
+          <span>Desenvolvido por Tharcio Santos</span>
         </div>
-      </section>
-    </main>
+      </footer>
+    </div>
   );
 }
 

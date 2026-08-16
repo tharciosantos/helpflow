@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { LuSend, LuCircleAlert, LuCircleCheck } from 'react-icons/lu';
 import { useTheme } from './ThemeProvider';
 
 export default function CreateTicketForm({ onTicketCreated }) {
@@ -45,19 +46,25 @@ export default function CreateTicketForm({ onTicketCreated }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className={`p-6 rounded-lg shadow-md max-w-md mx-auto mt-10 border ${
-      theme === 'light'
-        ? 'bg-white border-slate-200'
-        : 'bg-gray-800 border-gray-700'
-    }`}>
-      <h2 className={`text-2xl font-bold mb-6 text-center ${
-        theme === 'light' ? 'text-slate-900' : 'text-white'
-      }`}>Abrir Novo Ticket</h2>
-      <div className="space-y-4">
+    <form
+      onSubmit={handleSubmit}
+      className={`rounded-2xl border p-6 sm:p-8 shadow-xs transition-colors ${
+        theme === 'light'
+          ? 'bg-white border-slate-200/90'
+          : 'bg-slate-900/80 border-slate-800'
+      }`}
+    >
+      <div className="space-y-5">
+        {/* Título */}
         <div>
-          <label htmlFor="title" className={`block text-sm font-medium ${
-            theme === 'light' ? 'text-slate-700' : 'text-gray-300'
-          }`}>Título</label>
+          <label
+            htmlFor="title"
+            className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${
+              theme === 'light' ? 'text-slate-700' : 'text-slate-300'
+            }`}
+          >
+            Título do Chamado <span className="text-red-500">*</span>
+          </label>
           <input
             data-cy="ticket-create-title"
             type="text"
@@ -68,83 +75,101 @@ export default function CreateTicketForm({ onTicketCreated }) {
             required
             minLength={5}
             maxLength={100}
-            placeholder="Descreva brevemente o problema (mín. 5 caracteres)"
-            className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm ${
+            placeholder="Ex: Erro ao emitir relatório mensal no dashboard"
+            className={`block w-full rounded-xl border px-3.5 py-2.5 text-sm transition focus:outline-none focus:ring-2 focus:ring-teal-500/50 ${
               theme === 'light'
-                ? 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'
-                : 'bg-gray-700 border-gray-600 text-white placeholder:text-gray-500'
+                ? 'bg-slate-50/50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-teal-500'
+                : 'bg-slate-800/60 border-slate-700 text-white placeholder:text-slate-500 focus:bg-slate-800 focus:border-teal-400'
             }`}
           />
+          <p className={`mt-1 text-xs ${theme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>
+            Mínimo de 5 caracteres.
+          </p>
         </div>
+
+        {/* Descrição */}
         <div>
-          <label htmlFor="description" className={`block text-sm font-medium ${
-            theme === 'light' ? 'text-slate-700' : 'text-gray-300'
-          }`}>Descrição do Problema</label>
+          <label
+            htmlFor="description"
+            className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${
+              theme === 'light' ? 'text-slate-700' : 'text-slate-300'
+            }`}
+          >
+            Descrição Detalhada <span className="text-red-500">*</span>
+          </label>
           <textarea
             data-cy="ticket-create-description"
             id="description"
             name="description"
-            rows={4}
+            rows={5}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             required
-            className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm ${
+            placeholder="Explique o problema, comportamento esperado ou passos para reproduzir..."
+            className={`block w-full rounded-xl border px-3.5 py-2.5 text-sm leading-relaxed transition focus:outline-none focus:ring-2 focus:ring-teal-500/50 ${
               theme === 'light'
-                ? 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400'
-                : 'bg-gray-700 border-gray-600 text-white placeholder:text-gray-500'
+                ? 'bg-slate-50/50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-teal-500'
+                : 'bg-slate-800/60 border-slate-700 text-white placeholder:text-slate-500 focus:bg-slate-800 focus:border-teal-400'
             }`}
-          ></textarea>
+          />
         </div>
 
-        {/*
-          Campo de prioridade.
-          O valor padrão é 'MEDIUM' (definido no useState lá em cima).
-          Quando o usuário muda, setPriority atualiza o estado,
-          e no submit esse valor vai junto no body do fetch.
-        */}
+        {/* Prioridade */}
         <div>
-          <label htmlFor="priority" className={`block text-sm font-medium ${
-            theme === 'light' ? 'text-slate-700' : 'text-gray-300'
-          }`}>Prioridade</label>
+          <label
+            htmlFor="priority"
+            className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${
+              theme === 'light' ? 'text-slate-700' : 'text-slate-300'
+            }`}
+          >
+            Nível de Prioridade
+          </label>
           <select
             data-cy="ticket-create-priority"
             id="priority"
             name="priority"
             value={priority}
             onChange={(e) => setPriority(e.target.value)}
-            className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm ${
+            className={`block w-full rounded-xl border px-3.5 py-2.5 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-teal-500/50 ${
               theme === 'light'
-                ? 'bg-white border-slate-300 text-slate-900'
-                : 'bg-gray-700 border-gray-600 text-white'
+                ? 'bg-slate-50/50 border-slate-200 text-slate-900 focus:bg-white focus:border-teal-500'
+                : 'bg-slate-800/60 border-slate-700 text-white focus:bg-slate-800 focus:border-teal-400'
             }`}
           >
-            <option value="LOW">🟢 Baixa</option>
-            <option value="MEDIUM">🟡 Média</option>
-            <option value="HIGH">🟠 Alta</option>
-            <option value="URGENT">🔴 Urgente</option>
+            <option value="LOW">🟢 Baixa — Dúvidas e solicitações gerais</option>
+            <option value="MEDIUM">🟡 Média — Problema que não impede a operação</option>
+            <option value="HIGH">🟠 Alta — Impacto direto no fluxo de trabalho</option>
+            <option value="URGENT">🔴 Urgente — Sistema indisponível / bloqueio crítico</option>
           </select>
         </div>
       </div>
-      <div className="mt-6 text-center">
+
+      {/* Ações */}
+      <div className="mt-8 flex flex-col sm:flex-row items-center gap-3">
         <button
           data-cy="ticket-create-submit"
           type="submit"
           disabled={loading}
-          className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-teal-600 hover:bg-teal-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-teal-600 px-6 py-3 text-sm font-semibold text-white shadow-xs transition hover:bg-teal-500 active:scale-[0.99] disabled:opacity-50"
         >
-          {loading ? 'Criando ticket...' : 'Criar ticket'}
+          <LuSend size={15} />
+          {loading ? 'Criando ticket...' : 'Criar Ticket'}
         </button>
       </div>
+
       {statusMessage && (
-        <p
+        <div
           role="status"
           aria-live="polite"
-          className={`mt-4 text-center text-sm ${
+          className={`mt-4 rounded-xl border p-3 text-sm flex items-center gap-2 ${
             statusMessage.startsWith('Erro')
-              ? (theme === 'light' ? 'text-red-600' : 'text-red-400')
-              : (theme === 'light' ? 'text-green-600' : 'text-green-300')
+              ? (theme === 'light' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-red-950/40 border-red-900/60 text-red-300')
+              : (theme === 'light' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-emerald-950/40 border-emerald-900/60 text-emerald-300')
           }`}
-        >{statusMessage}</p>
+        >
+          {statusMessage.startsWith('Erro') ? <LuCircleAlert size={18} /> : <LuCircleCheck size={18} />}
+          <span>{statusMessage}</span>
+        </div>
       )}
     </form>
   );

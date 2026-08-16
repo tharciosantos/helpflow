@@ -155,23 +155,23 @@ export default function DemoTicketFlow({ theme = "dark" }) {
                 role="button"
                 tabIndex={0}
                 aria-label={isPaused ? "Clique para retomar animação" : "Clique para pausar animação"}
-                className={`relative cursor-pointer overflow-hidden rounded-2xl border p-6 shadow-2xl transition-shadow ${
+                className={`relative cursor-pointer overflow-hidden rounded-2xl border p-4 sm:p-5 shadow-xl transition-shadow ${
                     theme === "light"
                         ? "border-slate-200 bg-white/95 shadow-slate-200/50 hover:shadow-teal-500/20"
                         : "border-slate-700 bg-slate-900/95 shadow-black/30 hover:shadow-teal-500/10"
                 }`}
             >
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start justify-between gap-3">
                     <div>
-                        <p className={`text-sm font-medium ${
-                            theme === "light" ? "text-teal-600" : "text-teal-300"
+                        <p className={`text-xs font-semibold ${
+                            theme === "light" ? "text-teal-600" : "text-teal-400"
                         }`}>
                             Ticket #1042
                         </p>
 
                         <h2
                             id="demo-ticket-title"
-                            className={`mt-2 text-xl font-semibold ${
+                            className={`mt-1 text-base sm:text-lg font-bold leading-snug ${
                                 theme === "light" ? "text-slate-900" : "text-slate-100"
                             }`}
                         >
@@ -181,7 +181,7 @@ export default function DemoTicketFlow({ theme = "dark" }) {
 
                     <span
                         data-ticket-badge
-                        className={`rounded-full px-3 py-1 text-sm font-semibold transition-all duration-500 ${statusesWithBadges[currentStep].badgeClasses}`}
+                        className={`rounded-full px-2.5 py-0.5 text-xs font-semibold transition-all duration-500 ${statusesWithBadges[currentStep].badgeClasses}`}
                         role="status"
                         aria-live="polite"
                         aria-atomic="true"
@@ -190,22 +190,22 @@ export default function DemoTicketFlow({ theme = "dark" }) {
                     </span>
                 </div>
 
-                <p className={`mt-4 text-sm leading-6 ${
+                <p className={`mt-2 text-xs sm:text-sm leading-relaxed ${
                     theme === "light" ? "text-slate-600" : "text-slate-400"
                 }`}>
                     O relatório não carrega após a seleção do período.
                 </p>
 
-                <div className={`mt-6 border-t pt-5 ${
+                <div className={`mt-3.5 border-t pt-3 ${
                     theme === "light" ? "border-slate-200" : "border-slate-800"
                 }`}>
-                    <p className={`text-xs font-semibold uppercase tracking-widest ${
-                        theme === "light" ? "text-slate-500" : "text-slate-500"
+                    <p className={`text-[11px] font-bold uppercase tracking-wider ${
+                        theme === "light" ? "text-slate-500" : "text-slate-400"
                     }`}>
                         Andamento
                     </p>
 
-                    <ol className="mt-4 grid gap-3">
+                    <ol className="mt-2.5 grid gap-2">
                         {statusesWithBadges.map((status, index) => {
                             const isCurrent = index === currentStep;
                             const isCompleted = index < currentStep;
@@ -215,10 +215,10 @@ export default function DemoTicketFlow({ theme = "dark" }) {
                                     key={status.code}
                                     data-flow-step
                                     aria-current={isCurrent ? "step" : undefined}
-                                    className={`flex items-center gap-3 text-sm transition-all duration-500 ${
+                                    className={`flex items-center gap-2.5 text-xs sm:text-sm transition-all duration-500 ${
                                         isCurrent || isCompleted
                                             ? theme === "light"
-                                                ? "text-slate-700 font-medium"
+                                                ? "text-slate-800 font-medium"
                                                 : "text-slate-200 font-medium"
                                             : theme === "light"
                                                 ? "text-slate-400"
@@ -226,7 +226,7 @@ export default function DemoTicketFlow({ theme = "dark" }) {
                                     }`}
                                 >
                                     <span
-                                        className={`h-3 w-3 rounded-full transition-all duration-500 ${isCurrent
+                                        className={`h-2.5 w-2.5 rounded-full transition-all duration-500 ${isCurrent
                                             ? "bg-teal-400 ring-4 ring-teal-400/20 scale-110"
                                             : isCompleted
                                                 ? "bg-teal-600"
@@ -252,16 +252,16 @@ export default function DemoTicketFlow({ theme = "dark" }) {
                     </ol>
                 </div>
 
-                <div className={`mt-6 flex items-center justify-between rounded-xl px-4 py-3 text-sm ${
+                <div className={`mt-3.5 flex items-center justify-between rounded-lg px-3 py-2 text-xs ${
                     theme === "light"
                         ? "bg-slate-100/70"
                         : "bg-slate-950/70"
                 }`}>
-                    <span className={theme === "light" ? "text-slate-600" : "text-slate-500"}>
+                    <span className={theme === "light" ? "text-slate-600" : "text-slate-400"}>
                         Responsável
                     </span>
-                    <span className={`font-medium ${
-                        theme === "light" ? "text-slate-900" : "text-slate-300"
+                    <span className={`font-semibold ${
+                        theme === "light" ? "text-slate-900" : "text-slate-200"
                     }`}>
                         Equipe de suporte
                     </span>
@@ -274,10 +274,10 @@ export default function DemoTicketFlow({ theme = "dark" }) {
                     e.stopPropagation();
                     toggleAnimation();
                 }}
-                className={`relative z-10 mx-auto mt-6 flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-teal-500/50 focus:ring-offset-2 ${
+                className={`relative z-10 mx-auto mt-3 flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all focus:outline-none focus:ring-2 focus:ring-teal-500/50 ${
                     theme === "light"
-                        ? "border-slate-300 bg-white text-slate-700 hover:border-teal-500 hover:text-teal-600 focus:ring-offset-white"
-                        : "border-slate-700 bg-slate-800/80 text-slate-300 hover:border-teal-500/50 hover:bg-slate-800 hover:text-teal-300 focus:ring-offset-slate-900"
+                        ? "border-slate-300 bg-white text-slate-700 hover:border-teal-500 hover:text-teal-600"
+                        : "border-slate-700 bg-slate-800/80 text-slate-300 hover:border-teal-500/50 hover:bg-slate-800 hover:text-teal-300"
                 }`}
                 aria-label={isPaused ? "Retomar animação" : "Pausar animação"}
                 aria-pressed={isPaused}
