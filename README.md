@@ -19,7 +19,11 @@ O projeto também tem como foco o aprendizado de autenticação, autorização n
 - **Aplicação em produção:** [https://helpflow.vercel.app/](https://helpflow.vercel.app/)
 - **Repositório:** [https://github.com/tharciosantos/helpflow](https://github.com/tharciosantos/helpflow)
 
-A página pública apresenta os fluxos de `CLIENT` e `AGENT`. Para evitar credenciais compartilhadas, acesso administrativo indevido e mistura de dados, cada visitante pode criar sua própria conta `CLIENT` e usar dados fictícios. O projeto não fornece uma conta `AGENT` pública. Dados de demonstração podem ser removidos pelo próprio autor usando a exclusão normal do ticket; não há limpeza direta no banco.
+A aplicação conta com **Acesso de Demonstração (1-Clique)** diretamente na tela de login, permitindo explorar os dois fluxos do sistema com rapidez:
+- 👤 **Solicitante (`CLIENT`):** `client.demo@helpflow.com` — fluxo do usuário final com abertura, edição e acompanhamento de tickets próprios.
+- 🛡️ **Agente (`AGENT`):** `agent.demo@helpflow.com` — fluxo de suporte com visão de todos os tickets da empresa, alteração de status/prioridade e resolução de chamados.
+
+Além disso, cada visitante pode criar sua própria conta individual pelo fluxo padrão de cadastro com dados fictícios.
 
 ### Apresentação pública
 
