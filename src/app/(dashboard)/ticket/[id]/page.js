@@ -4,6 +4,15 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
+import { 
+    LuArrowLeft, 
+    LuUser, 
+    LuCalendar, 
+    LuShield, 
+    LuClock, 
+    LuPencil, 
+    LuTrash2 
+} from 'react-icons/lu';
 import { getStatusDisplayNamePT, getStatusBadgeClasses, getPriorityBadge } from '@/lib/ticketUtils';
 import { useTheme } from '../../../components/ThemeProvider';
 
@@ -103,14 +112,17 @@ export default function TicketDetailsPage() {
 
     if (loading || sessionStatus === 'loading') {
         return (
-            <main aria-label="Carregando detalhes do ticket" aria-busy="true" className={`mx-auto max-w-4xl p-8 ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
-                <div className={`animate-pulse rounded-xl p-6 border ${
-                    theme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-gray-800 border-gray-700'
+            <main aria-label="Carregando detalhes do ticket" aria-busy="true" className={`max-w-4xl mx-auto space-y-6 ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+                <div className={`animate-pulse rounded-2xl p-8 border ${
+                    theme === 'light' ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-800'
                 }`}>
-                    <div className={`h-8 w-2/3 rounded ${theme === 'light' ? 'bg-slate-200' : 'bg-gray-700'}`} />
-                    <div className={`mt-8 h-4 w-full rounded ${theme === 'light' ? 'bg-slate-200' : 'bg-gray-700'}`} />
-                    <div className={`mt-3 h-4 w-4/5 rounded ${theme === 'light' ? 'bg-slate-200' : 'bg-gray-700'}`} />
-                    <div className={`mt-8 h-4 w-1/2 rounded ${theme === 'light' ? 'bg-slate-200' : 'bg-gray-700'}`} />
+                    <div className={`h-7 w-2/3 rounded-lg ${theme === 'light' ? 'bg-slate-200' : 'bg-slate-800'}`} />
+                    <div className={`mt-6 h-20 w-full rounded-xl ${theme === 'light' ? 'bg-slate-100' : 'bg-slate-800/60'}`} />
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
+                        {[1, 2, 3, 4].map(i => (
+                            <div key={i} className={`h-16 rounded-xl ${theme === 'light' ? 'bg-slate-100' : 'bg-slate-800/40'}`} />
+                        ))}
+                    </div>
                 </div>
             </main>
         );
@@ -125,91 +137,219 @@ export default function TicketDetailsPage() {
     }
 
     return (
-        <main className={`min-h-screen p-8 ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
-            <div className="max-w-4xl mx-auto">
-                <Link href="/dashboard" data-cy="ticket-detail-back-link" className={`mb-8 block font-medium ${
-                    theme === 'light' ? 'text-teal-600 hover:text-teal-500' : 'text-teal-400 hover:text-teal-300'
-                }`}>&larr; Voltar para a lista</Link>
-                <div className={`p-6 rounded-lg shadow-md border ${
-                    theme === 'light' ? 'bg-white border-slate-200' : 'bg-gray-800 border-gray-700'
-                }`}>
-                    <div className="flex justify-between items-start mb-4">
-                        <h1 className="text-3xl font-bold">{ticket.title}</h1>
-                        <div className="flex items-center gap-2">
-                            {/* Badge de status */}
-                            <span className={`px-3 py-1 text-sm font-bold rounded-full ${getStatusBadgeClasses(ticket.status, theme)}`}>
-                                {getStatusDisplayNamePT(ticket.status)}
-                            </span>
-                            {/* Badge de prioridade */}
-                            {ticket.priority && (() => {
-                                const { label, classes } = getPriorityBadge(ticket.priority, theme);
-                                return (
-                                    <span className={`px-3 py-1 text-sm font-bold rounded-full ${classes}`}>
-                                        {label}
-                                    </span>
-                                );
-                            })()}
-                        </div>
+        <main className={`max-w-4xl mx-auto space-y-6 ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+            <div>
+                <Link 
+                    href="/dashboard" 
+                    data-cy="ticket-detail-back-link" 
+                    className={`inline-flex items-center gap-2 text-sm font-medium transition ${
+                        theme === 'light' ? 'text-slate-500 hover:text-teal-600' : 'text-slate-400 hover:text-teal-400'
+                    }`}
+                >
+                    <LuArrowLeft size={16} />
+                    Voltar para a lista
+                </Link>
+            </div>
+
+            <div className={`rounded-2xl border shadow-sm p-6 sm:p-8 space-y-6 ${
+                theme === 'light'
+                    ? 'bg-white border-slate-200/90'
+                    : 'bg-slate-900/90 border-slate-800'
+            }`}>
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                    <div className="space-y-1.5 flex-1">
+                        <span className={`inline-flex items-center font-mono text-xs font-semibold px-2.5 py-0.5 rounded-full border ${
+                            theme === 'light' 
+                                ? 'bg-slate-100 text-slate-600 border-slate-200' 
+                                : 'bg-slate-800/80 text-slate-300 border-slate-700'
+                        }`}>
+                            #{ticket.id.slice(-6)}
+                        </span>
+                        <h1 className={`text-2xl sm:text-3xl font-bold tracking-tight ${
+                            theme === 'light' ? 'text-slate-900' : 'text-white'
+                        }`}>
+                            {ticket.title}
+                        </h1>
                     </div>
-                    <div className={`border-t my-4 ${theme === 'light' ? 'border-slate-200' : 'border-gray-700'}`}></div>
-                    <p className={`whitespace-pre-wrap ${theme === 'light' ? 'text-slate-700' : 'text-gray-300'}`}>{ticket.description}</p>
-                    <div className={`mt-6 flex flex-col gap-2 text-sm sm:flex-row sm:justify-between ${
-                        theme === 'light' ? 'text-slate-500' : 'text-gray-400'
-                    }`}>
-                        <span>Criado por: {ticket.author?.name || 'Desconhecido'}</span>
-                        <span>Em: {new Date(ticket.createdAt).toLocaleString()}</span>
-                    </div>
-                    <div className={`mt-2 flex flex-col gap-2 text-sm sm:flex-row sm:justify-between ${
-                        theme === 'light' ? 'text-slate-500' : 'text-gray-400'
-                    }`}>
-                        <span>Responsável: {ticket.agent?.name || ticket.agent?.email || 'Não atribuído'}</span>
-                        <span>Atualizado em: {new Date(ticket.updatedAt).toLocaleString()}</span>
+
+                    <div className="flex flex-wrap items-center gap-2 shrink-0">
+                        <span className={`px-3 py-1 text-xs sm:text-sm font-semibold rounded-full ${getStatusBadgeClasses(ticket.status, theme)}`}>
+                            {getStatusDisplayNamePT(ticket.status)}
+                        </span>
+                        {ticket.priority && (() => {
+                            const { label, classes } = getPriorityBadge(ticket.priority, theme);
+                            return (
+                                <span className={`px-3 py-1 text-xs sm:text-sm font-semibold rounded-full ${classes}`}>
+                                    {label}
+                                </span>
+                            );
+                        })()}
                     </div>
                 </div>
 
-                {(session?.user?.role === 'AGENT' || session?.user?.id === ticket.authorId) && (
-                    <div className={`mt-6 p-6 rounded-lg shadow-md border ${
-                        theme === 'light' ? 'bg-white border-slate-200' : 'bg-gray-800 border-gray-700'
+                <div className={`rounded-xl p-5 border ${
+                    theme === 'light'
+                        ? 'bg-slate-50/70 border-slate-200/80 text-slate-800'
+                        : 'bg-slate-950/40 border-slate-800/80 text-slate-200'
+                }`}>
+                    <h3 className={`text-[11px] font-bold uppercase tracking-wider mb-2 ${
+                        theme === 'light' ? 'text-slate-400' : 'text-slate-500'
                     }`}>
-                        <h2 className="text-xl font-bold mb-4">Ações do ticket</h2>
-                        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                            {session?.user?.role === 'AGENT' && <div className="flex items-end gap-2">
-                                <label className={`flex flex-col gap-1 text-sm ${
-                                    theme === 'light' ? 'text-slate-700' : 'text-gray-300'
-                                }`}>Status
-                                <select
-                                    data-cy="ticket-detail-status"
-                                    value={newStatus}
-                                    onChange={(e) => setNewStatus(e.target.value)}
-                                    className={`border rounded-md py-2 px-3 focus:outline-none ${
-                                        theme === 'light'
-                                            ? 'bg-white border-slate-300 text-slate-900'
-                                            : 'bg-gray-700 border-gray-600 text-white'
-                                    }`}
-                                    disabled={isUpdating}
-                                >
-                                    <option value="OPEN">Aberto</option>
-                                    <option value="IN_PROGRESS">Em Progresso</option>
-                                    <option value="CLOSED">Fechado</option>
-                                </select>
-                                </label>
-                                <button disabled={isUpdating} data-cy="ticket-detail-status-submit" onClick={handleStatusUpdate} className="h-10 rounded-md bg-teal-600 px-4 font-semibold hover:bg-teal-700 disabled:cursor-wait disabled:opacity-50">{isUpdating ? 'Atualizando...' : 'Atualizar status'}</button>
-                            </div>}
+                        Descrição do Chamado
+                    </h3>
+                    <p className="whitespace-pre-wrap text-sm sm:text-base leading-relaxed">
+                        {ticket.description}
+                    </p>
+                </div>
 
-                            <button
-                                data-cy="ticket-detail-delete"
-                                onClick={handleDeleteTicket}
-                                disabled={isDeleting}
-                                className={`h-10 self-start rounded-md px-4 font-semibold sm:self-end ${isDeleting ? 'bg-gray-600 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'}`}
-                            >
-                                {isDeleting ? 'Deletando...' : 'Deletar Ticket'}
-                            </button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pt-2">
+                    <div className={`p-3.5 rounded-xl border flex items-center gap-3 ${
+                        theme === 'light' ? 'bg-slate-50/50 border-slate-200/70' : 'bg-slate-800/40 border-slate-700/50'
+                    }`}>
+                        <div className={`p-2 rounded-lg ${
+                            theme === 'light' ? 'bg-teal-50 text-teal-600' : 'bg-teal-950/50 text-teal-400'
+                        }`}>
+                            <LuUser size={16} />
                         </div>
-                        {error && <p role="alert" className={`text-sm mt-2 ${theme === 'light' ? 'text-red-600' : 'text-red-500'}`}>{error}</p>}
-                        {success && <p role="status" className={`text-sm mt-2 ${theme === 'light' ? 'text-teal-700' : 'text-teal-300'}`}>{success}</p>}
+                        <div className="min-w-0">
+                            <span className="block text-[11px] font-medium text-slate-400">Criado por</span>
+                            <span className="block text-xs font-semibold truncate" title={ticket.author?.name || 'Desconhecido'}>
+                                {ticket.author?.name || 'Desconhecido'}
+                            </span>
+                        </div>
                     </div>
-                )}
+
+                    <div className={`p-3.5 rounded-xl border flex items-center gap-3 ${
+                        theme === 'light' ? 'bg-slate-50/50 border-slate-200/70' : 'bg-slate-800/40 border-slate-700/50'
+                    }`}>
+                        <div className={`p-2 rounded-lg ${
+                            theme === 'light' ? 'bg-blue-50 text-blue-600' : 'bg-blue-950/50 text-blue-400'
+                        }`}>
+                            <LuCalendar size={16} />
+                        </div>
+                        <div className="min-w-0">
+                            <span className="block text-[11px] font-medium text-slate-400">Criado em</span>
+                            <span className="block text-xs font-semibold truncate">
+                                {new Date(ticket.createdAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className={`p-3.5 rounded-xl border flex items-center gap-3 ${
+                        theme === 'light' ? 'bg-slate-50/50 border-slate-200/70' : 'bg-slate-800/40 border-slate-700/50'
+                    }`}>
+                        <div className={`p-2 rounded-lg ${
+                            theme === 'light' ? 'bg-emerald-50 text-emerald-600' : 'bg-emerald-950/50 text-emerald-400'
+                        }`}>
+                            <LuShield size={16} />
+                        </div>
+                        <div className="min-w-0">
+                            <span className="block text-[11px] font-medium text-slate-400">Responsável</span>
+                            <span className="block text-xs font-semibold truncate" title={ticket.agent?.name || 'Não atribuído'}>
+                                {ticket.agent?.name || 'Não atribuído'}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className={`p-3.5 rounded-xl border flex items-center gap-3 ${
+                        theme === 'light' ? 'bg-slate-50/50 border-slate-200/70' : 'bg-slate-800/40 border-slate-700/50'
+                    }`}>
+                        <div className={`p-2 rounded-lg ${
+                            theme === 'light' ? 'bg-amber-50 text-amber-600' : 'bg-amber-950/50 text-amber-400'
+                        }`}>
+                            <LuClock size={16} />
+                        </div>
+                        <div className="min-w-0">
+                            <span className="block text-[11px] font-medium text-slate-400">Atualizado em</span>
+                            <span className="block text-xs font-semibold truncate">
+                                {new Date(ticket.updatedAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
+                            </span>
+                        </div>
+                    </div>
+                </div>
             </div>
+
+            {(session?.user?.role === 'AGENT' || session?.user?.id === ticket.authorId) && (
+                <div className={`p-6 sm:p-8 rounded-2xl border shadow-sm space-y-4 ${
+                    theme === 'light' ? 'bg-white border-slate-200/90' : 'bg-slate-900/90 border-slate-800'
+                }`}>
+                    <div>
+                        <h2 className="text-lg font-bold">Ações do Ticket</h2>
+                        <p className={`text-xs ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
+                            Gerencie o andamento e as opções deste chamado
+                        </p>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
+                        {session?.user?.role === 'AGENT' ? (
+                            <div className="flex flex-wrap items-center gap-3">
+                                <div className="flex items-center gap-2">
+                                    <label htmlFor="ticket-status-select" className={`text-xs font-medium ${
+                                        theme === 'light' ? 'text-slate-600' : 'text-slate-300'
+                                    }`}>
+                                        Status:
+                                    </label>
+                                    <select
+                                        id="ticket-status-select"
+                                        data-cy="ticket-detail-status"
+                                        value={newStatus}
+                                        onChange={(e) => setNewStatus(e.target.value)}
+                                        className={`border rounded-xl py-2 px-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-500/20 ${
+                                            theme === 'light'
+                                                ? 'bg-slate-50 border-slate-300 text-slate-900'
+                                                : 'bg-slate-800 border-slate-700 text-white'
+                                        }`}
+                                        disabled={isUpdating}
+                                    >
+                                        <option value="OPEN">Aberto</option>
+                                        <option value="IN_PROGRESS">Em Progresso</option>
+                                        <option value="CLOSED">Fechado</option>
+                                    </select>
+                                </div>
+                                <button
+                                    disabled={isUpdating}
+                                    data-cy="ticket-detail-status-submit"
+                                    onClick={handleStatusUpdate}
+                                    className="rounded-xl bg-teal-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-teal-400 disabled:opacity-50 disabled:cursor-wait shadow-sm"
+                                >
+                                    {isUpdating ? 'Atualizando...' : 'Atualizar status'}
+                                </button>
+                            </div>
+                        ) : (
+                            <Link
+                                href={`/dashboard/ticket/${ticket.id}/edit`}
+                                className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition ${
+                                    theme === 'light'
+                                        ? 'border-slate-300 bg-white hover:border-teal-500 hover:text-teal-600 text-slate-700 shadow-sm'
+                                        : 'border-slate-700 bg-slate-800/80 hover:border-teal-400 hover:text-teal-400 text-slate-200 shadow-sm'
+                                }`}
+                            >
+                                <LuPencil size={15} />
+                                Editar Informações
+                            </Link>
+                        )}
+
+                        <button
+                            data-cy="ticket-detail-delete"
+                            onClick={handleDeleteTicket}
+                            disabled={isDeleting}
+                            className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-all ${
+                                isDeleting
+                                    ? 'opacity-50 cursor-not-allowed border-slate-300 text-slate-400'
+                                    : theme === 'light'
+                                        ? 'border-red-200 bg-red-50/60 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 shadow-sm'
+                                        : 'border-red-900/60 bg-red-950/40 text-red-400 hover:bg-red-600 hover:text-white hover:border-red-600 shadow-sm'
+                            }`}
+                        >
+                            <LuTrash2 size={16} />
+                            {isDeleting ? 'Deletando...' : 'Deletar Ticket'}
+                        </button>
+                    </div>
+
+                    {error && <p role="alert" className={`text-sm mt-2 ${theme === 'light' ? 'text-red-600' : 'text-red-500'}`}>{error}</p>}
+                    {success && <p role="status" className={`text-sm mt-2 ${theme === 'light' ? 'text-teal-700' : 'text-teal-300'}`}>{success}</p>}
+                </div>
+            )}
         </main>
     );
 }
