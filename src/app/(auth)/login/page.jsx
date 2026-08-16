@@ -17,6 +17,49 @@ export default function LoginPage() {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
+    const DEMO_ACCOUNTS = {
+        client: {
+            email: "client.demo@helpflow.com",
+            password: "Demo@123456",
+        },
+        agent: {
+            email: "agent.demo@helpflow.com",
+            password: "Demo@123456",
+        },
+    };
+
+    const handleDemoLogin = async (type) => {
+        const creds = DEMO_ACCOUNTS[type];
+        if (!creds) return;
+        setEmail(creds.email);
+        setPassword(creds.password);
+        setLoading(true);
+        setError("");
+
+        try {
+            const res = await signIn("credentials", {
+                redirect: false,
+                email: creds.email,
+                password: creds.password,
+            });
+
+            if (res?.error) {
+                if (res.error.includes("Muitas tentativas")) {
+                    setError(res.error);
+                } else {
+                    setError("E-mail ou senha da conta demo inválidos.");
+                }
+            } else {
+                router.push("/dashboard");
+                router.refresh();
+            }
+        } catch (err) {
+            setError("Ocorreu um erro inesperado. Tente novamente.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -97,7 +140,7 @@ export default function LoginPage() {
                     </div>
 
                     {/* Description */}
-                    <div className={`border rounded-lg p-4 mb-6 ${
+                    <div className={`border rounded-lg p-4 mb-4 ${
                         theme === "light"
                             ? "bg-slate-50 border-slate-200"
                             : "bg-white/5 border-white/10"
@@ -107,6 +150,74 @@ export default function LoginPage() {
                         }`}>
                             Faça login com email ou GitHub para acessar o dashboard e gerenciar seus tickets.
                         </p>
+                    </div>
+
+                    {/* Demo Quick Access */}
+                    <div className={`border rounded-xl p-4 mb-6 ${
+                        theme === "light"
+                            ? "bg-teal-50/70 border-teal-200 shadow-sm"
+                            : "bg-teal-950/30 border-teal-800/50 shadow-sm"
+                    }`}>
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                            <span className="text-xs font-semibold uppercase tracking-wider text-teal-600 dark:text-teal-400 flex items-center gap-1.5">
+                                <span className="inline-block w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
+                                Acesso de Demonstração (1-Clique)
+                            </span>
+                            <span className={`text-[11px] px-2 py-0.5 rounded font-mono font-medium ${
+                                theme === "light" ? "bg-teal-100 text-teal-800" : "bg-teal-900/50 text-teal-300"
+                            }`}>
+                                RBAC
+                            </span>
+                        </div>
+                        <p className={`text-xs mb-3 ${
+                            theme === "light" ? "text-slate-600" : "text-slate-300"
+                        }`}>
+                            Explore as duas visões do sistema sem necessidade de cadastro:
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <button
+                                type="button"
+                                disabled={loading}
+                                onClick={() => handleDemoLogin("client")}
+                                className={`text-left p-2.5 rounded-lg border transition-all text-xs ${
+                                    theme === "light"
+                                        ? "bg-white border-slate-200 hover:border-teal-400 hover:shadow text-slate-800"
+                                        : "bg-slate-900/80 border-slate-700 hover:border-teal-400 hover:bg-slate-800 text-slate-100"
+                                }`}
+                            >
+                                <span className="flex items-center gap-1.5 font-semibold text-teal-600 dark:text-teal-400">
+                                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                                        <circle cx="12" cy="7" r="4" />
+                                    </svg>
+                                    <span>Solicitante (Client)</span>
+                                </span>
+                                <span className="block text-[11px] opacity-75 mt-0.5">
+                                    Abertura e histórico
+                                </span>
+                            </button>
+
+                            <button
+                                type="button"
+                                disabled={loading}
+                                onClick={() => handleDemoLogin("agent")}
+                                className={`text-left p-2.5 rounded-lg border transition-all text-xs ${
+                                    theme === "light"
+                                        ? "bg-white border-slate-200 hover:border-teal-400 hover:shadow text-slate-800"
+                                        : "bg-slate-900/80 border-slate-700 hover:border-teal-400 hover:bg-slate-800 text-slate-100"
+                                }`}
+                            >
+                                <span className="flex items-center gap-1.5 font-semibold text-teal-600 dark:text-teal-400">
+                                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                                    </svg>
+                                    <span>Agente (Agent)</span>
+                                </span>
+                                <span className="block text-[11px] opacity-75 mt-0.5">
+                                    Fila geral e resolução
+                                </span>
+                            </button>
+                        </div>
                     </div>
 
                     {/* Error */}
