@@ -43,7 +43,9 @@ const themeInitScript = `(function(){try{
   // Aplicar no DOM antes da primeira pintura
   if (theme === 'light') {
     root.classList.add('light');
+    root.classList.remove('dark');
   } else {
+    root.classList.add('dark');
     root.classList.remove('light');
   }
 

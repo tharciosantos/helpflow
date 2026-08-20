@@ -62,7 +62,9 @@ export default function ThemeProvider({ children, initialTheme = "dark" }) {
     const root = document.documentElement;
     if (overrideTheme === "light") {
       root.classList.add("light");
+      root.classList.remove("dark");
     } else {
+      root.classList.add("dark");
       root.classList.remove("light");
     }
 
