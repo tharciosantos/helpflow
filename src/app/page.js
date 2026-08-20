@@ -13,7 +13,7 @@ export default function Home() {
     <div className={`min-h-screen lg:h-screen lg:overflow-hidden flex flex-col justify-between ${
       theme === "light" 
         ? "bg-slate-50 text-slate-900" 
-        : "bg-slate-950 text-white"
+        : "bg-slate-950 text-slate-100"
     }`}>
       {/* Header com Logo, Badge de Demonstração e Theme Toggle */}
       <header className={`shrink-0 z-50 backdrop-blur-md transition-colors border-b px-4 py-2.5 sm:px-6 md:px-8 ${
@@ -23,13 +23,15 @@ export default function Home() {
       }`}>
         <div className="mx-auto flex max-w-5xl items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="text-xl font-bold bg-gradient-to-r from-teal-400 to-blue-500 bg-clip-text text-transparent">
-              HelpFlow
+            <span className={`text-xl font-bold tracking-tight ${
+              theme === "light" ? "text-slate-900" : "text-white"
+            }`}>
+              Help<span className="text-emerald-600 dark:text-emerald-400">Flow</span>
             </span>
             <span className={`hidden sm:inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold border ${
               theme === "light"
-                ? "bg-teal-50 text-teal-700 border-teal-200"
-                : "bg-teal-950/60 text-teal-300 border-teal-800/60"
+                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                : "bg-emerald-950/50 text-emerald-300 border-emerald-800/40"
             }`}>
               Demonstração Aberta
             </span>
@@ -40,15 +42,15 @@ export default function Home() {
               href="/login"
               className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
                 theme === "light"
-                  ? "text-slate-700 hover:text-teal-600"
-                  : "text-slate-300 hover:text-teal-400"
+                  ? "text-slate-600 hover:text-slate-950"
+                  : "text-slate-300 hover:text-white"
               }`}
             >
               Entrar
             </Link>
             <Link
               href="/register"
-              className="rounded-lg bg-teal-500 px-3.5 py-1.5 text-sm font-semibold text-slate-950 transition hover:bg-teal-400 shadow-sm"
+              className="rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 text-sm font-semibold transition shadow-xs"
             >
               Criar Conta
             </Link>
@@ -67,13 +69,15 @@ export default function Home() {
             <div>
               <div className={`inline-flex items-center gap-2 rounded-full px-3 py-0.5 text-xs font-semibold border mb-2.5 ${
                 theme === "light"
-                  ? "bg-teal-50 text-teal-700 border-teal-200"
-                  : "bg-teal-950/60 text-teal-300 border-teal-800/60"
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  : "bg-emerald-950/50 text-emerald-300 border-emerald-800/40"
               }`}>
                 <span>🚀</span> HelpFlow · Demonstração de Produto
               </div>
 
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-[2.5rem] font-bold leading-tight tracking-tight">
+              <h1 className={`text-2xl sm:text-3xl md:text-4xl lg:text-[2.5rem] font-bold leading-tight tracking-tight ${
+                theme === "light" ? "text-slate-900" : "text-white"
+              }`}>
                 Suporte organizado, com cada pessoa vendo e fazendo apenas o que precisa.
               </h1>
 
@@ -88,17 +92,17 @@ export default function Home() {
               <div className="mt-4 flex flex-col gap-2.5 sm:flex-row sm:items-center">
                 <Link
                   href="/register"
-                  className="rounded-xl bg-teal-500 px-5 py-2.5 text-center text-sm font-semibold text-slate-950 transition-all hover:bg-teal-400 hover:shadow-lg hover:shadow-teal-500/20 active:scale-[0.98]"
+                  className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 text-center text-sm font-semibold transition-all hover:shadow-md active:scale-[0.98]"
                 >
                   Criar conta de demonstração
                 </Link>
 
                 <Link
                   href="/login"
-                  className={`rounded-xl border px-5 py-2.5 text-center text-sm font-semibold transition-all hover:shadow-sm active:scale-[0.98] ${
+                  className={`rounded-xl border px-5 py-2.5 text-center text-sm font-semibold transition-all hover:shadow-xs active:scale-[0.98] ${
                     theme === "light"
-                      ? "border-slate-300 bg-white hover:border-teal-500 text-slate-800"
-                      : "border-slate-700 bg-slate-900/60 hover:border-teal-400 text-slate-200"
+                      ? "border-slate-300 bg-white hover:border-slate-400 text-slate-800"
+                      : "border-slate-700 bg-slate-900/60 hover:border-slate-600 text-slate-200"
                   }`}
                 >
                   Entrar
@@ -142,7 +146,7 @@ export default function Home() {
 
       {/* Footer minimalista discreto */}
       <footer className={`shrink-0 py-2 text-center text-[11px] border-t transition-colors ${
-        theme === "light" ? "border-slate-200/80 text-slate-400" : "border-slate-800/80 text-slate-500"
+        theme === "light" ? "border-slate-200 text-slate-400" : "border-slate-800 text-slate-500"
       }`}>
         <div className="max-w-5xl mx-auto px-4 flex items-center justify-between">
           <span>HelpFlow © {new Date().getFullYear()} — Plataforma de Atendimento</span>

@@ -94,32 +94,29 @@ export default function LoginPage() {
     };
 
     return (
-        <main className={`min-h-screen flex items-center justify-center p-4 relative overflow-hidden ${
-            theme === "light"
-                ? "bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50"
-                : "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"
+        <main className={`relative min-h-screen flex items-center justify-center p-4 transition-colors ${
+            theme === "light" 
+                ? "bg-slate-50" 
+                : "bg-slate-950"
         }`}>
             {/* Theme Toggle */}
             <div className="fixed right-4 top-4 z-50 sm:right-6 sm:top-6">
                 <ThemeToggle />
             </div>
 
-            {/* Background blobs */}
+            {/* Background subtle radial glow */}
             <div className="absolute inset-0 pointer-events-none">
-                <div className={`absolute top-0 left-1/4 w-96 h-96 rounded-full blur-3xl ${
-                    theme === "light" ? "bg-teal-200/30" : "bg-teal-500/10"
-                }`} />
-                <div className={`absolute bottom-0 right-1/4 w-96 h-96 rounded-full blur-3xl ${
-                    theme === "light" ? "bg-blue-200/30" : "bg-blue-500/10"
+                <div className={`absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full blur-3xl ${
+                    theme === "light" ? "bg-emerald-500/5" : "bg-emerald-600/10"
                 }`} />
             </div>
 
             {/* Card */}
             <div className="relative w-full max-w-md">
-                <div className={`backdrop-blur-xl border rounded-2xl shadow-2xl p-8 ${
+                <div className={`backdrop-blur-xl border rounded-2xl shadow-xl p-8 ${
                     theme === "light"
-                        ? "bg-white/80 border-slate-200"
-                        : "bg-white/10 border-white/20"
+                        ? "bg-white border-slate-200"
+                        : "bg-slate-900/90 border-slate-800"
                 }`}>
                     {/* Header */}
                     <div className="text-center mb-8">
@@ -131,10 +128,10 @@ export default function LoginPage() {
                             className="mx-auto mb-4"
                             priority
                         />
-                        <h1 className={`text-4xl font-bold mb-2 ${
+                        <h1 className={`text-3xl font-bold tracking-tight mb-2 ${
                             theme === "light" ? "text-slate-900" : "text-white"
                         }`}>HelpFlow</h1>
-                        <p className={theme === "light" ? "text-slate-600" : "text-gray-400"}>
+                        <p className={theme === "light" ? "text-slate-600" : "text-slate-400"}>
                             Sistema de suporte simplificado
                         </p>
                     </div>
@@ -143,10 +140,10 @@ export default function LoginPage() {
                     <div className={`border rounded-lg p-4 mb-4 ${
                         theme === "light"
                             ? "bg-slate-50 border-slate-200"
-                            : "bg-white/5 border-white/10"
+                            : "bg-slate-950/40 border-slate-800"
                     }`}>
                         <p className={`text-sm text-center ${
-                            theme === "light" ? "text-slate-600" : "text-gray-300"
+                            theme === "light" ? "text-slate-600" : "text-slate-300"
                         }`}>
                             Faça login com email ou GitHub para acessar o dashboard e gerenciar seus tickets.
                         </p>
@@ -155,22 +152,24 @@ export default function LoginPage() {
                     {/* Demo Quick Access */}
                     <div className={`border rounded-xl p-4 mb-6 ${
                         theme === "light"
-                            ? "bg-teal-50/70 border-teal-200 shadow-sm"
-                            : "bg-teal-950/30 border-teal-800/50 shadow-sm"
+                            ? "bg-slate-50 border-slate-200 shadow-xs"
+                            : "bg-slate-950/60 border-slate-800 shadow-xs"
                     }`}>
                         <div className="flex items-center justify-between gap-2 mb-2">
-                            <span className="text-xs font-semibold uppercase tracking-wider text-teal-600 dark:text-teal-400 flex items-center gap-1.5">
-                                <span className="inline-block w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
+                            <span className={`text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 ${
+                                theme === "light" ? "text-slate-900" : "text-white"
+                            }`}>
+                                <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                                 Acesso de Demonstração (1-Clique)
                             </span>
                             <span className={`text-[11px] px-2 py-0.5 rounded font-mono font-medium ${
-                                theme === "light" ? "bg-teal-100 text-teal-800" : "bg-teal-900/50 text-teal-300"
+                                theme === "light" ? "bg-slate-200 text-slate-800" : "bg-slate-800 text-slate-300"
                             }`}>
                                 RBAC
                             </span>
                         </div>
                         <p className={`text-xs mb-3 ${
-                            theme === "light" ? "text-slate-600" : "text-slate-300"
+                            theme === "light" ? "text-slate-600" : "text-slate-400"
                         }`}>
                             Explore as duas visões do sistema sem necessidade de cadastro:
                         </p>
@@ -181,12 +180,14 @@ export default function LoginPage() {
                                 onClick={() => handleDemoLogin("client")}
                                 className={`text-left p-2.5 rounded-lg border transition-all text-xs ${
                                     theme === "light"
-                                        ? "bg-white border-slate-200 hover:border-teal-400 hover:shadow text-slate-800"
-                                        : "bg-slate-900/80 border-slate-700 hover:border-teal-400 hover:bg-slate-800 text-slate-100"
+                                        ? "bg-white border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/50 hover:shadow-xs text-slate-800"
+                                        : "bg-slate-900 border-slate-800 hover:border-slate-700 hover:bg-slate-800 text-slate-100"
                                 }`}
                             >
-                                <span className="flex items-center gap-1.5 font-semibold text-teal-600 dark:text-teal-400">
-                                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                <span className={`flex items-center gap-1.5 font-semibold ${
+                                    theme === "light" ? "text-slate-900" : "text-white"
+                                }`}>
+                                    <svg className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                                         <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
                                         <circle cx="12" cy="7" r="4" />
                                     </svg>
@@ -203,12 +204,14 @@ export default function LoginPage() {
                                 onClick={() => handleDemoLogin("agent")}
                                 className={`text-left p-2.5 rounded-lg border transition-all text-xs ${
                                     theme === "light"
-                                        ? "bg-white border-slate-200 hover:border-teal-400 hover:shadow text-slate-800"
-                                        : "bg-slate-900/80 border-slate-700 hover:border-teal-400 hover:bg-slate-800 text-slate-100"
+                                        ? "bg-white border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/50 hover:shadow-xs text-slate-800"
+                                        : "bg-slate-900 border-slate-800 hover:border-slate-700 hover:bg-slate-800 text-slate-100"
                                 }`}
                             >
-                                <span className="flex items-center gap-1.5 font-semibold text-teal-600 dark:text-teal-400">
-                                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                <span className={`flex items-center gap-1.5 font-semibold ${
+                                    theme === "light" ? "text-slate-900" : "text-white"
+                                }`}>
+                                    <svg className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                                     </svg>
                                     <span>Agente (Agent)</span>
@@ -224,12 +227,10 @@ export default function LoginPage() {
                     {error && (
                         <div role="alert" className={`border rounded-lg p-3 mb-4 ${
                             theme === "light"
-                                ? "bg-red-50 border-red-300"
-                                : "bg-red-500/20 border-red-500/50"
+                                ? "bg-red-50 border-red-300 text-red-700"
+                                : "bg-red-500/20 border-red-500/50 text-red-200"
                         }`}>
-                            <p className={`text-sm ${
-                                theme === "light" ? "text-red-700" : "text-red-200"
-                            }`}>{error}</p>
+                            <p className="text-sm">{error}</p>
                         </div>
                     )}
 
@@ -237,7 +238,7 @@ export default function LoginPage() {
                     <form onSubmit={handleSubmit} className="space-y-4 mb-4">
                         <div>
                             <label htmlFor="login-email" className={`mb-1 block text-sm font-medium ${
-                                theme === "light" ? "text-slate-700" : "text-gray-200"
+                                theme === "light" ? "text-slate-700" : "text-slate-200"
                             }`}>
                                 Email
                             </label>
@@ -249,10 +250,10 @@ export default function LoginPage() {
                                 autoComplete="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className={`w-full rounded-md border px-4 py-2 focus:outline-none focus:ring-1 focus:ring-teal-400 ${
+                                className={`w-full rounded-lg border px-4 py-2 text-sm focus:outline-none focus:ring-2 ${
                                     theme === "light"
-                                        ? "border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-teal-500"
-                                        : "border-white/20 bg-slate-900/40 text-white placeholder-gray-400 focus:border-teal-400"
+                                        ? "border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-emerald-500 focus:ring-emerald-400/20"
+                                        : "border-slate-700 bg-slate-950/60 text-white placeholder-slate-500 focus:border-emerald-400 focus:ring-emerald-400/20"
                                 }`}
                                 placeholder="voce@exemplo.com"
                                 required
@@ -261,7 +262,7 @@ export default function LoginPage() {
 
                         <div>
                             <label htmlFor="login-password" className={`mb-1 block text-sm font-medium ${
-                                theme === "light" ? "text-slate-700" : "text-gray-200"
+                                theme === "light" ? "text-slate-700" : "text-slate-200"
                             }`}>
                                 Senha
                             </label>
@@ -273,10 +274,10 @@ export default function LoginPage() {
                                 autoComplete="current-password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className={`w-full rounded-md border px-4 py-2 focus:outline-none focus:ring-1 focus:ring-teal-400 ${
+                                className={`w-full rounded-lg border px-4 py-2 text-sm focus:outline-none focus:ring-2 ${
                                     theme === "light"
-                                        ? "border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-teal-500"
-                                        : "border-white/20 bg-slate-900/40 text-white placeholder-gray-400 focus:border-teal-400"
+                                        ? "border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-emerald-500 focus:ring-emerald-400/20"
+                                        : "border-slate-700 bg-slate-950/60 text-white placeholder-slate-500 focus:border-emerald-400 focus:ring-emerald-400/20"
                                 }`}
                                 placeholder="••••••••"
                                 required
@@ -287,27 +288,27 @@ export default function LoginPage() {
                             data-cy="login-submit"
                             type="submit"
                             disabled={loading}
-                            className="w-full rounded-md bg-teal-500 px-4 py-2 font-semibold text-white transition hover:bg-teal-400 disabled:bg-teal-700"
+                            className="w-full rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 font-semibold text-sm transition shadow-xs disabled:opacity-50"
                         >
                             {loading ? "Entrando..." : "Entrar"}
                         </button>
                     </form>
                     <p className={`text-center text-sm mt-2 ${
-                        theme === "light" ? "text-slate-600" : "text-gray-400"
+                        theme === "light" ? "text-slate-600" : "text-slate-400"
                     }`}>
-                        <Link href="/forgot-password" className="text-teal-500 hover:text-teal-400">
+                        <Link href="/forgot-password" className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 underline">
                             Esqueceu sua senha?
                         </Link>
                     </p>
                     <div className="my-4 flex items-center">
                         <div className={`flex-grow border-t ${
-                            theme === "light" ? "border-slate-300" : "border-white/10"
+                            theme === "light" ? "border-slate-200" : "border-slate-800"
                         }`}></div>
-                        <span className={`mx-4 text-sm ${
-                            theme === "light" ? "text-slate-500" : "text-gray-400"
+                        <span className={`mx-4 text-xs font-semibold ${
+                            theme === "light" ? "text-slate-400" : "text-slate-500"
                         }`}>OU</span>
                         <div className={`flex-grow border-t ${
-                            theme === "light" ? "border-slate-300" : "border-white/10"
+                            theme === "light" ? "border-slate-200" : "border-slate-800"
                         }`}></div>
                     </div>
 
@@ -316,21 +317,21 @@ export default function LoginPage() {
                         data-cy="login-github"
                         disabled={loading}
                         onClick={handleGitHubLogin}
-                        className={`flex w-full items-center justify-center gap-2 rounded-md border px-4 py-2 font-medium transition ${
+                        className={`flex w-full items-center justify-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition ${
                             theme === "light"
-                                ? "border-slate-300 bg-white text-slate-900 hover:bg-slate-50"
-                                : "border-white/20 bg-slate-900/60 text-white hover:bg-slate-800"
+                                ? "border-slate-300 bg-white text-slate-800 hover:bg-slate-50"
+                                : "border-slate-700 bg-slate-900/60 text-white hover:bg-slate-800"
                         }`}
                     >
-                        <FaGithub className="text-xl" />
+                        <FaGithub className="text-lg" />
                         Continuar com GitHub
                     </button>
 
                     <p className={`mt-6 text-center text-sm ${
-                        theme === "light" ? "text-slate-600" : "text-gray-300"
+                        theme === "light" ? "text-slate-600" : "text-slate-300"
                     }`}>
                         Não tem uma conta?{" "}
-                        <Link href="/register" data-cy="login-register-link" className="font-medium text-teal-500 hover:text-teal-400">
+                        <Link href="/register" data-cy="login-register-link" className="font-semibold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 underline">
                             Criar conta
                         </Link>
                     </p>

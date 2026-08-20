@@ -129,7 +129,7 @@ export default function TicketList({
               {hasActiveFilters ? "Nenhum ticket encontrado para os filtros selecionados." : "Você ainda não possui tickets abertos."}
             </p>
             {!hasActiveFilters && (
-              <Link href="/dashboard/tickets/new" className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-teal-600 hover:text-teal-500 dark:text-teal-400 dark:hover:text-teal-300 transition">
+              <Link href="/dashboard/tickets/new" className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-600 underline hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 transition">
                 <LuTicket size={16} />
                 Criar meu primeiro ticket →
               </Link>
@@ -143,8 +143,8 @@ export default function TicketList({
                 data-cy={`ticket-card-${ticket.id}`}
                 className={`group relative rounded-xl border p-5 transition-all duration-200 hover:shadow-md ${
                   theme === 'light'
-                    ? 'bg-white border-slate-200 hover:border-teal-500/40 shadow-xs'
-                    : 'bg-slate-900/80 border-slate-800 hover:border-teal-500/30'
+                    ? 'bg-white border-slate-200 hover:border-emerald-200 shadow-xs'
+                    : 'bg-slate-900/80 border-slate-800 hover:border-slate-700'
                 }`}
               >
                 <div className="flex flex-col gap-3.5">
@@ -153,7 +153,7 @@ export default function TicketList({
                     <h3 className="text-base sm:text-lg font-semibold leading-snug">
                       <Link
                         href={`/ticket/${ticket.id}`}
-                        className={`transition-colors hover:text-teal-500 ${
+                        className={`transition-colors hover:text-emerald-600 dark:hover:text-emerald-400 ${
                           theme === 'light' ? 'text-slate-900' : 'text-white'
                         }`}
                       >
@@ -203,7 +203,7 @@ export default function TicketList({
                       <span>{new Date(ticket.createdAt).toLocaleDateString('pt-BR')}</span>
                     </span>
                     <span className="inline-flex items-center gap-1.5 sm:ml-auto">
-                      <LuShield size={13} className={ticket.agent ? 'text-teal-500' : 'text-slate-400'} />
+                      <LuShield size={13} className={ticket.agent ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'} />
                       <span>Resp: <strong className={theme === 'light' ? 'text-slate-700 font-medium' : 'text-slate-300 font-medium'}>{ticket.agent?.name || ticket.agent?.email || 'Não atribuído'}</strong></span>
                     </span>
                   </div>
@@ -223,7 +223,7 @@ export default function TicketList({
                               disabled={updatingId === ticket.id}
                               value={ticket.status}
                               onChange={(e) => handleStatusChange(ticket.id, e.target.value)}
-                              className={`rounded-lg px-2.5 py-1 text-xs font-medium border focus:outline-none focus:ring-1 focus:ring-teal-500 ${
+                              className={`rounded-lg px-2.5 py-1 text-xs font-medium border focus:outline-none focus:ring-1 focus:ring-emerald-400 ${
                                 theme === 'light'
                                   ? 'bg-slate-50 border-slate-300 text-slate-900'
                                   : 'bg-slate-800 border-slate-700 text-white'
@@ -245,7 +245,7 @@ export default function TicketList({
                               disabled={updatingId === ticket.id}
                               value={ticket.agentId || ''}
                               onChange={(e) => handleAgentChange(ticket.id, e.target.value)}
-                              className={`rounded-lg px-2.5 py-1 text-xs font-medium border focus:outline-none focus:ring-1 focus:ring-teal-500 ${
+                              className={`rounded-lg px-2.5 py-1 text-xs font-medium border focus:outline-none focus:ring-1 focus:ring-emerald-400 ${
                                 theme === 'light'
                                   ? 'bg-slate-50 border-slate-300 text-slate-900'
                                   : 'bg-slate-800 border-slate-700 text-white'
@@ -265,8 +265,8 @@ export default function TicketList({
                           href={`/dashboard/ticket/${ticket.id}/edit`}
                           className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-semibold transition ${
                             theme === 'light'
-                              ? 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-teal-600 hover:border-slate-300'
-                              : 'border-slate-700 bg-slate-800/60 text-slate-300 hover:bg-slate-800 hover:text-teal-300 hover:border-slate-600'
+                              ? 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-emerald-600 hover:border-slate-300'
+                              : 'border-slate-700 bg-slate-800/60 text-slate-300 hover:bg-slate-800 hover:text-white hover:border-slate-600'
                           }`}
                         >
                           <LuPencil size={12} />
@@ -277,7 +277,7 @@ export default function TicketList({
                           disabled={deletingId === ticket.id}
                           className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-semibold transition disabled:opacity-50 ${
                             theme === 'light'
-                              ? 'border-slate-200 bg-white text-slate-600 hover:bg-red-50 hover:text-red-600 hover:border-red-200'
+                              ? 'border-slate-200 bg-white text-slate-700 hover:bg-red-50 hover:text-red-600 hover:border-red-200'
                               : 'border-slate-700 bg-slate-800/60 text-slate-300 hover:bg-red-950/40 hover:text-red-400 hover:border-red-800/60'
                           }`}
                         >

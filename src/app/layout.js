@@ -27,7 +27,7 @@ export default async function RootLayout({ children }) {
   const cookieStore = await cookies();
   const themeCookie = cookieStore.get("helpflow-theme")?.value;
   const initialTheme = themeCookie === "light" ? "light" : "dark";
-  const htmlClassName = initialTheme === "light" ? "light" : undefined;
+  const htmlClassName = initialTheme === "light" ? "light" : "dark";
 
   return (
     // suppressHydrationWarning é mantido como salvaguarda caso o script

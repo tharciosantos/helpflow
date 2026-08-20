@@ -17,22 +17,22 @@ export default function UserProfile() {
           src={session.user.image || '/default-avatar.png'}
           alt={session.user.name}
           className={`w-10 h-10 rounded-full border-2 ${
-            theme === 'light' ? 'border-slate-300' : 'border-gray-600'
+            theme === 'light' ? 'border-slate-200' : 'border-slate-700'
           }`}
         />
         <div className="min-w-0 flex-1">
           <p className={`text-sm font-medium truncate ${
-            theme === 'light' ? 'text-slate-900' : 'text-white'
+            theme === 'light' ? 'text-slate-900' : 'text-slate-100'
           }`}>{session.user.name}</p>
           <p className={`text-xs truncate ${
-            theme === 'light' ? 'text-slate-500' : 'text-gray-400'
+            theme === 'light' ? 'text-slate-500' : 'text-slate-400'
           }`}>{session.user.email}</p>
           <div className="mt-1.5 flex items-center">
             {session.user.role === 'AGENT' ? (
               <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium border ${
                 theme === 'light'
-                  ? 'bg-slate-100 text-slate-700 border-slate-200'
-                  : 'bg-slate-800 text-slate-300 border-slate-700'
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200/80'
+                  : 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40'
               }`}>
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
                 Agente de Suporte
@@ -40,8 +40,8 @@ export default function UserProfile() {
             ) : (
               <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium border ${
                 theme === 'light'
-                  ? 'bg-slate-100 text-slate-700 border-slate-200'
-                  : 'bg-slate-800 text-slate-300 border-slate-700'
+                  ? 'bg-blue-50 text-blue-700 border-blue-200/80'
+                  : 'bg-blue-950/40 text-blue-300 border-blue-800/40'
               }`}>
                 <span className="h-1.5 w-1.5 rounded-full bg-blue-500" aria-hidden="true" />
                 Solicitante

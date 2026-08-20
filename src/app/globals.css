@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   /* Mapeamento das variáveis do Next.js/Geist */
   --color-background: var(--background);
@@ -7,22 +9,22 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  /* Cores personalizadas */
-  --color-primary: #06b6d4;
-  --color-secondary: #0f172a;
+  /* Cores personalizadas Esmeralda com Neutros */
+  --color-primary: #059669;
+  --color-secondary: #10b981;
 }
 
-/* Tema escuro (padrão) */
+/* Tema escuro (suave e refinado em slate escuro) */
 :root {
-  --background: #020617;
+  --background: #0b1120;
   --foreground: #f8fafc;
   color-scheme: dark;
 }
 
-/* Tema claro */
+/* Tema claro (off-white limpo e descansado) */
 :root.light {
   --background: #f8fafc;
-  --foreground: #020617;
+  --foreground: #0f172a;
   color-scheme: light;
 }
 
@@ -34,8 +36,8 @@ body {
 }
 
 :focus-visible {
-  outline: 3px solid #2dd4bf;
-  outline-offset: 3px;
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {

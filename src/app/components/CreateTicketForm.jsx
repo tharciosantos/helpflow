@@ -76,10 +76,10 @@ export default function CreateTicketForm({ onTicketCreated }) {
             minLength={5}
             maxLength={100}
             placeholder="Ex: Erro ao emitir relatório mensal no dashboard"
-            className={`block w-full rounded-xl border px-3.5 py-2.5 text-sm transition focus:outline-none focus:ring-2 focus:ring-teal-500/50 ${
+            className={`block w-full rounded-xl border px-3.5 py-2.5 text-sm transition focus:outline-none focus:ring-2 ${
               theme === 'light'
-                ? 'bg-slate-50/50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-teal-500'
-                : 'bg-slate-800/60 border-slate-700 text-white placeholder:text-slate-500 focus:bg-slate-800 focus:border-teal-400'
+                ? 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-400/20'
+                : 'bg-slate-800/60 border-slate-700 text-white placeholder:text-slate-500 focus:bg-slate-800 focus:border-emerald-400 focus:ring-emerald-400/20'
             }`}
           />
           <p className={`mt-1 text-xs ${theme === 'light' ? 'text-slate-400' : 'text-slate-500'}`}>
@@ -106,10 +106,10 @@ export default function CreateTicketForm({ onTicketCreated }) {
             onChange={(e) => setDescription(e.target.value)}
             required
             placeholder="Explique o problema, comportamento esperado ou passos para reproduzir..."
-            className={`block w-full rounded-xl border px-3.5 py-2.5 text-sm leading-relaxed transition focus:outline-none focus:ring-2 focus:ring-teal-500/50 ${
+            className={`block w-full rounded-xl border px-3.5 py-2.5 text-sm leading-relaxed transition focus:outline-none focus:ring-2 ${
               theme === 'light'
-                ? 'bg-slate-50/50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-teal-500'
-                : 'bg-slate-800/60 border-slate-700 text-white placeholder:text-slate-500 focus:bg-slate-800 focus:border-teal-400'
+                ? 'bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-400/20'
+                : 'bg-slate-800/60 border-slate-700 text-white placeholder:text-slate-500 focus:bg-slate-800 focus:border-emerald-400 focus:ring-emerald-400/20'
             }`}
           />
         </div>
@@ -130,10 +130,10 @@ export default function CreateTicketForm({ onTicketCreated }) {
             name="priority"
             value={priority}
             onChange={(e) => setPriority(e.target.value)}
-            className={`block w-full rounded-xl border px-3.5 py-2.5 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-teal-500/50 ${
+            className={`block w-full rounded-xl border px-3.5 py-2.5 text-sm font-medium transition focus:outline-none focus:ring-2 ${
               theme === 'light'
-                ? 'bg-slate-50/50 border-slate-200 text-slate-900 focus:bg-white focus:border-teal-500'
-                : 'bg-slate-800/60 border-slate-700 text-white focus:bg-slate-800 focus:border-teal-400'
+                ? 'bg-white border-slate-300 text-slate-900 focus:border-emerald-500 focus:ring-emerald-400/20'
+                : 'bg-slate-800/60 border-slate-700 text-white focus:bg-slate-800 focus:border-emerald-400 focus:ring-emerald-400/20'
             }`}
           >
             <option value="LOW">🟢 Baixa — Dúvidas e solicitações gerais</option>
@@ -150,7 +150,7 @@ export default function CreateTicketForm({ onTicketCreated }) {
           data-cy="ticket-create-submit"
           type="submit"
           disabled={loading}
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-teal-600 px-6 py-3 text-sm font-semibold text-white shadow-xs transition hover:bg-teal-500 active:scale-[0.99] disabled:opacity-50"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 text-sm font-semibold shadow-xs transition active:scale-[0.99] disabled:opacity-50"
         >
           <LuSend size={15} />
           {loading ? 'Criando ticket...' : 'Criar Ticket'}

@@ -226,5 +226,6 @@ Execute sempre `npm run test` e `npm run lint` antes de submeter código.
 ## 12. Git Flow e Conventional Commits
 
 - Trabalhe sempre em branches nomeadas como `feat/`, `fix/`, `refactor/`, `docs/`, `chore/`.
+- **Regra Obrigatória:** Sempre apresente as alterações e aguarde a avaliação/validação do usuário antes de executar o commit ou push.
 - Commits no formato Conventional Commits: `tipo(escopo): descrição concisa`.
-- PR obrigatório com checklist e validação verde em `test`, `lint` e `build`.
+- PR com checklist e validação verde em `test`, `lint` e `build`.
