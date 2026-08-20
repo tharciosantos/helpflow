@@ -157,14 +157,14 @@ export default function DemoTicketFlow({ theme = "dark" }) {
                 aria-label={isPaused ? "Clique para retomar animação" : "Clique para pausar animação"}
                 className={`relative cursor-pointer overflow-hidden rounded-2xl border p-4 sm:p-5 shadow-xl transition-shadow ${
                     theme === "light"
-                        ? "border-slate-200 bg-white/95 shadow-slate-200/50 hover:shadow-teal-500/20"
-                        : "border-slate-700 bg-slate-900/95 shadow-black/30 hover:shadow-teal-500/10"
+                        ? "border-slate-200 bg-white shadow-slate-200/50 hover:shadow-md"
+                        : "border-slate-800 bg-slate-900/95 shadow-black/30 hover:shadow-md"
                 }`}
             >
                 <div className="flex items-start justify-between gap-3">
                     <div>
-                        <p className={`text-xs font-semibold ${
-                            theme === "light" ? "text-teal-600" : "text-teal-400"
+                        <p className={`text-xs font-mono font-semibold ${
+                            theme === "light" ? "text-slate-500" : "text-slate-400"
                         }`}>
                             Ticket #1042
                         </p>
@@ -172,7 +172,7 @@ export default function DemoTicketFlow({ theme = "dark" }) {
                         <h2
                             id="demo-ticket-title"
                             className={`mt-1 text-base sm:text-lg font-bold leading-snug ${
-                                theme === "light" ? "text-slate-900" : "text-slate-100"
+                                theme === "light" ? "text-slate-900" : "text-white"
                             }`}
                         >
                             Falha ao acessar relatório mensal
@@ -218,18 +218,18 @@ export default function DemoTicketFlow({ theme = "dark" }) {
                                     className={`flex items-center gap-2.5 text-xs sm:text-sm transition-all duration-500 ${
                                         isCurrent || isCompleted
                                             ? theme === "light"
-                                                ? "text-slate-800 font-medium"
-                                                : "text-slate-200 font-medium"
+                                                ? "text-slate-900 font-medium"
+                                                : "text-white font-medium"
                                             : theme === "light"
                                                 ? "text-slate-400"
-                                                : "text-slate-500"
+                                                : "text-slate-600"
                                     }`}
                                 >
                                     <span
                                         className={`h-2.5 w-2.5 rounded-full transition-all duration-500 ${isCurrent
-                                            ? "bg-teal-400 ring-4 ring-teal-400/20 scale-110"
+                                            ? "bg-emerald-600 ring-4 ring-emerald-500/20 dark:bg-emerald-400 dark:ring-emerald-400/20 scale-110"
                                             : isCompleted
-                                                ? "bg-teal-600"
+                                                ? "bg-emerald-400 dark:bg-emerald-600"
                                                 : theme === "light"
                                                     ? "bg-slate-300"
                                                     : "bg-slate-700"
@@ -261,7 +261,7 @@ export default function DemoTicketFlow({ theme = "dark" }) {
                         Responsável
                     </span>
                     <span className={`font-semibold ${
-                        theme === "light" ? "text-slate-900" : "text-slate-200"
+                        theme === "light" ? "text-slate-900" : "text-white"
                     }`}>
                         Equipe de suporte
                     </span>
@@ -274,10 +274,10 @@ export default function DemoTicketFlow({ theme = "dark" }) {
                     e.stopPropagation();
                     toggleAnimation();
                 }}
-                className={`relative z-10 mx-auto mt-3 flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all focus:outline-none focus:ring-2 focus:ring-teal-500/50 ${
+                className={`relative z-10 mx-auto mt-3 flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all focus:outline-none focus:ring-2 focus:ring-emerald-400/30 ${
                     theme === "light"
-                        ? "border-slate-300 bg-white text-slate-700 hover:border-teal-500 hover:text-teal-600"
-                        : "border-slate-700 bg-slate-800/80 text-slate-300 hover:border-teal-500/50 hover:bg-slate-800 hover:text-teal-300"
+                        ? "border-slate-300 bg-white text-slate-700 hover:border-emerald-400 hover:text-emerald-600"
+                        : "border-slate-700 bg-slate-800/80 text-slate-300 hover:border-slate-500 hover:bg-slate-800 hover:text-slate-100"
                 }`}
                 aria-label={isPaused ? "Retomar animação" : "Pausar animação"}
                 aria-pressed={isPaused}

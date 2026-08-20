@@ -113,7 +113,7 @@ export default function DashboardPage() {
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className={`text-2xl sm:text-3xl font-bold tracking-tight ${
-            theme === 'light' ? 'text-slate-900' : 'text-white'
+            theme === 'light' ? 'text-slate-900' : 'text-slate-100'
           }`}>
             Olá, {session?.user?.name || 'bem-vindo(a)'} 👋
           </h1>
@@ -127,7 +127,7 @@ export default function DashboardPage() {
         <Link
           data-cy="dashboard-new-ticket-link"
           href="/dashboard/tickets/new"
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-teal-500 px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-sm hover:bg-teal-400 transition active:scale-[0.98]"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 px-4 py-2.5 text-sm font-semibold shadow-xs transition active:scale-[0.98]"
         >
           <LuPlus size={18} />
           Novo ticket
@@ -153,10 +153,10 @@ export default function DashboardPage() {
               value={filters.search}
               onChange={(event) => setFilters(prev => ({ ...prev, search: event.target.value }))}
               placeholder="Título ou descrição..."
-              className={`w-full rounded-lg border py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-1 ${
+              className={`w-full rounded-lg border py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 ${
                 theme === 'light'
-                  ? 'border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:border-teal-500 focus:ring-teal-500'
-                  : 'border-slate-700 bg-slate-800 text-white placeholder:text-slate-500 focus:border-teal-400 focus:ring-teal-400'
+                  ? 'border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-400/20'
+                  : 'border-slate-700 bg-slate-800 text-white placeholder:text-slate-500 focus:border-emerald-400 focus:ring-emerald-400/20'
               }`}
             />
           </div>
@@ -170,10 +170,10 @@ export default function DashboardPage() {
             data-cy="ticket-filter-status" 
             value={filters.status} 
             onChange={(event) => setFilters(prev => ({ ...prev, status: event.target.value }))} 
-            className={`rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
+            className={`rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
               theme === 'light'
-                ? 'border-slate-300 bg-white text-slate-900 focus:border-teal-500 focus:ring-teal-500'
-                : 'border-slate-700 bg-slate-800 text-white focus:border-teal-400 focus:ring-teal-400'
+                ? 'border-slate-300 bg-white text-slate-900 focus:border-emerald-500 focus:ring-emerald-400/20'
+                : 'border-slate-700 bg-slate-800 text-white focus:border-emerald-400 focus:ring-emerald-400/20'
             }`}
           >
             <option value="">Todos</option>
@@ -191,10 +191,10 @@ export default function DashboardPage() {
             data-cy="ticket-filter-priority" 
             value={filters.priority} 
             onChange={(event) => setFilters(prev => ({ ...prev, priority: event.target.value }))} 
-            className={`rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 ${
+            className={`rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
               theme === 'light'
-                ? 'border-slate-300 bg-white text-slate-900 focus:border-teal-500 focus:ring-teal-500'
-                : 'border-slate-700 bg-slate-800 text-white focus:border-teal-400 focus:ring-teal-400'
+                ? 'border-slate-300 bg-white text-slate-900 focus:border-emerald-500 focus:ring-emerald-400/20'
+                : 'border-slate-700 bg-slate-800 text-white focus:border-emerald-400 focus:ring-emerald-400/20'
             }`}
           >
             <option value="">Todas</option>
@@ -205,12 +205,12 @@ export default function DashboardPage() {
           </select>
         </label>
 
-        <button data-cy="ticket-filter-submit" type="submit" className="rounded-lg bg-teal-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-teal-400 shadow-xs active:scale-[0.98]">
+        <button data-cy="ticket-filter-submit" type="submit" className="rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 px-4 py-2 text-sm font-semibold transition shadow-xs active:scale-[0.98]">
           Filtrar
         </button>
         <button data-cy="ticket-filter-clear" type="button" onClick={clearFilters} className={`rounded-lg border px-3.5 py-2 text-sm font-medium transition ${
           theme === 'light' 
-            ? 'border-slate-300 text-slate-600 hover:bg-slate-100 hover:text-slate-900' 
+            ? 'border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-900' 
             : 'border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white'
         }`}>
           Limpar
@@ -295,11 +295,11 @@ export default function DashboardPage() {
 
             <div className="grid grid-cols-2 gap-2.5">
               <div className={`rounded-lg p-3 border transition-colors ${
-                theme === 'light' ? 'bg-slate-50/80 border-slate-200' : 'bg-slate-800/60 border-slate-700/60'
+                theme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-800/60 border-slate-700/60'
               }`}>
                 <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
                   <span>Total</span>
-                  <LuLayers size={14} className="text-teal-500" />
+                  <LuLayers size={14} className="text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <span className={`text-2xl font-extrabold ${
                   theme === 'light' ? 'text-slate-900' : 'text-white'
@@ -307,11 +307,11 @@ export default function DashboardPage() {
               </div>
 
               <div className={`rounded-lg p-3 border transition-colors ${
-                theme === 'light' ? 'bg-slate-50/80 border-slate-200' : 'bg-slate-800/60 border-slate-700/60'
+                theme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-800/60 border-slate-700/60'
               }`}>
                 <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
                   <span>Filtrados</span>
-                  <LuSearch size={14} className="text-blue-500" />
+                  <LuSearch size={14} className="text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <span className={`text-2xl font-extrabold ${
                   theme === 'light' ? 'text-slate-900' : 'text-white'
@@ -319,7 +319,7 @@ export default function DashboardPage() {
               </div>
 
               <div className={`rounded-lg p-3 border transition-colors ${
-                theme === 'light' ? 'bg-slate-50/80 border-slate-200' : 'bg-slate-800/60 border-slate-700/60'
+                theme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-800/60 border-slate-700/60'
               }`}>
                 <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
                   <span className="flex items-center gap-1.5 font-medium">
@@ -334,7 +334,7 @@ export default function DashboardPage() {
               </div>
 
               <div className={`rounded-lg p-3 border transition-colors ${
-                theme === 'light' ? 'bg-slate-50/80 border-slate-200' : 'bg-slate-800/60 border-slate-700/60'
+                theme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-800/60 border-slate-700/60'
               }`}>
                 <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
                   <span className="flex items-center gap-1.5 font-medium">
@@ -349,7 +349,7 @@ export default function DashboardPage() {
               </div>
 
               <div className={`col-span-2 rounded-lg p-3 border transition-colors ${
-                theme === 'light' ? 'bg-slate-50/80 border-slate-200' : 'bg-slate-800/60 border-slate-700/60'
+                theme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-800/60 border-slate-700/60'
               }`}>
                 <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
                   <span className="flex items-center gap-1.5 font-medium">
@@ -374,9 +374,9 @@ export default function DashboardPage() {
               💡 Dica rápida
             </h3>
             <p>
-              Use os status <span className="font-semibold text-teal-600 dark:text-teal-400">Aberto</span>,{' '}
+              Use os status <span className="font-semibold text-emerald-600 dark:text-emerald-400">Aberto</span>,{' '}
               <span className="font-semibold text-amber-600 dark:text-amber-400">Em Progresso</span> e{' '}
-              <span className="font-semibold">Fechado</span> para organizar o fluxo de atendimento da equipe.
+              <span className="font-semibold text-slate-700 dark:text-slate-300">Fechado</span> para organizar o fluxo de atendimento da equipe.
             </p>
           </div>
         </aside>

@@ -56,19 +56,21 @@ export default function FeatureCard({ title, description, delay = 0, theme = "da
         hasAnimated ? "opacity-100" : "scroll-reveal"
       } ${
         theme === "light"
-          ? "border-slate-200/90 bg-white hover:border-teal-500/40 hover:shadow-md hover:shadow-teal-500/5"
-          : "border-slate-800 bg-slate-900/90 hover:border-teal-500/40 hover:shadow-md hover:shadow-teal-500/10"
+          ? "border-slate-200 bg-white hover:border-emerald-200 hover:shadow-md"
+          : "border-slate-800 bg-slate-900/90 hover:border-slate-700 hover:shadow-md"
       }`}
       style={{ animationDelay: hasAnimated ? "0ms" : `${delay}ms` }}
     >
       <div className={`mb-2.5 inline-flex h-8 w-8 items-center justify-center rounded-lg border transition-transform duration-300 group-hover:scale-105 ${
         theme === "light"
-          ? "border-teal-200 bg-teal-50 text-teal-600"
-          : "border-teal-800/60 bg-teal-950/50 text-teal-400"
+          ? "border-emerald-200/80 bg-emerald-50 text-emerald-600"
+          : "border-emerald-900/40 bg-emerald-950/40 text-emerald-400"
       }`}>
         <IconComponent size={16} />
       </div>
-      <h2 className="text-sm sm:text-base font-bold">{title}</h2>
+      <h2 className={`text-sm sm:text-base font-bold ${
+        theme === "light" ? "text-slate-900" : "text-white"
+      }`}>{title}</h2>
       <p className={`mt-1 text-xs leading-relaxed ${
         theme === "light" ? "text-slate-600" : "text-slate-400"
       }`}>

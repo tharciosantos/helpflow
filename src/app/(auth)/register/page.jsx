@@ -79,31 +79,28 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className={`min-h-screen flex items-center justify-center p-4 relative overflow-hidden ${
+    <main className={`relative min-h-screen flex items-center justify-center p-4 transition-colors ${
       theme === "light"
-        ? "bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50"
-        : "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"
+        ? "bg-slate-50"
+        : "bg-slate-950"
     }`}>
       {/* Theme Toggle */}
       <div className="fixed right-4 top-4 z-50 sm:right-6 sm:top-6">
         <ThemeToggle />
       </div>
 
-      {/* Background blobs */}
+      {/* Background subtle radial glow */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className={`absolute top-0 left-1/4 w-96 h-96 rounded-full blur-3xl ${
-          theme === "light" ? "bg-teal-200/30" : "bg-teal-500/10"
-        }`} />
-        <div className={`absolute bottom-0 right-1/4 w-96 h-96 rounded-full blur-3xl ${
-          theme === "light" ? "bg-blue-200/30" : "bg-blue-500/10"
+        <div className={`absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full blur-3xl ${
+          theme === "light" ? "bg-emerald-500/5" : "bg-emerald-600/10"
         }`} />
       </div>
 
       <div className="relative w-full max-w-md">
-        <div className={`backdrop-blur-xl border rounded-2xl shadow-2xl p-8 ${
+        <div className={`backdrop-blur-xl border rounded-2xl shadow-xl p-8 ${
           theme === "light"
-            ? "bg-white/80 border-slate-200"
-            : "bg-white/10 border-white/20"
+            ? "bg-white border-slate-200"
+            : "bg-slate-900/90 border-slate-800"
         }`}>
           <div className="text-center mb-8">
             <Image
@@ -114,16 +111,16 @@ export default function RegisterPage() {
               className="mx-auto mb-4"
               priority
             />
-            <h1 className={`text-4xl font-bold mb-2 ${
+            <h1 className={`text-3xl font-bold tracking-tight mb-2 ${
               theme === "light" ? "text-slate-900" : "text-white"
             }`}>Criar Conta</h1>
-            <p className={theme === "light" ? "text-slate-600" : "text-gray-400"}>
+            <p className={theme === "light" ? "text-slate-600" : "text-slate-400"}>
               Cadastre-se para abrir e acompanhar seus tickets
             </p>
           </div>
 
           {error && (
-            <div role="alert" className={`mb-4 rounded-md p-3 text-sm border ${
+            <div role="alert" className={`mb-4 rounded-lg p-3 text-sm border ${
               theme === "light"
                 ? "bg-red-50 border-red-200 text-red-700"
                 : "bg-red-500/20 border-red-500/50 text-red-200"
@@ -135,7 +132,7 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="register-name" className={`mb-1 block text-sm font-medium ${
-                theme === "light" ? "text-slate-700" : "text-gray-200"
+                theme === "light" ? "text-slate-700" : "text-slate-200"
               }`}>
                 Nome
               </label>
@@ -148,10 +145,10 @@ export default function RegisterPage() {
                 ref={fields.name}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className={`w-full rounded-md border px-4 py-2 focus:outline-none focus:ring-1 focus:ring-teal-400 ${
+                className={`w-full rounded-lg border px-4 py-2 text-sm focus:outline-none focus:ring-2 ${
                   theme === "light"
-                    ? "border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-teal-500"
-                    : "border-white/20 bg-slate-900/40 text-white placeholder-gray-400 focus:border-teal-400"
+                    ? "border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-emerald-500 focus:ring-emerald-400/20"
+                    : "border-slate-700 bg-slate-950/60 text-white placeholder-slate-500 focus:border-emerald-400 focus:ring-emerald-400/20"
                 }`}
                 placeholder="Seu nome"
                 required
@@ -164,7 +161,7 @@ export default function RegisterPage() {
 
             <div>
               <label htmlFor="register-email" className={`mb-1 block text-sm font-medium ${
-                theme === "light" ? "text-slate-700" : "text-gray-200"
+                theme === "light" ? "text-slate-700" : "text-slate-200"
               }`}>
                 Email
               </label>
@@ -177,10 +174,10 @@ export default function RegisterPage() {
                 ref={fields.email}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className={`w-full rounded-md border px-4 py-2 focus:outline-none focus:ring-1 focus:ring-teal-400 ${
+                className={`w-full rounded-lg border px-4 py-2 text-sm focus:outline-none focus:ring-2 ${
                   theme === "light"
-                    ? "border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-teal-500"
-                    : "border-white/20 bg-slate-900/40 text-white placeholder-gray-400 focus:border-teal-400"
+                    ? "border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-emerald-500 focus:ring-emerald-400/20"
+                    : "border-slate-700 bg-slate-950/60 text-white placeholder-slate-500 focus:border-emerald-400 focus:ring-emerald-400/20"
                 }`}
                 placeholder="voce@exemplo.com"
                 required
@@ -192,7 +189,7 @@ export default function RegisterPage() {
 
             <div>
               <label htmlFor="register-password" className={`mb-1 block text-sm font-medium ${
-                theme === "light" ? "text-slate-700" : "text-gray-200"
+                theme === "light" ? "text-slate-700" : "text-slate-200"
               }`}>
                 Senha
               </label>
@@ -205,10 +202,10 @@ export default function RegisterPage() {
                 ref={fields.password}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className={`w-full rounded-md border px-4 py-2 focus:outline-none focus:ring-1 focus:ring-teal-400 ${
+                className={`w-full rounded-lg border px-4 py-2 text-sm focus:outline-none focus:ring-2 ${
                   theme === "light"
-                    ? "border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-teal-500"
-                    : "border-white/20 bg-slate-900/40 text-white placeholder-gray-400 focus:border-teal-400"
+                    ? "border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-emerald-500 focus:ring-emerald-400/20"
+                    : "border-slate-700 bg-slate-950/60 text-white placeholder-slate-500 focus:border-emerald-400 focus:ring-emerald-400/20"
                 }`}
                 placeholder="••••••••"
                 required
@@ -216,13 +213,13 @@ export default function RegisterPage() {
                 aria-invalid={Boolean(fieldErrors.password)}
                 aria-describedby={fieldErrors.password ? 'register-password-help register-password-error' : 'register-password-help'}
               />
-              <p id="register-password-help" className={`mt-1 text-xs ${theme === "light" ? "text-slate-400" : "text-gray-400"}`}>Use pelo menos 8 caracteres.</p>
+              <p id="register-password-help" className={`mt-1 text-xs ${theme === "light" ? "text-slate-400" : "text-slate-500"}`}>Use pelo menos 8 caracteres.</p>
               {fieldErrors.password && <p id="register-password-error" className="mt-1 text-sm text-red-500">{fieldErrors.password[0]}</p>}
             </div>
 
             <div>
               <label htmlFor="register-confirm-password" className={`mb-1 block text-sm font-medium ${
-                theme === "light" ? "text-slate-700" : "text-gray-200"
+                theme === "light" ? "text-slate-700" : "text-slate-200"
               }`}>
                 Confirmar senha
               </label>
@@ -235,10 +232,10 @@ export default function RegisterPage() {
                 ref={fields.confirmPassword}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className={`w-full rounded-md border px-4 py-2 focus:outline-none focus:ring-1 focus:ring-teal-400 ${
+                className={`w-full rounded-lg border px-4 py-2 text-sm focus:outline-none focus:ring-2 ${
                   theme === "light"
-                    ? "border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-teal-500"
-                    : "border-white/20 bg-slate-900/40 text-white placeholder-gray-400 focus:border-teal-400"
+                    ? "border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-emerald-500 focus:ring-emerald-400/20"
+                    : "border-slate-700 bg-slate-950/60 text-white placeholder-slate-500 focus:border-emerald-400 focus:ring-emerald-400/20"
                 }`}
                 placeholder="••••••••"
                 required
@@ -253,20 +250,20 @@ export default function RegisterPage() {
               data-cy="register-submit"
               type="submit"
               disabled={loading}
-              className="w-full rounded-md bg-teal-500 px-4 py-2 font-semibold text-white transition hover:bg-teal-400 disabled:bg-teal-700"
+              className="w-full rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 font-semibold text-sm transition shadow-xs disabled:opacity-50"
             >
               {loading ? "Criando conta..." : "Criar conta"}
             </button>
           </form>
 
           <p className={`mt-6 text-center text-sm ${
-            theme === "light" ? "text-slate-600" : "text-gray-300"
+            theme === "light" ? "text-slate-600" : "text-slate-400"
           }`}>
             Já tem uma conta?{" "}
             <Link
               data-cy="register-login-link"
               href="/login"
-              className="font-medium text-teal-500 hover:text-teal-400"
+              className="font-semibold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 underline"
             >
               Entrar
             </Link>

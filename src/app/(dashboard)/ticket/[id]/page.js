@@ -143,7 +143,7 @@ export default function TicketDetailsPage() {
                     href="/dashboard" 
                     data-cy="ticket-detail-back-link" 
                     className={`inline-flex items-center gap-2 text-sm font-medium transition ${
-                        theme === 'light' ? 'text-slate-500 hover:text-teal-600' : 'text-slate-400 hover:text-teal-400'
+                        theme === 'light' ? 'text-slate-500 hover:text-emerald-600' : 'text-slate-400 hover:text-emerald-400'
                     }`}
                 >
                     <LuArrowLeft size={16} />
@@ -153,7 +153,7 @@ export default function TicketDetailsPage() {
 
             <div className={`rounded-2xl border shadow-sm p-6 sm:p-8 space-y-6 ${
                 theme === 'light'
-                    ? 'bg-white border-slate-200/90'
+                    ? 'bg-white border-slate-200'
                     : 'bg-slate-900/90 border-slate-800'
             }`}>
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
@@ -189,11 +189,11 @@ export default function TicketDetailsPage() {
 
                 <div className={`rounded-xl p-5 border ${
                     theme === 'light'
-                        ? 'bg-slate-50/70 border-slate-200/80 text-slate-800'
+                        ? 'bg-slate-50 border-slate-200 text-slate-800'
                         : 'bg-slate-950/40 border-slate-800/80 text-slate-200'
                 }`}>
                     <h3 className={`text-[11px] font-bold uppercase tracking-wider mb-2 ${
-                        theme === 'light' ? 'text-slate-400' : 'text-slate-500'
+                        theme === 'light' ? 'text-slate-500' : 'text-slate-400'
                     }`}>
                         Descrição do Chamado
                     </h3>
@@ -204,10 +204,10 @@ export default function TicketDetailsPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pt-2">
                     <div className={`p-3.5 rounded-xl border flex items-center gap-3 ${
-                        theme === 'light' ? 'bg-slate-50/50 border-slate-200/70' : 'bg-slate-800/40 border-slate-700/50'
+                        theme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-800/40 border-slate-700/50'
                     }`}>
                         <div className={`p-2 rounded-lg ${
-                            theme === 'light' ? 'bg-teal-50 text-teal-600' : 'bg-teal-950/50 text-teal-400'
+                            theme === 'light' ? 'bg-blue-50 text-blue-600' : 'bg-blue-950/50 text-blue-400'
                         }`}>
                             <LuUser size={16} />
                         </div>
@@ -220,7 +220,7 @@ export default function TicketDetailsPage() {
                     </div>
 
                     <div className={`p-3.5 rounded-xl border flex items-center gap-3 ${
-                        theme === 'light' ? 'bg-slate-50/50 border-slate-200/70' : 'bg-slate-800/40 border-slate-700/50'
+                        theme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-800/40 border-slate-700/50'
                     }`}>
                         <div className={`p-2 rounded-lg ${
                             theme === 'light' ? 'bg-blue-50 text-blue-600' : 'bg-blue-950/50 text-blue-400'
@@ -236,7 +236,7 @@ export default function TicketDetailsPage() {
                     </div>
 
                     <div className={`p-3.5 rounded-xl border flex items-center gap-3 ${
-                        theme === 'light' ? 'bg-slate-50/50 border-slate-200/70' : 'bg-slate-800/40 border-slate-700/50'
+                        theme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-800/40 border-slate-700/50'
                     }`}>
                         <div className={`p-2 rounded-lg ${
                             theme === 'light' ? 'bg-emerald-50 text-emerald-600' : 'bg-emerald-950/50 text-emerald-400'
@@ -252,7 +252,7 @@ export default function TicketDetailsPage() {
                     </div>
 
                     <div className={`p-3.5 rounded-xl border flex items-center gap-3 ${
-                        theme === 'light' ? 'bg-slate-50/50 border-slate-200/70' : 'bg-slate-800/40 border-slate-700/50'
+                        theme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-800/40 border-slate-700/50'
                     }`}>
                         <div className={`p-2 rounded-lg ${
                             theme === 'light' ? 'bg-amber-50 text-amber-600' : 'bg-amber-950/50 text-amber-400'
@@ -271,7 +271,7 @@ export default function TicketDetailsPage() {
 
             {(session?.user?.role === 'AGENT' || session?.user?.id === ticket.authorId) && (
                 <div className={`p-6 sm:p-8 rounded-2xl border shadow-sm space-y-4 ${
-                    theme === 'light' ? 'bg-white border-slate-200/90' : 'bg-slate-900/90 border-slate-800'
+                    theme === 'light' ? 'bg-white border-slate-200' : 'bg-slate-900/90 border-slate-800'
                 }`}>
                     <div>
                         <h2 className="text-lg font-bold">Ações do Ticket</h2>
@@ -294,10 +294,10 @@ export default function TicketDetailsPage() {
                                         data-cy="ticket-detail-status"
                                         value={newStatus}
                                         onChange={(e) => setNewStatus(e.target.value)}
-                                        className={`border rounded-xl py-2 px-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-500/20 ${
+                                        className={`border rounded-xl py-2 px-3 text-sm font-medium focus:outline-none focus:ring-2 ${
                                             theme === 'light'
-                                                ? 'bg-slate-50 border-slate-300 text-slate-900'
-                                                : 'bg-slate-800 border-slate-700 text-white'
+                                                ? 'bg-slate-50 border-slate-300 text-slate-900 focus:border-emerald-500 focus:ring-emerald-400/20'
+                                                : 'bg-slate-800 border-slate-700 text-white focus:border-emerald-400 focus:ring-emerald-400/20'
                                         }`}
                                         disabled={isUpdating}
                                     >
@@ -310,7 +310,7 @@ export default function TicketDetailsPage() {
                                     disabled={isUpdating}
                                     data-cy="ticket-detail-status-submit"
                                     onClick={handleStatusUpdate}
-                                    className="rounded-xl bg-teal-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-teal-400 disabled:opacity-50 disabled:cursor-wait shadow-sm"
+                                    className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-sm font-semibold transition disabled:opacity-50 disabled:cursor-wait shadow-sm"
                                 >
                                     {isUpdating ? 'Atualizando...' : 'Atualizar status'}
                                 </button>
@@ -320,8 +320,8 @@ export default function TicketDetailsPage() {
                                 href={`/dashboard/ticket/${ticket.id}/edit`}
                                 className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition ${
                                     theme === 'light'
-                                        ? 'border-slate-300 bg-white hover:border-teal-500 hover:text-teal-600 text-slate-700 shadow-sm'
-                                        : 'border-slate-700 bg-slate-800/80 hover:border-teal-400 hover:text-teal-400 text-slate-200 shadow-sm'
+                                        ? 'border-slate-300 bg-white hover:border-emerald-500 hover:text-emerald-600 text-slate-700 shadow-sm'
+                                        : 'border-slate-700 bg-slate-800/80 hover:border-emerald-400 hover:text-emerald-300 text-slate-200 shadow-sm'
                                 }`}
                             >
                                 <LuPencil size={15} />
@@ -347,7 +347,7 @@ export default function TicketDetailsPage() {
                     </div>
 
                     {error && <p role="alert" className={`text-sm mt-2 ${theme === 'light' ? 'text-red-600' : 'text-red-500'}`}>{error}</p>}
-                    {success && <p role="status" className={`text-sm mt-2 ${theme === 'light' ? 'text-teal-700' : 'text-teal-300'}`}>{success}</p>}
+                    {success && <p role="status" className={`text-sm mt-2 ${theme === 'light' ? 'text-emerald-700' : 'text-emerald-300'}`}>{success}</p>}
                 </div>
             )}
         </main>

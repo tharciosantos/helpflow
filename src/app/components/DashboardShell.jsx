@@ -13,18 +13,18 @@ export default function DashboardShell({ children }) {
 
   return (
     <div className={`flex h-screen transition-colors duration-200 ${
-      theme === 'light' ? 'bg-slate-100 text-slate-900' : 'bg-slate-900 text-white'
+      theme === 'light' ? 'bg-slate-50 text-slate-900' : 'bg-slate-950 text-slate-100'
     }`}>
       {/* Desktop Sidebar */}
       <aside className={`hidden md:flex w-64 p-6 flex-col justify-between border-r transition-colors duration-200 ${
         theme === 'light' 
           ? 'bg-white border-slate-200 text-slate-900' 
-          : 'bg-slate-800 border-slate-700/60 text-white'
+          : 'bg-slate-900 border-slate-800 text-slate-100'
       }`}>
         <div>
           <div className="flex items-center justify-between mb-8">
             <Link href="/dashboard" className="flex items-center gap-2.5 group">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-600 text-white shadow-xs transition-transform duration-200 group-hover:scale-105">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-xs transition-transform duration-200 group-hover:scale-105">
                 <LuHeadphones size={17} />
               </div>
               <span className={`text-xl font-bold tracking-tight ${
@@ -38,7 +38,7 @@ export default function DashboardShell({ children }) {
           <SidebarNav /> 
         </div>
         <div className={`border-t pt-4 ${
-          theme === 'light' ? 'border-slate-200' : 'border-slate-700'
+          theme === 'light' ? 'border-slate-200' : 'border-slate-800'
         }`}>
           <UserProfile />
         </div>
