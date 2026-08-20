@@ -8,6 +8,19 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+model Company {
+  id        String   @id @default(uuid())
+  name      String
+  code      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users     User[]
+  tickets   Ticket[]
+
+  @@index([code])
+}
+
 model User {
   id            String    @id @default(uuid())
   name          String?
@@ -20,12 +33,17 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  companyId     String?
+  company       Company?  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
   createdTickets  Ticket[] @relation("TicketAuthor")
   assignedTickets Ticket[] @relation("TicketAgent")
 
   accounts Account[]
   sessions Session[]
   passwordResets PasswordReset[]
+
+  @@index([companyId])
 }
 
 model Ticket {
@@ -37,6 +55,9 @@ model Ticket {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  companyId   String?
+  company     Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
   authorId String
   author   User @relation("TicketAuthor", fields: [authorId], references: [id])
 
@@ -45,6 +66,7 @@ model Ticket {
 
   @@index([authorId])
   @@index([status])
+  @@index([companyId])
 }
 
 enum Status {
