@@ -4,6 +4,9 @@ import {
     updateTicketStatusSchema,
     updateTicketSchema,
     registerSchema,
+    registerCompanySchema,
+    registerEmployeeSchema,
+    generateCompanyCode,
 } from '../schemas.js';
 
 // ─────────────────────────────────────────────
@@ -210,5 +213,62 @@ describe('registerSchema', () => {
         });
         expect(result.success).toBe(false);
         expect(result.error.flatten().fieldErrors.name).toBeDefined();
+    });
+});
+
+// ─────────────────────────────────────────────
+// registerCompanySchema & registerEmployeeSchema
+// ─────────────────────────────────────────────
+describe('registerCompanySchema & registerEmployeeSchema', () => {
+    it('deve aceitar dados válidos de cadastro de empresa', () => {
+        const result = registerCompanySchema.safeParse({
+            name: 'Carlos Gestor',
+            companyName: 'Tech Inovações',
+            email: 'carlos@techinovacoes.com',
+            password: 'senhaSegura123',
+            confirmPassword: 'senhaSegura123',
+        });
+        expect(result.success).toBe(true);
+    });
+
+    it('deve rejeitar cadastro de empresa sem companyName', () => {
+        const result = registerCompanySchema.safeParse({
+            name: 'Carlos Gestor',
+            email: 'carlos@techinovacoes.com',
+            password: 'senhaSegura123',
+            confirmPassword: 'senhaSegura123',
+        });
+        expect(result.success).toBe(false);
+        expect(result.error.flatten().fieldErrors.companyName).toBeDefined();
+    });
+
+    it('deve aceitar dados válidos de cadastro de funcionário com código', () => {
+        const result = registerEmployeeSchema.safeParse({
+            accountType: 'EMPLOYEE',
+            name: 'Ana Silva',
+            companyCode: 'TECH-4821',
+            email: 'ana@techinovacoes.com',
+            password: 'senhaSegura123',
+            confirmPassword: 'senhaSegura123',
+        });
+        expect(result.success).toBe(true);
+    });
+
+    it('deve rejeitar funcionário com código muito curto ou ausente', () => {
+        const result = registerEmployeeSchema.safeParse({
+            accountType: 'EMPLOYEE',
+            name: 'Ana Silva',
+            companyCode: 'A',
+            email: 'ana@techinovacoes.com',
+            password: 'senhaSegura123',
+            confirmPassword: 'senhaSegura123',
+        });
+        expect(result.success).toBe(false);
+        expect(result.error.flatten().fieldErrors.companyCode).toBeDefined();
+    });
+
+    it('deve gerar código amigável de empresa com prefixo correto', () => {
+        const code = generateCompanyCode('Tech Corp');
+        expect(code).toMatch(/^TECH-\d{4}$/);
     });
 });
