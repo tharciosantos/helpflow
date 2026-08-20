@@ -14,6 +14,7 @@ export default function EditTicketPage() {
     const { data: session } = useSession();
     const { theme } = useTheme();
     const [ticket, setTicket] = useState(null);
+    const [agents, setAgents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
@@ -37,6 +38,22 @@ export default function EditTicketPage() {
             fetchTicket();
         }
     }, [id]);
+
+    useEffect(() => {
+        if (session?.user?.role === 'AGENT') {
+            const fetchAgents = async () => {
+                try {
+                    const res = await fetch('/api/agents');
+                    if (res.ok) {
+                        setAgents(await res.json());
+                    }
+                } catch (err) {
+                    console.error('Erro ao buscar membros:', err);
+                }
+            };
+            fetchAgents();
+        }
+    }, [session?.user?.role]);
 
     const handleTicketUpdated = () => {
         router.push('/dashboard');
@@ -97,7 +114,12 @@ export default function EditTicketPage() {
                         ? 'bg-white border-slate-200/90'
                         : 'bg-slate-900/80 border-slate-800'
                 }`}>
-                    <EditTicketForm ticket={ticket} onTicketUpdated={handleTicketUpdated} isAgent={session?.user?.role === 'AGENT'} />
+                    <EditTicketForm
+                        ticket={ticket}
+                        onTicketUpdated={handleTicketUpdated}
+                        isAgent={session?.user?.role === 'AGENT'}
+                        agents={agents}
+                    />
                 </div>
             )}
         </div>

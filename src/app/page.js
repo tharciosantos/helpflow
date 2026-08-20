@@ -72,7 +72,7 @@ export default function Home() {
                   ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                   : "bg-emerald-950/50 text-emerald-300 border-emerald-800/40"
               }`}>
-                <span>🚀</span> HelpFlow · Demonstração de Produto
+                HelpFlow · Service Desk Corporativo
               </div>
 
               <h1 className={`text-2xl sm:text-3xl md:text-4xl lg:text-[2.5rem] font-bold leading-tight tracking-tight ${
@@ -149,7 +149,7 @@ export default function Home() {
         theme === "light" ? "border-slate-200 text-slate-400" : "border-slate-800 text-slate-500"
       }`}>
         <div className="max-w-5xl mx-auto px-4 flex items-center justify-between">
-          <span>HelpFlow © {new Date().getFullYear()} — Plataforma de Atendimento</span>
+          <span>HelpFlow © {new Date().getFullYear()} - Plataforma de Atendimento</span>
           <span>Desenvolvido por Tharcio Santos</span>
         </div>
       </footer>

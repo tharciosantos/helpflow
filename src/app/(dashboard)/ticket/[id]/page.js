@@ -23,9 +23,12 @@ export default function TicketDetailsPage() {
     const router = useRouter();
 
     const [ticket, setTicket] = useState(null);
+    const [agents, setAgents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [newStatus, setNewStatus] = useState('OPEN');
+    const [newPriority, setNewPriority] = useState('MEDIUM');
+    const [newAgentId, setNewAgentId] = useState('');
     const [isDeleting, setIsDeleting] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
     const [success, setSuccess] = useState('');
@@ -44,6 +47,8 @@ export default function TicketDetailsPage() {
             const data = await res.json();
             setTicket(data);
             setNewStatus(data.status ?? 'OPEN');
+            setNewPriority(data.priority ?? 'MEDIUM');
+            setNewAgentId(data.agentId ?? '');
         } catch (err) {
             console.error('Erro ao buscar ticket:', err);
             setError(err.message || 'Erro ao buscar o ticket');
@@ -56,10 +61,23 @@ export default function TicketDetailsPage() {
         if (id) fetchTicket();
     }, [id, fetchTicket]);
 
-    const handleStatusUpdate = async () => {
-        if (!['OPEN', 'IN_PROGRESS', 'CLOSED'].includes(newStatus)) {
-            return setError('Selecione um status válido');
+    useEffect(() => {
+        if (session?.user?.role === 'AGENT') {
+            const fetchAgents = async () => {
+                try {
+                    const res = await fetch('/api/agents');
+                    if (res.ok) {
+                        setAgents(await res.json());
+                    }
+                } catch (err) {
+                    console.error('Erro ao buscar membros:', err);
+                }
+            };
+            fetchAgents();
         }
+    }, [session?.user?.role]);
+
+    const handleQuickUpdate = async () => {
         setError('');
         setSuccess('');
         setIsUpdating(true);
@@ -67,23 +85,25 @@ export default function TicketDetailsPage() {
             const res = await fetch(`/api/tickets/${id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: newStatus }),
+                body: JSON.stringify({
+                    status: newStatus,
+                    priority: newPriority,
+                    agentId: newAgentId || null,
+                }),
             });
             if (!res.ok) {
-                if (res.status === 400) {
-                    const body = await res.json();
-                    throw new Error(body.message || 'Status inválido');
-                }
-                if (res.status === 403 || res.status === 401) throw new Error('Não autorizado');
-                throw new Error('Falha ao atualizar o status');
+                const body = await res.json();
+                throw new Error(body.message || 'Falha ao atualizar o ticket.');
             }
             const updated = await res.json();
             setTicket(updated);
             setNewStatus(updated.status);
-            setSuccess('Status atualizado com sucesso.');
+            setNewPriority(updated.priority);
+            setNewAgentId(updated.agentId || '');
+            setSuccess('Chamado atualizado com sucesso.');
         } catch (err) {
-            console.error('Erro ao atualizar status:', err);
-            setError(err.message || 'Erro ao atualizar status');
+            console.error('Erro ao atualizar ticket:', err);
+            setError(err.message || 'Erro ao atualizar chamado.');
         } finally {
             setIsUpdating(false);
         }
@@ -280,21 +300,22 @@ export default function TicketDetailsPage() {
                         </p>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
-                        {session?.user?.role === 'AGENT' ? (
-                            <div className="flex flex-wrap items-center gap-3">
-                                <div className="flex items-center gap-2">
-                                    <label htmlFor="ticket-status-select" className={`text-xs font-medium ${
+                    {session?.user?.role === 'AGENT' && (
+                        <div className="space-y-4 pt-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                {/* STATUS */}
+                                <div className="space-y-1.5">
+                                    <label htmlFor="ticket-status-select" className={`block text-xs font-semibold uppercase tracking-wider ${
                                         theme === 'light' ? 'text-slate-600' : 'text-slate-300'
                                     }`}>
-                                        Status:
+                                        Status
                                     </label>
                                     <select
                                         id="ticket-status-select"
                                         data-cy="ticket-detail-status"
                                         value={newStatus}
                                         onChange={(e) => setNewStatus(e.target.value)}
-                                        className={`border rounded-xl py-2 px-3 text-sm font-medium focus:outline-none focus:ring-2 ${
+                                        className={`w-full border rounded-xl py-2 px-3 text-sm font-medium focus:outline-none focus:ring-2 ${
                                             theme === 'light'
                                                 ? 'bg-slate-50 border-slate-300 text-slate-900 focus:border-emerald-500 focus:ring-emerald-400/20'
                                                 : 'bg-slate-800 border-slate-700 text-white focus:border-emerald-400 focus:ring-emerald-400/20'
@@ -306,16 +327,77 @@ export default function TicketDetailsPage() {
                                         <option value="CLOSED">Fechado</option>
                                     </select>
                                 </div>
+
+                                {/* PRIORIDADE */}
+                                <div className="space-y-1.5">
+                                    <label htmlFor="ticket-priority-select" className={`block text-xs font-semibold uppercase tracking-wider ${
+                                        theme === 'light' ? 'text-slate-600' : 'text-slate-300'
+                                    }`}>
+                                        Prioridade
+                                    </label>
+                                    <select
+                                        id="ticket-priority-select"
+                                        data-cy="ticket-detail-priority"
+                                        value={newPriority}
+                                        onChange={(e) => setNewPriority(e.target.value)}
+                                        className={`w-full border rounded-xl py-2 px-3 text-sm font-medium focus:outline-none focus:ring-2 ${
+                                            theme === 'light'
+                                                ? 'bg-slate-50 border-slate-300 text-slate-900 focus:border-emerald-500 focus:ring-emerald-400/20'
+                                                : 'bg-slate-800 border-slate-700 text-white focus:border-emerald-400 focus:ring-emerald-400/20'
+                                        }`}
+                                        disabled={isUpdating}
+                                    >
+                                        <option value="LOW">Baixa</option>
+                                        <option value="MEDIUM">Média</option>
+                                        <option value="HIGH">Alta</option>
+                                        <option value="URGENT">Urgente</option>
+                                    </select>
+                                </div>
+
+                                {/* RESPONSÁVEL */}
+                                <div className="space-y-1.5">
+                                    <label htmlFor="ticket-agent-select" className={`block text-xs font-semibold uppercase tracking-wider ${
+                                        theme === 'light' ? 'text-slate-600' : 'text-slate-300'
+                                    }`}>
+                                        Responsável
+                                    </label>
+                                    <select
+                                        id="ticket-agent-select"
+                                        data-cy="ticket-detail-agent"
+                                        value={newAgentId}
+                                        onChange={(e) => setNewAgentId(e.target.value)}
+                                        className={`w-full border rounded-xl py-2 px-3 text-sm font-medium focus:outline-none focus:ring-2 ${
+                                            theme === 'light'
+                                                ? 'bg-slate-50 border-slate-300 text-slate-900 focus:border-emerald-500 focus:ring-emerald-400/20'
+                                                : 'bg-slate-800 border-slate-700 text-white focus:border-emerald-400 focus:ring-emerald-400/20'
+                                        }`}
+                                        disabled={isUpdating}
+                                    >
+                                        <option value="">Não atribuído</option>
+                                        {agents.map((member) => (
+                                            <option key={member.id} value={member.id}>
+                                                {member.name || member.email} {member.role === 'AGENT' ? '(TI / Suporte)' : '(Funcionário)'}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-200/60 dark:border-slate-800/80">
+                        <div className="flex flex-wrap items-center gap-2">
+                            {session?.user?.role === 'AGENT' && (
                                 <button
                                     disabled={isUpdating}
                                     data-cy="ticket-detail-status-submit"
-                                    onClick={handleStatusUpdate}
-                                    className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-sm font-semibold transition disabled:opacity-50 disabled:cursor-wait shadow-sm"
+                                    onClick={handleQuickUpdate}
+                                    className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 text-sm font-semibold transition disabled:opacity-50 disabled:cursor-wait shadow-sm inline-flex items-center gap-2"
                                 >
-                                    {isUpdating ? 'Atualizando...' : 'Atualizar status'}
+                                    {isUpdating ? 'Salvando...' : 'Salvar Alterações Rápidas'}
                                 </button>
-                            </div>
-                        ) : (
+                            )}
+
                             <Link
                                 href={`/dashboard/ticket/${ticket.id}/edit`}
                                 className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition ${
@@ -325,9 +407,9 @@ export default function TicketDetailsPage() {
                                 }`}
                             >
                                 <LuPencil size={15} />
-                                Editar Informações
+                                Editar Informações Completas
                             </Link>
-                        )}
+                        </div>
 
                         <button
                             data-cy="ticket-detail-delete"
