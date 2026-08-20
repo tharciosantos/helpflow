@@ -1,7 +1,18 @@
 const AGENT_ONLY_FIELDS = ['status', 'priority', 'agentId'];
 
 export function canViewTicket(user, ticket) {
-  return Boolean(user?.id && ticket && (user.role === 'AGENT' || ticket.authorId === user.id));
+  if (!user?.id || !ticket) return false;
+
+  // Se ambos possuem companyId e são diferentes, bloqueia imediatamente
+  if (user.companyId && ticket.companyId && user.companyId !== ticket.companyId) {
+    return false;
+  }
+
+  // Agente da mesma empresa (ou sem empresa atribuída) pode ver
+  if (user.role === 'AGENT') return true;
+
+  // Funcionário pode ver o seu próprio ticket ou o ticket onde foi atribuído como responsável
+  return ticket.authorId === user.id || ticket.agentId === user.id;
 }
 
 export function canDeleteTicket(user, ticket) {
