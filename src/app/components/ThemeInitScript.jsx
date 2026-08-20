@@ -1,8 +1,8 @@
 // Script de bloqueio que roda no <head> e decide o tema ANTES do primeiro paint.
 // Fonte da verdade para o tema:
-//   1. localStorage("helpflow-theme")  — preferência explícita do usuário
-//   2. cookie("helpflow-theme")        — definido pelo SSR do layout (cookie-based SSR)
-//   3. matchMedia("(prefers-color-scheme: light)")  — preferência do SO (primeiro acesso)
+//   1. localStorage("helpflow-theme")  - preferência explícita do usuário
+//   2. cookie("helpflow-theme")        - definido pelo SSR do layout (cookie-based SSR)
+//   3. matchMedia("(prefers-color-scheme: light)")  - preferência do SO (primeiro acesso)
 //   4. fallback: "dark"
 // Aplica a classe .light no <html> e GRAVA o cookie + localStorage, garantindo que
 // o próximo carregamento (F5 ou navegação) já receba o tema correto via SSR.

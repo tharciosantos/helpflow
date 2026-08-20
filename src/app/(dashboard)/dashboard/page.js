@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useSession } from "next-auth/react";
-import { LuPlus, LuSearch, LuLayers, LuClock, LuListFilter, LuCircleCheck } from 'react-icons/lu';
+import { LuPlus, LuSearch, LuLayers, LuClock, LuListFilter, LuCircleCheck, LuCopy, LuCheck, LuBuilding, LuShare2 } from 'react-icons/lu';
 import TicketList from "../../components/TicketList";
 import { useTheme } from "../../components/ThemeProvider";
 
@@ -22,6 +22,13 @@ export default function DashboardPage() {
   const [closedCount, setClosedCount] = useState(0);
   const [filters, setFilters] = useState({ search: '', status: '', priority: '' });
   const [agents, setAgents] = useState([]);
+  const [copiedType, setCopiedType] = useState('');
+
+  const handleCopy = (text, type) => {
+    navigator.clipboard.writeText(text);
+    setCopiedType(type);
+    setTimeout(() => setCopiedType(''), 2500);
+  };
 
   const fetchTickets = useCallback(async (page = 1, activeFilters = {}) => {
     setLoading(true);
@@ -115,7 +122,7 @@ export default function DashboardPage() {
           <h1 className={`text-2xl sm:text-3xl font-bold tracking-tight ${
             theme === 'light' ? 'text-slate-900' : 'text-slate-100'
           }`}>
-            Olá, {session?.user?.name || 'bem-vindo(a)'} 👋
+            Olá, {session?.user?.name || 'bem-vindo(a)'}
           </h1>
           <p className={`mt-1 text-sm ${
             theme === 'light' ? 'text-slate-600' : 'text-slate-400'
@@ -133,6 +140,85 @@ export default function DashboardPage() {
           Novo ticket
         </Link>
       </header>
+
+      {/* Card da Empresa / Código de Convite de Funcionários (Apenas para AGENT com Empresa) */}
+      {session?.user?.role === 'AGENT' && session?.user?.companyCode && (
+        <div
+          data-cy="company-invite-card"
+          className={`rounded-2xl border p-5 sm:p-6 transition-all ${
+            theme === 'light'
+              ? 'bg-emerald-50/70 border-emerald-200 text-slate-900 shadow-xs'
+              : 'bg-emerald-950/20 border-emerald-800/60 text-slate-100 shadow-xs'
+          }`}
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className={`p-1.5 rounded-lg ${
+                  theme === 'light' ? 'bg-emerald-100 text-emerald-700' : 'bg-emerald-900/60 text-emerald-300'
+                }`}>
+                  <LuBuilding size={18} />
+                </span>
+                <h2 className="text-base sm:text-lg font-bold">
+                  {session.user.companyName || 'Sua Empresa'} · Painel de Atendimento
+                </h2>
+              </div>
+              <p className={`text-xs sm:text-sm ${
+                theme === 'light' ? 'text-slate-600' : 'text-slate-400'
+              }`}>
+                Compartilhe o código ou link de cadastro com seus funcionários para que eles abram chamados privados para sua equipe.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
+              <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border font-mono text-sm font-bold tracking-wider ${
+                theme === 'light'
+                  ? 'bg-white border-emerald-300 text-emerald-800'
+                  : 'bg-slate-900 border-emerald-700 text-emerald-300'
+              }`}>
+                <span>{session.user.companyCode}</span>
+                <button
+                  type="button"
+                  data-cy="copy-company-code"
+                  onClick={() => handleCopy(session.user.companyCode, 'code')}
+                  className={`p-1 rounded-md transition hover:bg-emerald-100 dark:hover:bg-emerald-900/50 ${
+                    copiedType === 'code' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500'
+                  }`}
+                  title="Copiar código da empresa"
+                >
+                  {copiedType === 'code' ? <LuCheck size={16} /> : <LuCopy size={16} />}
+                </button>
+              </div>
+
+              <button
+                type="button"
+                data-cy="copy-invite-link"
+                onClick={() => {
+                  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+                  handleCopy(`${origin}/register?companyCode=${session.user.companyCode}`, 'link');
+                }}
+                className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition active:scale-[0.98] ${
+                  theme === 'light'
+                    ? 'bg-white border-slate-300 hover:bg-slate-50 text-slate-800'
+                    : 'bg-slate-900 border-slate-700 hover:bg-slate-800 text-slate-200'
+                }`}
+              >
+                {copiedType === 'link' ? (
+                  <>
+                    <LuCheck size={14} className="text-emerald-600" />
+                    <span>Link copiado!</span>
+                  </>
+                ) : (
+                  <>
+                    <LuShare2 size={14} />
+                    <span>Copiar link de convite</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Barra de Filtros */}
       <form onSubmit={applyFilters} className={`grid gap-3 rounded-xl border p-4 sm:grid-cols-2 md:grid-cols-[minmax(0,1fr)_160px_160px_auto_auto] md:items-end ${
@@ -238,7 +324,7 @@ export default function DashboardPage() {
             />
           </div>
 
-          {/* Paginação — só aparece quando há mais de 1 página */}
+          {/* Paginação - só aparece quando há mais de 1 página */}
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-4 py-2">
               <button

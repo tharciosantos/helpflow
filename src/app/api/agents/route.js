@@ -14,12 +14,14 @@ export async function GET() {
   }
 
   try {
-    const agents = await prisma.user.findMany({
-      where: { role: 'AGENT' },
-      select: { id: true, name: true, email: true },
-      orderBy: [{ name: 'asc' }, { email: 'asc' }],
+    const companyFilter = session.user.companyId ? { companyId: session.user.companyId } : {};
+
+    const members = await prisma.user.findMany({
+      where: { ...companyFilter },
+      select: { id: true, name: true, email: true, role: true },
+      orderBy: [{ role: 'asc' }, { name: 'asc' }, { email: 'asc' }],
     });
-    return NextResponse.json(agents);
+    return NextResponse.json(members);
   } catch (error) {
     console.error('Erro ao buscar agentes:', error);
     return NextResponse.json({ message: 'Erro interno do servidor' }, { status: 500 });

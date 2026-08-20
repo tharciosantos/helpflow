@@ -30,6 +30,15 @@ export const authOptions = {
         }
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
+          include: {
+            company: {
+              select: {
+                id: true,
+                name: true,
+                code: true,
+              },
+            },
+          },
         });
 
         if (!user) {
@@ -55,6 +64,9 @@ export const authOptions = {
           email: user.email,
           image: user.image,
           role: user.role,
+          companyId: user.companyId || null,
+          companyName: user.company?.name || null,
+          companyCode: user.company?.code || null,
         };
       },
     }),
@@ -65,15 +77,21 @@ export const authOptions = {
   callbacks: {
     async jwt({ token, user, account }) {
       if (user) {
-        token.id   = user.id;
+        token.id = user.id;
         token.role = user.role;
+        token.companyId = user.companyId || null;
+        token.companyName = user.companyName || null;
+        token.companyCode = user.companyCode || null;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id   = token.id;
+        session.user.id = token.id;
         session.user.role = token.role;
+        session.user.companyId = token.companyId || null;
+        session.user.companyName = token.companyName || null;
+        session.user.companyCode = token.companyCode || null;
       }
       return session;
     },

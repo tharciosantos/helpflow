@@ -191,10 +191,10 @@ export default function LoginPage() {
                                         <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
                                         <circle cx="12" cy="7" r="4" />
                                     </svg>
-                                    <span>Solicitante (Client)</span>
+                                    <span>Funcionário (Colaborador)</span>
                                 </span>
                                 <span className="block text-[11px] opacity-75 mt-0.5">
-                                    Abertura e histórico
+                                    Abertura e histórico privado
                                 </span>
                             </button>
 
@@ -214,10 +214,10 @@ export default function LoginPage() {
                                     <svg className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                                     </svg>
-                                    <span>Agente (Agent)</span>
+                                    <span>Empresa / TI (Atendimento)</span>
                                 </span>
                                 <span className="block text-[11px] opacity-75 mt-0.5">
-                                    Fila geral e resolução
+                                    Fila geral e resolução corporativa
                                 </span>
                             </button>
                         </div>

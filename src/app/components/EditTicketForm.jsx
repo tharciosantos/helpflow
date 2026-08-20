@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useTheme } from './ThemeProvider';
 
-export default function EditTicketForm({ ticket, onTicketUpdated, isAgent = false }) {
+export default function EditTicketForm({ ticket, onTicketUpdated, isAgent = false, agents = [] }) {
     const { theme } = useTheme();
     // Inicializa cada estado com o valor atual do ticket
     // Assim o formulário já abre preenchido com os dados existentes
@@ -11,6 +11,7 @@ export default function EditTicketForm({ ticket, onTicketUpdated, isAgent = fals
     const [description, setDescription] = useState(ticket.description);
     const [status, setStatus] = useState(ticket.status);
     const [priority, setPriority] = useState(ticket.priority || 'MEDIUM');
+    const [agentId, setAgentId] = useState(ticket.agentId || '');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -26,7 +27,7 @@ export default function EditTicketForm({ ticket, onTicketUpdated, isAgent = fals
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(isAgent
-                    ? { title, description, status, priority }
+                    ? { title, description, status, priority, agentId: agentId || null }
                     : { title, description }),
             });
 
@@ -102,53 +103,81 @@ export default function EditTicketForm({ ticket, onTicketUpdated, isAgent = fals
                 ></textarea>
             </div>
 
-            {/* STATUS + PRIORIDADE lado a lado em telas maiores */}
+            {/* STATUS + PRIORIDADE + RESPONSÁVEL lado a lado em telas maiores */}
             {isAgent && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label htmlFor="status" className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${
-                            theme === 'light' ? 'text-slate-700' : 'text-slate-300'
-                        }`}>
-                            Status
-                        </label>
-                        <select
-                            data-cy="ticket-edit-status"
-                            id="status"
-                            value={status}
-                            onChange={(e) => setStatus(e.target.value)}
-                            className={`block w-full rounded-xl border px-3.5 py-2.5 text-sm font-medium transition focus:outline-none focus:ring-2 ${
-                                theme === 'light'
-                                    ? 'bg-white border-slate-300 text-slate-900 focus:border-emerald-500 focus:ring-emerald-400/20'
-                                    : 'bg-slate-800/60 border-slate-700 text-white focus:bg-slate-800 focus:border-emerald-400 focus:ring-emerald-400/20'
-                            }`}
-                        >
-                            <option value="OPEN">Aberto</option>
-                            <option value="IN_PROGRESS">Em Progresso</option>
-                            <option value="CLOSED">Fechado</option>
-                        </select>
+                <div className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label htmlFor="status" className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${
+                                theme === 'light' ? 'text-slate-700' : 'text-slate-300'
+                            }`}>
+                                Status
+                            </label>
+                            <select
+                                data-cy="ticket-edit-status"
+                                id="status"
+                                value={status}
+                                onChange={(e) => setStatus(e.target.value)}
+                                className={`block w-full rounded-xl border px-3.5 py-2.5 text-sm font-medium transition focus:outline-none focus:ring-2 ${
+                                    theme === 'light'
+                                        ? 'bg-white border-slate-300 text-slate-900 focus:border-emerald-500 focus:ring-emerald-400/20'
+                                        : 'bg-slate-800/60 border-slate-700 text-white focus:bg-slate-800 focus:border-emerald-400 focus:ring-emerald-400/20'
+                                }`}
+                            >
+                                <option value="OPEN">Aberto</option>
+                                <option value="IN_PROGRESS">Em Progresso</option>
+                                <option value="CLOSED">Fechado</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label htmlFor="priority" className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${
+                                theme === 'light' ? 'text-slate-700' : 'text-slate-300'
+                            }`}>
+                                Prioridade
+                            </label>
+                            <select
+                                data-cy="ticket-edit-priority"
+                                id="priority"
+                                value={priority}
+                                onChange={(e) => setPriority(e.target.value)}
+                                className={`block w-full rounded-xl border px-3.5 py-2.5 text-sm font-medium transition focus:outline-none focus:ring-2 ${
+                                    theme === 'light'
+                                        ? 'bg-white border-slate-300 text-slate-900 focus:border-emerald-500 focus:ring-emerald-400/20'
+                                        : 'bg-slate-800/60 border-slate-700 text-white focus:bg-slate-800 focus:border-emerald-400 focus:ring-emerald-400/20'
+                                }`}
+                            >
+                                <option value="LOW">Baixa</option>
+                                <option value="MEDIUM">Média</option>
+                                <option value="HIGH">Alta</option>
+                                <option value="URGENT">Urgente</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div>
-                        <label htmlFor="priority" className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${
+                        <label htmlFor="agentId" className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${
                             theme === 'light' ? 'text-slate-700' : 'text-slate-300'
                         }`}>
-                            Prioridade
+                            Responsável pelo Chamado
                         </label>
                         <select
-                            data-cy="ticket-edit-priority"
-                            id="priority"
-                            value={priority}
-                            onChange={(e) => setPriority(e.target.value)}
+                            data-cy="ticket-edit-agent"
+                            id="agentId"
+                            value={agentId}
+                            onChange={(e) => setAgentId(e.target.value)}
                             className={`block w-full rounded-xl border px-3.5 py-2.5 text-sm font-medium transition focus:outline-none focus:ring-2 ${
                                 theme === 'light'
                                     ? 'bg-white border-slate-300 text-slate-900 focus:border-emerald-500 focus:ring-emerald-400/20'
                                     : 'bg-slate-800/60 border-slate-700 text-white focus:bg-slate-800 focus:border-emerald-400 focus:ring-emerald-400/20'
                             }`}
                         >
-                            <option value="LOW">🟢 Baixa</option>
-                            <option value="MEDIUM">🟡 Média</option>
-                            <option value="HIGH">🟠 Alta</option>
-                            <option value="URGENT">🔴 Urgente</option>
+                            <option value="">Não atribuído</option>
+                            {agents.map((member) => (
+                                <option key={member.id} value={member.id}>
+                                    {member.name || member.email} {member.role === 'AGENT' ? '(TI / Suporte)' : '(Funcionário)'}
+                                </option>
+                            ))}
                         </select>
                     </div>
                 </div>

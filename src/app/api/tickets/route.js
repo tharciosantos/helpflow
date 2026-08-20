@@ -19,7 +19,7 @@ export async function POST(req) {
   try {
     const body = await req.json();
 
-    // Validação com Zod — retorna erros detalhados automaticamente
+    // Validação com Zod - retorna erros detalhados automaticamente
     const validation = createTicketSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
@@ -32,12 +32,13 @@ export async function POST(req) {
     }
 
     // validation.data já tem os campos limpos e validados pelo Zod
-    // Extraímos priority também — se não vier no body, o banco usa o default (MEDIUM)
+    // Extraímos priority também - se não vier no body, o banco usa o default (MEDIUM)
     const { title, description, priority } = validation.data;
     const authorId = session.user.id;
+    const companyId = session.user.companyId || null;
 
     const newTicket = await prisma.ticket.create({
-      data: { title, description, priority, authorId },
+      data: { title, description, priority, authorId, companyId },
     });
 
     return NextResponse.json(newTicket, { status: 201 });
@@ -57,6 +58,7 @@ export async function GET(req) {
 
   try {
     const role = session.user.role || 'CLIENT';
+    const companyId = session.user.companyId;
 
     // Ler parâmetros de paginação da URL
     const { searchParams } = new URL(req.url);
@@ -74,19 +76,36 @@ export async function GET(req) {
     const validStatuses = ['OPEN', 'IN_PROGRESS', 'CLOSED'];
     const validPriorities = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'];
 
-    const visibilityFilter = role === 'AGENT' ? {} : { authorId: session.user.id };
+    // Isolamento multi-empresa: AGENT vê todos da sua empresa; CLIENT vê os que criou ou onde é responsável
+    const baseVisibility = {
+      ...(companyId ? { companyId } : {}),
+      ...(role !== 'AGENT'
+        ? {
+            OR: [
+              { authorId: session.user.id },
+              { agentId: session.user.id },
+            ],
+          }
+        : {}),
+    };
+
     const where = {
-      ...visibilityFilter,
+      ...(companyId ? { companyId } : {}),
       ...(validStatuses.includes(status) ? { status } : {}),
       ...(validPriorities.includes(priority) ? { priority } : {}),
       ...(search
         ? {
-            OR: [
-              { title: { contains: search, mode: 'insensitive' } },
-              { description: { contains: search, mode: 'insensitive' } },
+            AND: [
+              ...(baseVisibility.OR ? [{ OR: baseVisibility.OR }] : []),
+              {
+                OR: [
+                  { title: { contains: search, mode: 'insensitive' } },
+                  { description: { contains: search, mode: 'insensitive' } },
+                ],
+              },
             ],
           }
-        : {}),
+        : baseVisibility.OR ? { OR: baseVisibility.OR } : {}),
     };
 
     // Buscar tickets E totais em paralelo
@@ -102,9 +121,9 @@ export async function GET(req) {
         take: limit,
       }),
       prisma.ticket.count({ where }),
-      prisma.ticket.count({ where: { ...visibilityFilter, status: 'OPEN' } }),
-      prisma.ticket.count({ where: { ...visibilityFilter, status: 'IN_PROGRESS' } }),
-      prisma.ticket.count({ where: { ...visibilityFilter, status: 'CLOSED' } }),
+      prisma.ticket.count({ where: { ...baseVisibility, status: 'OPEN' } }),
+      prisma.ticket.count({ where: { ...baseVisibility, status: 'IN_PROGRESS' } }),
+      prisma.ticket.count({ where: { ...baseVisibility, status: 'CLOSED' } }),
     ]);
 
     return NextResponse.json({

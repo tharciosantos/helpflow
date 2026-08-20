@@ -252,8 +252,10 @@ export default function TicketList({
                               }`}
                             >
                               <option value="">Não atribuído</option>
-                              {agents.map((agent) => (
-                                <option key={agent.id} value={agent.id}>{agent.name || agent.email}</option>
+                              {agents.map((member) => (
+                                <option key={member.id} value={member.id}>
+                                  {member.name || member.email} {member.role === 'AGENT' ? '(TI / Suporte)' : '(Funcionário)'}
+                                </option>
                               ))}
                             </select>
                           </div>

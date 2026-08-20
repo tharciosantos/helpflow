@@ -1,7 +1,7 @@
 'use client';
 
 import { useSession, signOut } from 'next-auth/react';
-import { LuLogOut } from 'react-icons/lu';
+import { LuLogOut, LuBuilding2 } from 'react-icons/lu';
 import { useTheme } from './ThemeProvider';
 
 export default function UserProfile() {
@@ -27,6 +27,14 @@ export default function UserProfile() {
           <p className={`text-xs truncate ${
             theme === 'light' ? 'text-slate-500' : 'text-slate-400'
           }`}>{session.user.email}</p>
+          {session.user.companyName && (
+            <p className={`text-[11px] font-medium truncate mt-0.5 flex items-center gap-1 ${
+              theme === 'light' ? 'text-emerald-700' : 'text-emerald-400'
+            }`}>
+              <LuBuilding2 size={13} className="shrink-0" />
+              <span className="truncate">{session.user.companyName}</span>
+            </p>
+          )}
           <div className="mt-1.5 flex items-center">
             {session.user.role === 'AGENT' ? (
               <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium border ${
@@ -35,7 +43,7 @@ export default function UserProfile() {
                   : 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40'
               }`}>
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
-                Agente de Suporte
+                Empresa / Suporte
               </span>
             ) : (
               <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium border ${
@@ -44,7 +52,7 @@ export default function UserProfile() {
                   : 'bg-blue-950/40 text-blue-300 border-blue-800/40'
               }`}>
                 <span className="h-1.5 w-1.5 rounded-full bg-blue-500" aria-hidden="true" />
-                Solicitante
+                Funcionário
               </span>
             )}
           </div>

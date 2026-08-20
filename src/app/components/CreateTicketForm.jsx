@@ -136,10 +136,10 @@ export default function CreateTicketForm({ onTicketCreated }) {
                 : 'bg-slate-800/60 border-slate-700 text-white focus:bg-slate-800 focus:border-emerald-400 focus:ring-emerald-400/20'
             }`}
           >
-            <option value="LOW">🟢 Baixa — Dúvidas e solicitações gerais</option>
-            <option value="MEDIUM">🟡 Média — Problema que não impede a operação</option>
-            <option value="HIGH">🟠 Alta — Impacto direto no fluxo de trabalho</option>
-            <option value="URGENT">🔴 Urgente — Sistema indisponível / bloqueio crítico</option>
+            <option value="LOW">Baixa - Dúvidas e solicitações gerais</option>
+            <option value="MEDIUM">Média - Problema que não impede a operação</option>
+            <option value="HIGH">Alta - Impacto direto no fluxo de trabalho</option>
+            <option value="URGENT">Urgente - Sistema indisponível / bloqueio crítico</option>
           </select>
         </div>
       </div>

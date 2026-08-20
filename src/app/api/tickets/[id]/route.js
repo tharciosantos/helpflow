@@ -45,7 +45,7 @@ export async function GET(req, { params }) {
   }
 }
 
-// FUNÇÃO PATCH — atualização parcial (status, title, description, priority)
+// FUNÇÃO PATCH - atualização parcial (status, title, description, priority)
 export async function PATCH(req, { params }) {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -110,12 +110,13 @@ export async function PATCH(req, { params }) {
     }
 
     if (data.agentId) {
-      const assignedAgent = await prisma.user.findFirst({
-        where: { id: data.agentId, role: 'AGENT' },
+      const companyFilter = ticket.companyId ? { companyId: ticket.companyId } : {};
+      const assignedMember = await prisma.user.findFirst({
+        where: { id: data.agentId, ...companyFilter },
         select: { id: true },
       });
-      if (!assignedAgent) {
-        return NextResponse.json({ message: 'Agente selecionado inválido.' }, { status: 400 });
+      if (!assignedMember) {
+        return NextResponse.json({ message: 'Membro selecionado inválido.' }, { status: 400 });
       }
     }
 
