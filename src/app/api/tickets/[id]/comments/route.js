@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { createCommentSchema } from '@/lib/schemas';
-import { checkRateLimit } from '@/lib/rateLimiter';
+import { checkRateLimit, buildRateLimitHeaders } from '@/lib/rateLimiter';
 import { canCommentOnTicket, canViewTicket } from '@/lib/ticketAuthorization';
 
 // GET /api/tickets/[id]/comments - Lista os comentários do chamado
@@ -64,9 +64,12 @@ export async function POST(req, { params }) {
     return NextResponse.json({ message: 'Não autorizado' }, { status: 401 });
   }
 
-  const { isLimited } = checkRateLimit(`comment:create:${session.user.id}`, { maxRequests: 20 });
+  const { isLimited, remaining, resetTime } = await checkRateLimit(`comment:create:${session.user.id}`, { maxRequests: 20 });
   if (isLimited) {
-    return NextResponse.json({ message: 'Muitas mensagens enviadas. Aguarde um instante.' }, { status: 429 });
+    return NextResponse.json(
+      { message: 'Muitas mensagens enviadas. Aguarde um instante.' },
+      { status: 429, headers: buildRateLimitHeaders({ remaining, resetTime }) }
+    );
   }
 
   try {
