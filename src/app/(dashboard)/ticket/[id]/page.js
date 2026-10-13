@@ -15,6 +15,7 @@ import {
 } from 'react-icons/lu';
 import { getStatusDisplayNamePT, getStatusBadgeClasses, getPriorityBadge } from '@/lib/ticketUtils';
 import CommentsSection from '../../../components/CommentsSection';
+import ConfirmDialog from '../../../components/ConfirmDialog';
 import { useTheme } from '../../../components/ThemeProvider';
 
 export default function TicketDetailsPage() {
@@ -31,6 +32,8 @@ export default function TicketDetailsPage() {
     const [newPriority, setNewPriority] = useState('MEDIUM');
     const [newAgentId, setNewAgentId] = useState('');
     const [isDeleting, setIsDeleting] = useState(false);
+    const [confirmDeleteTicket, setConfirmDeleteTicket] = useState(false);
+    const [confirmDeleteCommentId, setConfirmDeleteCommentId] = useState(null);
     const [isUpdating, setIsUpdating] = useState(false);
     const [success, setSuccess] = useState('');
 
@@ -120,10 +123,6 @@ export default function TicketDetailsPage() {
     };
 
     const handleDeleteTicket = async () => {
-        if (!window.confirm('Tem certeza de que deseja deletar este ticket? Esta ação não pode ser desfeita.')) {
-            return;
-        }
-
         setIsDeleting(true);
         setError('');
         setSuccess('');
@@ -144,6 +143,7 @@ export default function TicketDetailsPage() {
             console.error('Erro ao deletar ticket:', err);
             setError(err.message || 'Erro ao deletar o ticket');
             setIsDeleting(false);
+            setConfirmDeleteTicket(false);
         }
     };
 
@@ -181,9 +181,8 @@ export default function TicketDetailsPage() {
 
     // Excluir Comentário
     const handleDeleteComment = async (commentId) => {
-        if (!window.confirm('Deseja realmente excluir este comentário?')) return;
-
         setDeletingCommentId(commentId);
+        setCommentError('');
         try {
             const res = await fetch(`/api/tickets/${id}/comments/${commentId}`, {
                 method: 'DELETE',
@@ -197,9 +196,10 @@ export default function TicketDetailsPage() {
             setComments(prev => prev.filter(c => c.id !== commentId));
         } catch (err) {
             console.error('Erro ao excluir comentário:', err);
-            alert(err.message || 'Erro ao excluir comentário.');
+            setCommentError(err.message || 'Erro ao excluir comentário.');
         } finally {
             setDeletingCommentId(null);
+            setConfirmDeleteCommentId(null);
         }
     };
 
@@ -480,7 +480,7 @@ export default function TicketDetailsPage() {
 
                         <button
                             data-cy="ticket-detail-delete"
-                            onClick={handleDeleteTicket}
+                            onClick={() => setConfirmDeleteTicket(true)}
                             disabled={isDeleting}
                             className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-all ${
                                 isDeleting
@@ -512,7 +512,27 @@ export default function TicketDetailsPage() {
                 commentError={commentError}
                 deletingCommentId={deletingCommentId}
                 onAddComment={handleAddComment}
-                onDeleteComment={handleDeleteComment}
+                onDeleteComment={(commentId) => setConfirmDeleteCommentId(commentId)}
+            />
+
+            <ConfirmDialog
+                open={confirmDeleteTicket}
+                title="Excluir ticket"
+                description="Tem certeza que deseja excluir este ticket? Essa ação não pode ser desfeita."
+                confirmLabel="Excluir"
+                confirming={isDeleting}
+                onCancel={() => !isDeleting && setConfirmDeleteTicket(false)}
+                onConfirm={handleDeleteTicket}
+            />
+
+            <ConfirmDialog
+                open={Boolean(confirmDeleteCommentId)}
+                title="Excluir comentário"
+                description="Deseja realmente excluir este comentário? Essa ação não pode ser desfeita."
+                confirmLabel="Excluir"
+                confirming={Boolean(confirmDeleteCommentId && deletingCommentId === confirmDeleteCommentId)}
+                onCancel={() => !deletingCommentId && setConfirmDeleteCommentId(null)}
+                onConfirm={() => confirmDeleteCommentId && handleDeleteComment(confirmDeleteCommentId)}
             />
         </main>
     );

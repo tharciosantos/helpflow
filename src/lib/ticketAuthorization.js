@@ -16,7 +16,11 @@ export function canViewTicket(user, ticket) {
 }
 
 export function canDeleteTicket(user, ticket) {
-  return canViewTicket(user, ticket);
+  if (!canViewTicket(user, ticket)) return false;
+  // P0: CLIENT só exclui o próprio ticket ainda em OPEN.
+  // AGENT pode excluir qualquer ticket da empresa (soft-delete na API).
+  if (user?.role === 'AGENT') return true;
+  return ticket.authorId === user?.id && ticket.status === 'OPEN';
 }
 
 export function getForbiddenTicketFields(user, body = {}) {
@@ -25,7 +29,11 @@ export function getForbiddenTicketFields(user, body = {}) {
 }
 
 export function canEditTicketContent(user, ticket) {
-  return canViewTicket(user, ticket);
+  if (!canViewTicket(user, ticket)) return false;
+  // P0: regra documentada — CLIENT só edita conteúdo do próprio ticket em OPEN.
+  // AGENT mantém poder de triagem em qualquer status.
+  if (user?.role === 'AGENT') return true;
+  return ticket.authorId === user?.id && ticket.status === 'OPEN';
 }
 
 export function canCommentOnTicket(user, ticket) {

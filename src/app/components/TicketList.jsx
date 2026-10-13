@@ -3,6 +3,7 @@ import { useState } from "react";
 import { LuTicket, LuInbox, LuUser, LuCalendar, LuCircleAlert, LuPencil, LuTrash2, LuShield } from "react-icons/lu";
 import { getStatusDisplayNamePT, getStatusBadgeClasses, getPriorityBadge } from '@/lib/ticketUtils';
 import { useTheme } from "./ThemeProvider";
+import ConfirmDialog from "./ConfirmDialog";
 
 export default function TicketList({
   tickets,
@@ -17,25 +18,35 @@ export default function TicketList({
   const { theme } = useTheme();
   const [deletingId, setDeletingId] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
+  const showFeedback = (setter, message) => {
+    setter(message);
+    if (message) {
+      setTimeout(() => setter(''), 4000);
+    }
+  };
+
   const handleDelete = async (ticketId) => {
-    if (window.confirm("Tem certeza que deseja excluir este ticket?")) {
-      setErrorMessage('');
-      setSuccessMessage('');
-      setDeletingId(ticketId);
-      try {
-        const res = await fetch(`/api/tickets/${ticketId}`, { method: "DELETE" });
-        if (!res.ok) throw new Error("Falha ao excluir o ticket.");
-        const deletedTicket = tickets.find(t => t.id === ticketId);
-        onTicketDeleted?.(ticketId, deletedTicket?.status);
-        setSuccessMessage('Ticket excluído com sucesso.');
-      } catch (err) {
-        setErrorMessage(err.message || 'Erro ao excluir o ticket.');
-      } finally {
-        setDeletingId(null);
+    setErrorMessage('');
+    setSuccessMessage('');
+    setDeletingId(ticketId);
+    try {
+      const res = await fetch(`/api/tickets/${ticketId}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "Falha ao excluir o ticket.");
       }
+      const deletedTicket = tickets.find(t => t.id === ticketId);
+      onTicketDeleted?.(ticketId, deletedTicket?.status);
+      showFeedback(setSuccessMessage, 'Ticket excluído com sucesso.');
+    } catch (err) {
+      showFeedback(setErrorMessage, err.message || 'Erro ao excluir o ticket.');
+    } finally {
+      setDeletingId(null);
+      setPendingDeleteId(null);
     }
   };
 
@@ -275,7 +286,7 @@ export default function TicketList({
                           Editar
                         </Link>
                         <button
-                          onClick={() => handleDelete(ticket.id)}
+                          onClick={() => setPendingDeleteId(ticket.id)}
                           disabled={deletingId === ticket.id}
                           className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-semibold transition disabled:opacity-50 ${
                             theme === 'light'
@@ -295,6 +306,15 @@ export default function TicketList({
           </div>
         )}
       </div>
+      <ConfirmDialog
+        open={Boolean(pendingDeleteId)}
+        title="Excluir ticket"
+        description="Tem certeza que deseja excluir este ticket? Essa ação não pode ser desfeita."
+        confirmLabel="Excluir"
+        confirming={Boolean(pendingDeleteId && deletingId === pendingDeleteId)}
+        onCancel={() => setPendingDeleteId(null)}
+        onConfirm={() => pendingDeleteId && handleDelete(pendingDeleteId)}
+      />
     </>
   );
 }

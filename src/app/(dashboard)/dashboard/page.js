@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useSession } from "next-auth/react";
 import { LuPlus, LuSearch, LuLayers, LuClock, LuListFilter, LuCircleCheck, LuCopy, LuCheck, LuBuilding, LuShare2 } from 'react-icons/lu';
@@ -23,6 +23,7 @@ export default function DashboardPage() {
   const [filters, setFilters] = useState({ search: '', status: '', priority: '' });
   const [agents, setAgents] = useState([]);
   const [copiedType, setCopiedType] = useState('');
+  const abortRef = useRef(null);
 
   const handleCopy = (text, type) => {
     navigator.clipboard.writeText(text);
@@ -31,6 +32,9 @@ export default function DashboardPage() {
   };
 
   const fetchTickets = useCallback(async (page = 1, activeFilters = {}) => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
     setLoading(true);
     setError('');
     try {
@@ -40,7 +44,7 @@ export default function DashboardPage() {
       if (status) params.set('status', status);
       if (priority) params.set('priority', priority);
 
-      const res = await fetch(`/api/tickets?${params.toString()}`);
+      const res = await fetch(`/api/tickets?${params.toString()}`, { signal: controller.signal });
       if (!res.ok) throw new Error('Falha ao carregar tickets.');
 
       const data = await res.json();
@@ -53,11 +57,24 @@ export default function DashboardPage() {
       setInProgressCount(data.summary.inProgress);
       setClosedCount(data.summary.closed);
     } catch (err) {
+      if (err?.name === 'AbortError') return;
       setError(err.message);
     } finally {
-      setLoading(false);
+      if (abortRef.current === controller) setLoading(false);
     }
   }, []);
+
+  useEffect(() => () => abortRef.current?.abort(), []);
+
+  // Debounce da busca textual (status/prioridade continuam instantâneos via selects)
+  useEffect(() => {
+    if (status !== 'authenticated') return;
+    const t = setTimeout(() => {
+      fetchTickets(1, filters);
+    }, 350);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.search, status]);
 
   useEffect(() => {
     if (status === 'authenticated') {
@@ -105,13 +122,26 @@ export default function DashboardPage() {
 
   const applyFilters = (event) => {
     event.preventDefault();
+    abortRef.current?.abort();
     fetchTickets(1, filters);
   };
 
   const clearFilters = () => {
     const emptyFilters = { search: '', status: '', priority: '' };
     setFilters(emptyFilters);
-    fetchTickets(1, emptyFilters);
+    // O debounce cobre o search; status/priority disparam abaixo
+  };
+
+  const handleStatusFilter = (value) => {
+    const next = { ...filters, status: value };
+    setFilters(next);
+    fetchTickets(1, next);
+  };
+
+  const handlePriorityFilter = (value) => {
+    const next = { ...filters, priority: value };
+    setFilters(next);
+    fetchTickets(1, next);
   };
 
   return (
@@ -255,7 +285,7 @@ export default function DashboardPage() {
           <select 
             data-cy="ticket-filter-status" 
             value={filters.status} 
-            onChange={(event) => setFilters(prev => ({ ...prev, status: event.target.value }))} 
+            onChange={(event) => handleStatusFilter(event.target.value)} 
             className={`rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
               theme === 'light'
                 ? 'border-slate-300 bg-white text-slate-900 focus:border-emerald-500 focus:ring-emerald-400/20'
@@ -276,7 +306,7 @@ export default function DashboardPage() {
           <select 
             data-cy="ticket-filter-priority" 
             value={filters.priority} 
-            onChange={(event) => setFilters(prev => ({ ...prev, priority: event.target.value }))} 
+            onChange={(event) => handlePriorityFilter(event.target.value)} 
             className={`rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
               theme === 'light'
                 ? 'border-slate-300 bg-white text-slate-900 focus:border-emerald-500 focus:ring-emerald-400/20'

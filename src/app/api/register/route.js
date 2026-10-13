@@ -1,23 +1,20 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
-import { checkRateLimit, getClientIp } from '@/lib/rateLimiter';
+import { checkRateLimit, getClientIp, buildRateLimitHeaders } from '@/lib/rateLimiter';
 import { registerSchema, registerCompanySchema, registerEmployeeSchema, generateCompanyCode } from '@/lib/schemas';
 import { resolveRegistrationRole } from '@/lib/registrationRole';
 
 export async function POST(req) {
     const ip = getClientIp(req);
-    const { isLimited } = checkRateLimit(`register:${ip}`);
+    const { isLimited, remaining, resetTime } = await checkRateLimit(`register:${ip}`);
 
     if (isLimited) {
         return NextResponse.json(
             { message: 'Muitas tentativas. Tente novamente em 15 minutos.' },
             {
                 status: 429,
-                headers: {
-                    'X-RateLimit-Remaining': '0',
-                    'Retry-After': '900',
-                },
+                headers: buildRateLimitHeaders({ remaining, resetTime }),
             }
         );
     }

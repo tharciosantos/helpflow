@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from '@/lib/prisma';
 import { createTicketSchema } from '@/lib/schemas';
-import { checkRateLimit } from '@/lib/rateLimiter';
+import { checkRateLimit, buildRateLimitHeaders } from '@/lib/rateLimiter';
 
 export async function POST(req) {
   const session = await getServerSession(authOptions);
@@ -11,9 +11,12 @@ export async function POST(req) {
     return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
   }
 
-  const { isLimited, remaining } = checkRateLimit(`ticket:create:${session.user.id}`, { maxRequests: 10 });
+  const { isLimited, remaining, resetTime } = await checkRateLimit(`ticket:create:${session.user.id}`, { maxRequests: 10 });
   if (isLimited) {
-    return NextResponse.json({ message: "Muitas requisições. Tente novamente mais tarde." }, { status: 429 });
+    return NextResponse.json(
+      { message: "Muitas requisições. Tente novamente mais tarde." },
+      { status: 429, headers: buildRateLimitHeaders({ remaining, resetTime }) }
+    );
   }
 
   try {

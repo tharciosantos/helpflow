@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { randomBytes } from 'crypto';
 import prisma from '@/lib/prisma';
-import { checkRateLimit, getClientIp } from '@/lib/rateLimiter';
+import { checkRateLimit, getClientIp, buildRateLimitHeaders } from '@/lib/rateLimiter';
 import { forgotPasswordSchema } from '@/lib/schemas';
 // 1. Importamos a nossa função de disparo de e-mail
 import { sendResetPasswordEmail } from '@/lib/email';
@@ -20,12 +20,17 @@ export async function POST(req) {
 
         const { email } = validation.data;
         const ip = getClientIp(req);
-        const { isLimited } = checkRateLimit(`forgot-password:${ip}`);
+        // Limite por IP + por e-mail (evita spam direcionado a um alvo sem expor enumeração)
+        const [byIp, byEmail] = await Promise.all([
+            checkRateLimit(`forgot-password:${ip}`),
+            checkRateLimit(`forgot-password:email:${email.toLowerCase()}`, { maxRequests: 3 }),
+        ]);
+        const limited = byIp.isLimited ? byIp : byEmail;
 
-        if (isLimited) {
+        if (limited.isLimited) {
             return NextResponse.json(
                 { message: 'Muitas tentativas. Tente novamente em 15 minutos.' },
-                { status: 429 }
+                { status: 429, headers: buildRateLimitHeaders(limited) }
             );
         }
 

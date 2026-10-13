@@ -24,7 +24,7 @@ export const authOptions = {
           throw new Error("Invalid credentials");
         }
 
-        const { isLimited } = checkRateLimit(`login:${credentials.email}`);
+        const { isLimited } = await checkRateLimit(`login:${credentials.email}`);
         if (isLimited) {
           throw new Error('Muitas tentativas de login. Tente novamente em 15 minutos.');
         }

@@ -14,7 +14,7 @@ export const createTicketSchema = z.object({
     // optional: se não vier no body, o Zod simplesmente ignora
     // e o Prisma usa o @default(MEDIUM) do schema.prisma
     priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).optional(),
-});
+}).strict();
 
 export const updateTicketStatusSchema = z.object({
     status: z.enum(['OPEN', 'IN_PROGRESS', 'CLOSED'], {
@@ -44,10 +44,10 @@ export const registerCompanySchema = z.object({
     accountType: z.literal('COMPANY').optional().default('COMPANY'),
     name: z.string({ required_error: 'Nome do responsável é obrigatório.' }).trim().min(2, 'Nome deve ter pelo menos 2 caracteres.'),
     companyName: z.string({ required_error: 'Nome da empresa é obrigatório.' }).trim().min(2, 'Nome da empresa deve ter pelo menos 2 caracteres.').max(80, 'Nome da empresa deve ter no máximo 80 caracteres.'),
-    email: z.string({ required_error: 'Email é obrigatório.' }).email('Email inválido.'),
+    email: z.string({ required_error: 'Email é obrigatório.' }).trim().toLowerCase().email('Email inválido.'),
     password: z.string().min(8, 'A senha deve ter pelo menos 8 caracteres.'),
     confirmPassword: z.string().min(8, 'A confirmação de senha deve ter pelo menos 8 caracteres.'),
-}).refine((data) => data.password === data.confirmPassword, {
+}).strict().refine((data) => data.password === data.confirmPassword, {
     message: 'As senhas não coincidem.',
     path: ['confirmPassword'],
 });
@@ -55,11 +55,11 @@ export const registerCompanySchema = z.object({
 export const registerEmployeeSchema = z.object({
     accountType: z.literal('EMPLOYEE'),
     name: z.string({ required_error: 'Nome é obrigatório.' }).trim().min(2, 'Nome deve ter pelo menos 2 caracteres.'),
-    companyCode: z.string({ required_error: 'Código da empresa é obrigatório.' }).trim().min(3, 'Código da empresa inválido.').max(30, 'Código da empresa inválido.'),
-    email: z.string({ required_error: 'Email é obrigatório.' }).email('Email inválido.'),
+    companyCode: z.string({ required_error: 'Código da empresa é obrigatório.' }).trim().toUpperCase().min(3, 'Código da empresa inválido.').max(30, 'Código da empresa inválido.'),
+    email: z.string({ required_error: 'Email é obrigatório.' }).trim().toLowerCase().email('Email inválido.'),
     password: z.string().min(8, 'A senha deve ter pelo menos 8 caracteres.'),
     confirmPassword: z.string().min(8, 'A confirmação de senha deve ter pelo menos 8 caracteres.'),
-}).refine((data) => data.password === data.confirmPassword, {
+}).strict().refine((data) => data.password === data.confirmPassword, {
     message: 'As senhas não coincidem.',
     path: ['confirmPassword'],
 });
