@@ -14,7 +14,8 @@ const agentSameCompany = { id: 'agent-1', role: 'AGENT', companyId: 'company-A' 
 const otherCompanyClient = { id: 'client-3', role: 'CLIENT', companyId: 'company-B' };
 const otherCompanyAgent = { id: 'agent-2', role: 'AGENT', companyId: 'company-B' };
 
-const ticket = { id: 'ticket-1', authorId: owner.id, companyId: 'company-A' };
+const ticket = { id: 'ticket-1', authorId: owner.id, companyId: 'company-A', status: 'OPEN' };
+const closedTicket = { id: 'ticket-1', authorId: owner.id, companyId: 'company-A', status: 'CLOSED' };
 
 describe('autorização de tickets com isolamento multi-empresa', () => {
   it('permite ao CLIENT funcionário autor visualizar, editar conteúdo e excluir seu próprio ticket', () => {
@@ -51,6 +52,14 @@ describe('autorização de tickets com isolamento multi-empresa', () => {
     const assignedEmployee = { id: 'client-2', role: 'CLIENT', companyId: 'company-A' };
     const ticketAssigned = { id: 'ticket-2', authorId: owner.id, agentId: 'client-2', companyId: 'company-A' };
     expect(canViewTicket(assignedEmployee, ticketAssigned)).toBe(true);
+  });
+
+  it('bloqueia CLIENT de editar/excluir ticket que saiu de OPEN', () => {
+    expect(canEditTicketContent(owner, closedTicket)).toBe(false);
+    expect(canDeleteTicket(owner, closedTicket)).toBe(false);
+    // AGENT mantém triagem/exclusão (soft-delete na API)
+    expect(canEditTicketContent(agentSameCompany, closedTicket)).toBe(true);
+    expect(canDeleteTicket(agentSameCompany, closedTicket)).toBe(true);
   });
 
   it('impede CLIENT de manipular status, prioridade ou atribuição', () => {
