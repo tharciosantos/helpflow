@@ -1,19 +1,76 @@
-import { LuMessageSquare, LuSend, LuTrash2 } from 'react-icons/lu';
+import { LuMessageSquare, LuSend, LuTrash2, LuHistory, LuLock } from 'react-icons/lu';
 import { canDeleteComment } from '@/lib/ticketAuthorization';
+
+const FIELD_LABELS = {
+    status: 'Status',
+    priority: 'Prioridade',
+    agentId: 'Responsável',
+    title: 'Título',
+    description: 'Descrição',
+};
+
+const STATUS_LABELS = { OPEN: 'Aberto', IN_PROGRESS: 'Em Progresso', CLOSED: 'Fechado' };
+const PRIORITY_LABELS = { LOW: 'Baixa', MEDIUM: 'Média', HIGH: 'Alta', URGENT: 'Urgente' };
+
+function formatHistoryValue(field, value) {
+    if (value === null || value === undefined) return 'Não atribuído';
+    if (field === 'status') return STATUS_LABELS[value] ?? value;
+    if (field === 'priority') return PRIORITY_LABELS[value] ?? value;
+    if (field === 'description') return value.length > 80 ? `${value.slice(0, 80)}...` : value;
+    return value;
+}
+
+function formatHistoryText(entry, actorNameMap) {
+    const field = FIELD_LABELS[entry.field] ?? entry.field;
+    const from = formatHistoryValue(entry.field, entry.from);
+    const to = formatHistoryValue(entry.field, entry.to);
+    if (entry.field === 'agentId') {
+        const fromName = entry.from ? (actorNameMap[entry.from] ?? 'Membro') : 'Não atribuído';
+        const toName = entry.to ? (actorNameMap[entry.to] ?? 'Membro') : 'Não atribuído';
+        return `${field}: ${fromName} → ${toName}`;
+    }
+    return `${field}: ${from} → ${to}`;
+}
 
 export default function CommentsSection({
     ticket,
     comments,
+    histories = [],
+    agents = [],
     session,
     theme,
     commentText,
     setCommentText,
+    isInternalNote,
+    setIsInternalNote,
     isSubmittingComment,
     commentError,
     deletingCommentId,
     onAddComment,
     onDeleteComment,
 }) {
+    const isAgent = session?.user?.role === 'AGENT';
+    const actorNameMap = Object.fromEntries(
+        [...(agents ?? []), ticket?.author, ticket?.agent]
+            .filter(Boolean)
+            .map((person) => [person.id, person.name || person.email])
+    );
+
+    const timeline = [
+        ...comments.map((comment) => ({
+            kind: 'comment',
+            id: `comment-${comment.id}`,
+            createdAt: comment.createdAt,
+            comment,
+        })),
+        ...histories.map((entry) => ({
+            kind: 'history',
+            id: `history-${entry.id}`,
+            createdAt: entry.createdAt,
+            entry,
+        })),
+    ].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
     return (
         <div className={`rounded-2xl border shadow-sm p-6 sm:p-8 space-y-6 ${
             theme === 'light' ? 'bg-white border-slate-200' : 'bg-slate-900/90 border-slate-800'
@@ -41,12 +98,12 @@ export default function CommentsSection({
                         ? 'bg-slate-100 text-slate-700 border-slate-200'
                         : 'bg-slate-800 text-slate-300 border-slate-700'
                 }`}>
-                    {comments.length} {comments.length === 1 ? 'mensagem' : 'mensagens'}
+                    {timeline.length} {timeline.length === 1 ? 'evento' : 'eventos'}
                 </span>
             </div>
 
             <div className="space-y-4">
-                {comments.length === 0 ? (
+                {timeline.length === 0 ? (
                     <div className={`text-center py-8 px-4 rounded-xl border border-dashed ${
                         theme === 'light'
                             ? 'bg-slate-50/60 border-slate-300 text-slate-500'
@@ -58,31 +115,71 @@ export default function CommentsSection({
                     </div>
                 ) : (
                     <div className="space-y-3.5">
-                        {comments.map((comment) => {
-                            const isAgent = comment.author?.role === 'AGENT';
+                        {timeline.map((item) => {
+                            if (item.kind === 'history') {
+                                const { entry } = item;
+                                return (
+                                    <div
+                                        key={item.id}
+                                        className={`rounded-xl px-4 py-3 border border-dashed flex items-start gap-2.5 ${
+                                            theme === 'light'
+                                                ? 'bg-slate-50/70 border-slate-300 text-slate-600'
+                                                : 'bg-slate-950/40 border-slate-700 text-slate-300'
+                                        }`}
+                                    >
+                                        <LuHistory size={14} className="mt-0.5 shrink-0 opacity-70" />
+                                        <div className="min-w-0">
+                                            <p className="text-xs leading-relaxed">
+                                                <span className="font-semibold">
+                                                    {entry.actor?.name || entry.actor?.email || 'Sistema'}
+                                                </span>
+                                                {' alterou '}
+                                                {formatHistoryText(entry, actorNameMap)}
+                                            </p>
+                                            <span className={`text-[11px] ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
+                                                {new Date(entry.createdAt).toLocaleDateString('pt-BR', {
+                                                    day: '2-digit',
+                                                    month: '2-digit',
+                                                    year: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })}
+                                            </span>
+                                        </div>
+                                    </div>
+                                );
+                            }
+
+                            const comment = item.comment;
+                            const isCommentAgent = comment.author?.role === 'AGENT';
                             const isTicketCreator = comment.authorId === ticket.authorId;
+                            const isInternal = comment.visibility === 'INTERNAL';
                             // Mesma regra do backend (inclui checagem de companyId),
                             // evita exibir a lixeira para AGENT de outra empresa.
                             const canDeleteThisComment = canDeleteComment(session?.user, comment, ticket);
 
                             return (
                                 <div
-                                    key={comment.id}
+                                    key={item.id}
                                     data-cy="ticket-comment-item"
                                     className={`rounded-xl p-4 border transition-all ${
-                                        isAgent
+                                        isInternal
                                             ? theme === 'light'
-                                                ? 'bg-emerald-50/40 border-emerald-200/80 shadow-xs'
-                                                : 'bg-emerald-950/20 border-emerald-800/40 shadow-xs'
-                                            : theme === 'light'
-                                                ? 'bg-slate-50 border-slate-200'
-                                                : 'bg-slate-950/40 border-slate-800'
+                                                ? 'bg-amber-50/70 border-amber-300 shadow-xs'
+                                                : 'bg-amber-950/20 border-amber-800/50 shadow-xs'
+                                            : isCommentAgent
+                                                ? theme === 'light'
+                                                    ? 'bg-emerald-50/40 border-emerald-200/80 shadow-xs'
+                                                    : 'bg-emerald-950/20 border-emerald-800/40 shadow-xs'
+                                                : theme === 'light'
+                                                    ? 'bg-slate-50 border-slate-200'
+                                                    : 'bg-slate-950/40 border-slate-800'
                                     }`}
                                 >
                                     <div className="flex items-start justify-between gap-3 mb-2">
                                         <div className="flex items-center gap-2.5 min-w-0">
                                             <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-xs shrink-0 border ${
-                                                isAgent
+                                                isCommentAgent
                                                     ? 'bg-emerald-600 text-white border-emerald-500'
                                                     : theme === 'light'
                                                         ? 'bg-slate-200 text-slate-700 border-slate-300'
@@ -97,7 +194,7 @@ export default function CommentsSection({
                                                     }`}>
                                                         {comment.author?.name || 'Membro da Equipe'}
                                                     </span>
-                                                    {isAgent ? (
+                                                    {isCommentAgent ? (
                                                         <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold border ${
                                                             theme === 'light'
                                                                 ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
@@ -114,9 +211,19 @@ export default function CommentsSection({
                                                             Funcionário
                                                         </span>
                                                     )}
-                                                    {isTicketCreator && !isAgent && (
+                                                    {isTicketCreator && !isCommentAgent && (
                                                         <span className="text-[10px] text-slate-500 font-medium">
                                                             (Autor)
+                                                        </span>
+                                                    )}
+                                                    {isInternal && (
+                                                        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold border ${
+                                                            theme === 'light'
+                                                                ? 'bg-amber-100 text-amber-800 border-amber-300'
+                                                                : 'bg-amber-900/60 text-amber-300 border-amber-700'
+                                                        }`}>
+                                                            <LuLock size={10} />
+                                                            Nota interna
                                                         </span>
                                                     )}
                                                 </div>
@@ -189,11 +296,27 @@ export default function CommentsSection({
                     />
 
                     <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-200/50 dark:border-slate-800/60 mt-2">
-                        <span className={`text-[11px] ${
-                            commentText.length > 1800 ? 'text-amber-500' : 'text-slate-400'
-                        }`}>
-                            {commentText.length} / 2000 caracteres
-                        </span>
+                        <div className="flex items-center gap-3">
+                            <span className={`text-[11px] ${
+                                commentText.length > 1800 ? 'text-amber-500' : 'text-slate-400'
+                            }`}>
+                                {commentText.length} / 2000 caracteres
+                            </span>
+
+                            {isAgent && (
+                                <label className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400 cursor-pointer select-none">
+                                    <input
+                                        type="checkbox"
+                                        checked={Boolean(isInternalNote)}
+                                        onChange={(e) => setIsInternalNote?.(e.target.checked)}
+                                        data-cy="ticket-comment-internal"
+                                        className="h-3.5 w-3.5 rounded accent-amber-500"
+                                    />
+                                    <LuLock size={11} />
+                                    Nota interna (só TI)
+                                </label>
+                            )}
+                        </div>
 
                         <button
                             type="submit"

@@ -39,6 +39,7 @@ model User {
   createdTickets  Ticket[] @relation("TicketAuthor")
   assignedTickets Ticket[] @relation("TicketAgent")
   comments        TicketComment[]
+  ticketHistories TicketHistory[]
 
   accounts Account[]
   sessions Session[]
@@ -66,6 +67,7 @@ model Ticket {
   agent   User? @relation("TicketAgent", fields: [agentId], references: [id])
 
   comments TicketComment[]
+  histories TicketHistory[]
 
   @@index([authorId])
   @@index([status])
@@ -75,6 +77,7 @@ model Ticket {
 model TicketComment {
   id        String   @id @default(cuid())
   content   String   @db.Text
+  visibility CommentVisibility @default(PUBLIC)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -86,6 +89,25 @@ model TicketComment {
 
   @@index([ticketId])
   @@index([authorId])
+}
+
+model TicketHistory {
+  id        String   @id @default(cuid())
+  ticketId  String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  actorId   String
+  actor     User     @relation(fields: [actorId], references: [id], onDelete: Cascade)
+  field     String   // status | priority | agentId | title | description
+  from      String?
+  to        String?
+  createdAt DateTime @default(now())
+
+  @@index([ticketId, createdAt])
+}
+
+enum CommentVisibility {
+  PUBLIC
+  INTERNAL
 }
 
 enum Status {
