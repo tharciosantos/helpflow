@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { updateTicketStatusSchema, updateTicketSchema } from '@/lib/schemas';
 import { checkRateLimit, buildRateLimitHeaders } from '@/lib/rateLimiter';
+import { buildHistoryEntries } from '@/lib/ticketHistory';
 import {
   canDeleteTicket,
   canEditTicketContent,
@@ -27,8 +28,16 @@ export async function GET(req, { params }) {
         author: { select: { id: true, name: true, email: true, image: true, role: true } },
         agent: { select: { id: true, name: true, email: true, image: true, role: true } },
         comments: {
+          // Notas internas: só AGENT enxerga. CLIENT recebe apenas PUBLIC.
+          where: session.user.role === 'AGENT' ? {} : { visibility: 'PUBLIC' },
           include: {
             author: { select: { id: true, name: true, email: true, image: true, role: true } },
+          },
+          orderBy: { createdAt: 'asc' },
+        },
+        histories: {
+          include: {
+            actor: { select: { id: true, name: true, email: true, image: true, role: true } },
           },
           orderBy: { createdAt: 'asc' },
         },
@@ -129,13 +138,23 @@ export async function PATCH(req, { params }) {
       }
     }
 
-    const updatedTicket = await prisma.ticket.update({
-      where: { id },
-      data,
-      include: {
-        author: { select: { id: true, name: true, email: true, image: true } },
-        agent: { select: { id: true, name: true, email: true, image: true } },
-      },
+    const updatedTicket = await prisma.$transaction(async (tx) => {
+      const updated = await tx.ticket.update({
+        where: { id },
+        data,
+        include: {
+          author: { select: { id: true, name: true, email: true, image: true } },
+          agent: { select: { id: true, name: true, email: true, image: true } },
+        },
+      });
+
+      // Auditoria: registra diffs reais na mesma transação (atomicidade).
+      const entries = buildHistoryEntries({ ticket, data, actorId: session.user.id });
+      if (entries.length > 0) {
+        await tx.ticketHistory.createMany({ data: entries });
+      }
+
+      return updated;
     });
 
     return NextResponse.json(updatedTicket, { status: 200 });

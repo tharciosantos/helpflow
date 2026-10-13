@@ -118,5 +118,8 @@ export const createCommentSchema = z.object({
         .trim()
         .min(1, 'O comentário não pode ficar vazio.')
         .max(2000, 'O comentário não pode ter mais de 2000 caracteres.'),
-});
+    // Enum extensível: PUBLIC visível a todos com acesso; INTERNAL só AGENT.
+    // CLIENT que enviar INTERNAL recebe 403 na rota (defesa em profundidade).
+    visibility: z.enum(['PUBLIC', 'INTERNAL']).optional().default('PUBLIC'),
+}).strict();
 

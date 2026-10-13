@@ -35,7 +35,11 @@ export async function GET(req, { params }) {
     }
 
     const comments = await prisma.ticketComment.findMany({
-      where: { ticketId: id },
+      where: {
+        ticketId: id,
+        // CLIENT nunca recebe INTERNAL, mesmo chamando a rota direta.
+        ...(session.user.role === 'AGENT' ? {} : { visibility: 'PUBLIC' }),
+      },
       include: {
         author: {
           select: {
@@ -102,10 +106,19 @@ export async function POST(req, { params }) {
       return NextResponse.json({ message: errorMsg }, { status: 400 });
     }
 
+    // Notas internas são privilégio de AGENT (defesa em profundidade além do schema).
+    if (parsed.data.visibility === 'INTERNAL' && session.user.role !== 'AGENT') {
+      return NextResponse.json(
+        { message: 'Apenas agentes podem criar notas internas.' },
+        { status: 403 }
+      );
+    }
+
     const newComment = await prisma.$transaction(async (tx) => {
       const created = await tx.ticketComment.create({
         data: {
           content: parsed.data.content,
+          visibility: parsed.data.visibility,
           ticketId: id,
           authorId: session.user.id,
         },
