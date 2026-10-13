@@ -168,11 +168,11 @@ export default function ResetPasswordForm({ token }) {
                 }`}>
                     <div className="text-center mb-8">
                         <Image
-                            src="/favicon.ico"
+                            src="/icon.png"
                             alt="HelpFlow Logo"
                             width={64}
                             height={64}
-                            className="mx-auto mb-4"
+                            className="mx-auto mb-4 rounded-2xl"
                             priority
                         />
                         <h1 className={`text-3xl font-bold mb-2 ${
