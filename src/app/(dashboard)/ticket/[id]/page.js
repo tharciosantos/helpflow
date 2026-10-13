@@ -39,7 +39,9 @@ export default function TicketDetailsPage() {
 
     // Estados de Comentários / Interações
     const [comments, setComments] = useState([]);
+    const [histories, setHistories] = useState([]);
     const [commentText, setCommentText] = useState('');
+    const [isInternalNote, setIsInternalNote] = useState(false);
     const [isSubmittingComment, setIsSubmittingComment] = useState(false);
     const [commentError, setCommentError] = useState('');
     const [deletingCommentId, setDeletingCommentId] = useState(null);
@@ -58,6 +60,7 @@ export default function TicketDetailsPage() {
             const data = await res.json();
             setTicket(data);
             setComments(data.comments || []);
+            setHistories(data.histories || []);
             setNewStatus(data.status ?? 'OPEN');
             setNewPriority(data.priority ?? 'MEDIUM');
             setNewAgentId(data.agentId ?? '');
@@ -160,7 +163,10 @@ export default function TicketDetailsPage() {
             const res = await fetch(`/api/tickets/${id}/comments`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content: trimmed }),
+                body: JSON.stringify({
+                    content: trimmed,
+                    visibility: isInternalNote ? 'INTERNAL' : 'PUBLIC',
+                }),
             });
 
             if (!res.ok) {
@@ -171,6 +177,7 @@ export default function TicketDetailsPage() {
             const newComment = await res.json();
             setComments(prev => [...prev, newComment]);
             setCommentText('');
+            setIsInternalNote(false);
         } catch (err) {
             console.error('Erro ao postar comentário:', err);
             setCommentError(err.message || 'Erro ao enviar comentário.');
@@ -504,10 +511,14 @@ export default function TicketDetailsPage() {
             <CommentsSection
                 ticket={ticket}
                 comments={comments}
+                histories={histories}
+                agents={agents}
                 session={session}
                 theme={theme}
                 commentText={commentText}
                 setCommentText={setCommentText}
+                isInternalNote={isInternalNote}
+                setIsInternalNote={setIsInternalNote}
                 isSubmittingComment={isSubmittingComment}
                 commentError={commentError}
                 deletingCommentId={deletingCommentId}
