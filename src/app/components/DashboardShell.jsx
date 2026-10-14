@@ -12,11 +12,11 @@ export default function DashboardShell({ children }) {
   const { theme } = useTheme();
 
   return (
-    <div className={`flex h-screen transition-colors duration-200 ${
+    <div id="hf-shell" className={`flex h-dvh overflow-hidden transition-colors duration-200 ${
       theme === 'light' ? 'bg-slate-50 text-slate-900' : 'bg-slate-950 text-slate-100'
     }`}>
       {/* Desktop Sidebar */}
-      <aside className={`hidden md:flex w-64 p-6 flex-col justify-between border-r transition-colors duration-200 ${
+      <aside className={`hidden md:flex w-64 p-6 flex-col justify-between min-h-0 overflow-y-auto border-r transition-colors duration-200 ${
         theme === 'light' 
           ? 'bg-white border-slate-200 text-slate-900' 
           : 'bg-slate-900 border-slate-800 text-slate-100'
@@ -45,9 +45,9 @@ export default function DashboardShell({ children }) {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
         <MobileHeader /> 
-        <main className="flex-1 overflow-y-auto p-4 md:p-8">
+        <main className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 md:p-8">
           {children}
         </main>
       </div>
