@@ -2,6 +2,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { LuTicket, LuInbox, LuUser, LuCalendar, LuCircleAlert, LuPencil, LuTrash2, LuShield } from "react-icons/lu";
 import { getStatusDisplayNamePT, getStatusBadgeClasses, getPriorityBadge } from '@/lib/ticketUtils';
+import { isOverdue } from '@/lib/sla';
 import { useTheme } from "./ThemeProvider";
 import ConfirmDialog from "./ConfirmDialog";
 
@@ -175,6 +176,16 @@ export default function TicketList({
                     <div className="flex items-center gap-2">
                       <span className={"rounded-full px-2.5 py-0.5 text-xs font-medium border " + getStatusBadgeClasses(ticket.status, theme)}>
                         {getStatusDisplayNamePT(ticket.status)}
+                      {isOverdue(ticket) && (
+                        <span
+                          className="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium border-red-300 bg-red-100 text-red-700 dark:border-red-800 dark:bg-red-950/50 dark:text-red-400"
+                          title={`Prazo expirado em ${new Date(ticket.dueAt).toLocaleString('pt-BR')}`}
+                        >
+                          <LuCircleAlert size={12} aria-hidden="true" />
+                          Atrasado
+                        </span>
+                      )}
+
                       </span>
                       {(() => {
                         const badge = getPriorityBadge(ticket.priority, theme);

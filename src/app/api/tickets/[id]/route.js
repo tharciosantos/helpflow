@@ -5,6 +5,7 @@ import prisma from '@/lib/prisma';
 import { updateTicketStatusSchema, updateTicketSchema } from '@/lib/schemas';
 import { checkRateLimit, buildRateLimitHeaders } from '@/lib/rateLimiter';
 import { buildHistoryEntries } from '@/lib/ticketHistory';
+import { computeDueAt } from '@/lib/sla';
 import {
   canDeleteTicket,
   canEditTicketContent,
@@ -137,6 +138,20 @@ export async function PATCH(req, { params }) {
         return NextResponse.json({ message: 'Membro selecionado inválido.' }, { status: 400 });
       }
     }
+    // SLA - prazo e resolução derivados do estado do ticket:
+    // 1) Se a prioridade mudou, recalculamos o prazo a partir de AGORA.
+    // 2) Se fechou, gravamos resolvedAt; se reabriu, limpamos resolvedAt.
+    if (data.priority !== undefined && data.priority !== ticket.priority) {
+      data.dueAt = computeDueAt(data.priority);
+    }
+    if (data.status === 'CLOSED' && ticket.status !== 'CLOSED') {
+      data.resolvedAt = new Date();
+    }
+    if (data.status && data.status !== 'CLOSED' && ticket.status === 'CLOSED') {
+      data.resolvedAt = null;
+    }
+
+
 
     const updatedTicket = await prisma.$transaction(async (tx) => {
       const updated = await tx.ticket.update({

@@ -69,6 +69,12 @@ model Ticket {
   comments TicketComment[]
   histories TicketHistory[]
 
+  // SLA: prazo derivado da prioridade e marca de resolução.
+  // dueAt é calculado na criação e recalculado quando a prioridade muda.
+  // resolvedAt é gravado ao fechar e limpo ao reabrir.
+  dueAt      DateTime?
+  resolvedAt DateTime?
+
   @@index([authorId])
   @@index([status])
   @@index([companyId])
