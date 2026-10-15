@@ -40,6 +40,7 @@ model User {
   assignedTickets Ticket[] @relation("TicketAgent")
   comments        TicketComment[]
   ticketHistories TicketHistory[]
+  notifications   Notification[]
 
   accounts Account[]
   sessions Session[]
@@ -68,6 +69,7 @@ model Ticket {
 
   comments TicketComment[]
   histories TicketHistory[]
+  notifications Notification[]
 
   // SLA: prazo derivado da prioridade e marca de resolução.
   // dueAt é calculado na criação e recalculado quando a prioridade muda.
@@ -109,6 +111,24 @@ model TicketHistory {
   createdAt DateTime @default(now())
 
   @@index([ticketId, createdAt])
+}
+
+// Notificacao in-app (sino). Nao confundir com e-mail: vive apenas no app.
+// userId = quem RECEBE. type = ASSIGNED | COMMENT | STATUS.
+// Regra de dominio (resolveNotificationRecipients) nunca notifica o autor da acao.
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ticketId  String?
+  ticket    Ticket?   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  type      String
+  message   String
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
 }
 
 enum CommentVisibility {
