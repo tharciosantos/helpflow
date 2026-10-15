@@ -5,6 +5,7 @@ import prisma from '@/lib/prisma';
 import { createCommentSchema } from '@/lib/schemas';
 import { checkRateLimit, buildRateLimitHeaders } from '@/lib/rateLimiter';
 import { canCommentOnTicket, canViewTicket } from '@/lib/ticketAuthorization';
+import { resolveNotificationRecipients, buildNotificationMessage } from '@/lib/notifications';
 
 // GET /api/tickets/[id]/comments - Lista os comentários do chamado
 export async function GET(req, { params }) {
@@ -140,6 +141,28 @@ export async function POST(req, { params }) {
         where: { id },
         data: { updatedAt: new Date() },
       });
+
+      // Notificacao in-app: apenas comentarios PUBLICOS notificam o outro lado.
+      // Notas internas (INTERNAL) sao alinhamento da TI e nao geram sino.
+      if (parsed.data.visibility !== 'INTERNAL') {
+        const recipients = resolveNotificationRecipients({
+          event: 'COMMENT',
+          actor: { id: session.user.id, role: session.user.role },
+          ticket,
+        });
+        if (recipients.length > 0) {
+          await tx.notification.createMany({
+            data: recipients.map((userId) => ({
+              userId,
+              ticketId: id,
+              type: 'COMMENT',
+              message: buildNotificationMessage({
+                event: 'COMMENT', actorName: session.user.name, ticketTitle: null,
+              }),
+            })),
+          });
+        }
+      }
 
       return created;
     });

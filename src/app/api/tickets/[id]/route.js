@@ -5,6 +5,8 @@ import prisma from '@/lib/prisma';
 import { updateTicketStatusSchema, updateTicketSchema } from '@/lib/schemas';
 import { checkRateLimit, buildRateLimitHeaders } from '@/lib/rateLimiter';
 import { buildHistoryEntries } from '@/lib/ticketHistory';
+import { computeDueAt } from '@/lib/sla';
+import { resolveNotificationRecipients, buildNotificationMessage } from '@/lib/notifications';
 import {
   canDeleteTicket,
   canEditTicketContent,
@@ -137,6 +139,20 @@ export async function PATCH(req, { params }) {
         return NextResponse.json({ message: 'Membro selecionado inválido.' }, { status: 400 });
       }
     }
+    // SLA - prazo e resolução derivados do estado do ticket:
+    // 1) Se a prioridade mudou, recalculamos o prazo a partir de AGORA.
+    // 2) Se fechou, gravamos resolvedAt; se reabriu, limpamos resolvedAt.
+    if (data.priority !== undefined && data.priority !== ticket.priority) {
+      data.dueAt = computeDueAt(data.priority);
+    }
+    if (data.status === 'CLOSED' && ticket.status !== 'CLOSED') {
+      data.resolvedAt = new Date();
+    }
+    if (data.status && data.status !== 'CLOSED' && ticket.status === 'CLOSED') {
+      data.resolvedAt = null;
+    }
+
+
 
     const updatedTicket = await prisma.$transaction(async (tx) => {
       const updated = await tx.ticket.update({
@@ -152,6 +168,44 @@ export async function PATCH(req, { params }) {
       const entries = buildHistoryEntries({ ticket, data, actorId: session.user.id });
       if (entries.length > 0) {
         await tx.ticketHistory.createMany({ data: entries });
+      }
+
+      // Notificacoes in-app (sino): derivadas do que REALMENTE mudou.
+      const actor = { id: session.user.id, role: session.user.role };
+      const notifications = [];
+
+      // ASSIGNED: somente quando o responsavel muda para um novo valor.
+      if (data.agentId !== undefined && data.agentId !== ticket.agentId) {
+        const recipients = resolveNotificationRecipients({
+          event: 'ASSIGNED', actor, ticket, newAgentId: data.agentId,
+        });
+        notifications.push(...recipients.map((userId) => ({
+          userId,
+          ticketId: id,
+          type: 'ASSIGNED',
+          message: buildNotificationMessage({
+            event: 'ASSIGNED', actorName: session.user.name, ticketTitle: ticket.title,
+          }),
+        })));
+      }
+
+      // STATUS: somente quando o status muda.
+      if (data.status !== undefined && data.status !== ticket.status) {
+        const recipients = resolveNotificationRecipients({
+          event: 'STATUS', actor, ticket,
+        });
+        notifications.push(...recipients.map((userId) => ({
+          userId,
+          ticketId: id,
+          type: 'STATUS',
+          message: buildNotificationMessage({
+            event: 'STATUS', actorName: session.user.name, ticketTitle: ticket.title,
+          }),
+        })));
+      }
+
+      if (notifications.length > 0) {
+        await tx.notification.createMany({ data: notifications });
       }
 
       return updated;

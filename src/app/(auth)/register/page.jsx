@@ -123,11 +123,11 @@ function RegisterForm() {
       >
         <div className="text-center mb-6">
           <Image
-            src="/favicon.ico"
+            src="/icon.png"
             alt="HelpFlow Logo"
             width={56}
             height={56}
-            className="mx-auto mb-3"
+            className="mx-auto mb-3 rounded-xl"
             priority
           />
           <h1

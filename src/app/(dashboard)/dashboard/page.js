@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useSession } from "next-auth/react";
-import { LuPlus, LuSearch, LuLayers, LuClock, LuListFilter, LuCircleCheck, LuCopy, LuCheck, LuBuilding, LuShare2 } from 'react-icons/lu';
+import { LuPlus, LuSearch, LuLayers, LuClock, LuListFilter, LuCircleCheck, LuCopy, LuCheck, LuBuilding, LuShare2, LuCircleAlert } from 'react-icons/lu';
 import TicketList from "../../components/TicketList";
 import { useTheme } from "../../components/ThemeProvider";
 
@@ -20,6 +20,7 @@ export default function DashboardPage() {
   const [openCount, setOpenCount] = useState(0);
   const [inProgressCount, setInProgressCount] = useState(0);
   const [closedCount, setClosedCount] = useState(0);
+  const [overdueCount, setOverdueCount] = useState(0);
   const [filters, setFilters] = useState({ search: '', status: '', priority: '' });
   const [agents, setAgents] = useState([]);
   const [copiedType, setCopiedType] = useState('');
@@ -56,6 +57,7 @@ export default function DashboardPage() {
       setOpenCount(data.summary.open);
       setInProgressCount(data.summary.inProgress);
       setClosedCount(data.summary.closed);
+      setOverdueCount(data.summary.overdue || 0);
     } catch (err) {
       if (err?.name === 'AbortError') return;
       setError(err.message);
@@ -463,6 +465,22 @@ export default function DashboardPage() {
                   theme === 'light' ? 'text-slate-900' : 'text-white'
                 }`}>{inProgressCount}</span>
               </div>
+
+              <div className={`rounded-lg p-3 border transition-colors ${
+                theme === 'light' ? 'bg-red-50 border-red-200' : 'bg-red-950/30 border-red-800/60'
+              }`}>
+                <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
+                  <span className="flex items-center gap-1.5 font-medium">
+                    <span className="h-1.5 w-1.5 rounded-full bg-red-500" aria-hidden="true" />
+                    Atrasado
+                  </span>
+                  <LuCircleAlert size={14} className={theme === 'light' ? 'text-red-500' : 'text-red-400'} />
+                </div>
+                <span className={`text-2xl font-extrabold ${
+                  theme === 'light' ? 'text-red-700' : 'text-red-400'
+                }`}>{overdueCount}</span>
+              </div>
+
 
               <div className={`col-span-2 rounded-lg p-3 border transition-colors ${
                 theme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-800/60 border-slate-700/60'

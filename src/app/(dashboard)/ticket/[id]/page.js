@@ -229,7 +229,7 @@ export default function TicketDetailsPage() {
     const canManageTicket = session?.user?.role === 'AGENT' || session?.user?.id === ticket.authorId;
 
     return (
-        <main className={`max-w-4xl mx-auto space-y-6 ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+        <div className={`max-w-4xl mx-auto space-y-6 pb-2 ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
             <div>
                 <Link 
                     href="/dashboard" 
@@ -545,6 +545,6 @@ export default function TicketDetailsPage() {
                 onCancel={() => !deletingCommentId && setConfirmDeleteCommentId(null)}
                 onConfirm={() => confirmDeleteCommentId && handleDeleteComment(confirmDeleteCommentId)}
             />
-        </main>
+        </div>
     );
 }

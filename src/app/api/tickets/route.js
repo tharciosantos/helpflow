@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import prisma from '@/lib/prisma';
 import { createTicketSchema } from '@/lib/schemas';
 import { checkRateLimit, buildRateLimitHeaders } from '@/lib/rateLimiter';
+import { computeDueAt } from '@/lib/sla';
 
 export async function POST(req) {
   const session = await getServerSession(authOptions);
@@ -40,8 +41,13 @@ export async function POST(req) {
     const authorId = session.user.id;
     const companyId = session.user.companyId || null;
 
+    // SLA: se a prioridade não vier no body, tratamos como MEDIUM para calcular
+    // o prazo de forma consistente com o @default do schema.
+    const effectivePriority = priority || 'MEDIUM';
+    const dueAt = computeDueAt(effectivePriority);
+
     const newTicket = await prisma.ticket.create({
-      data: { title, description, priority, authorId, companyId },
+      data: { title, description, priority, authorId, companyId, dueAt },
     });
 
     return NextResponse.json(newTicket, { status: 201 });
@@ -129,6 +135,17 @@ export async function GET(req) {
       prisma.ticket.count({ where: { ...baseVisibility, status: 'CLOSED' } }),
     ]);
 
+    // SLA: contagem de atrasados respeitando o escopo de visibilidade.
+    // Regra on-read: tem prazo, prazo já venceu e ainda não foi fechado.
+    const overdueCount = await prisma.ticket.count({
+      where: {
+        ...(companyId ? { companyId } : {}),
+        ...(baseVisibility.OR ? { OR: baseVisibility.OR } : {}),
+        dueAt: { lt: new Date() },
+        status: { not: 'CLOSED' },
+      },
+    });
+
     return NextResponse.json({
       tickets,
       pagination: {
@@ -144,6 +161,7 @@ export async function GET(req) {
         open: openCount,
         inProgress: inProgressCount,
         closed: closedCount,
+        overdue: overdueCount,
       },
     }, { status: 200 });
 

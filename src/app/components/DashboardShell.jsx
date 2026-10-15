@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { LuHeadphones } from 'react-icons/lu';
 import { useTheme } from './ThemeProvider';
@@ -11,12 +12,24 @@ import MobileHeader from './MobileHeader';
 export default function DashboardShell({ children }) {
   const { theme } = useTheme();
 
+  // App shell: enquanto o dashboard esta montado, o scroll pertence ao <main>,
+  // nunca ao <body>. Travar o overflow do body aqui e a defesa final contra o
+  // classico "100vh que estoura" - aconteca o que acontecer nos filhos, o body
+  // nao rola, entao nenhuma faixa de fundo vaza abaixo do shell.
+  useEffect(() => {
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, []);
+
   return (
-    <div className={`flex h-screen transition-colors duration-200 ${
+    <div id="hf-shell" className={`flex h-dvh overflow-hidden transition-colors duration-200 ${
       theme === 'light' ? 'bg-slate-50 text-slate-900' : 'bg-slate-950 text-slate-100'
     }`}>
       {/* Desktop Sidebar */}
-      <aside className={`hidden md:flex w-64 p-6 flex-col justify-between border-r transition-colors duration-200 ${
+      <aside className={`hidden md:flex w-64 shrink-0 flex-col justify-between p-6 border-r transition-colors duration-200 ${
         theme === 'light' 
           ? 'bg-white border-slate-200 text-slate-900' 
           : 'bg-slate-900 border-slate-800 text-slate-100'
@@ -45,9 +58,9 @@ export default function DashboardShell({ children }) {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
         <MobileHeader /> 
-        <main className="flex-1 overflow-y-auto p-4 md:p-8">
+        <main className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 md:p-8">
           {children}
         </main>
       </div>
