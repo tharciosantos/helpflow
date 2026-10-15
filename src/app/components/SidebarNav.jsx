@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { LuLayoutDashboard, LuTicketPlus } from 'react-icons/lu';
 import { usePathname } from 'next/navigation'; 
 import { useTheme } from './ThemeProvider';
+import NotificationBell from './NotificationBell';
 
 export default function SidebarNav({ dataCyPrefix = 'sidebar' }) {
   const pathname = usePathname();
@@ -40,6 +41,7 @@ export default function SidebarNav({ dataCyPrefix = 'sidebar' }) {
         <LuTicketPlus size={20} />
         <span>Novo Ticket</span>
       </Link>
+      <NotificationBell />
     </nav>
   );
 }
