@@ -11,9 +11,12 @@ import {
     LuShield,
     LuClock,
     LuPencil,
-    LuTrash2
+    LuTrash2,
+    LuMessageSquare
 } from 'react-icons/lu';
 import { getStatusDisplayNamePT, getStatusBadgeClasses, getPriorityBadge } from '@/lib/ticketUtils';
+import { formatDuration } from '@/lib/metrics';
+import { canEditTicketContent } from '@/lib/ticketAuthorization';
 import CommentsSection from '../../../components/CommentsSection';
 import ConfirmDialog from '../../../components/ConfirmDialog';
 import { useTheme } from '../../../components/ThemeProvider';
@@ -227,6 +230,9 @@ export default function TicketDetailsPage() {
     }
 
     const canManageTicket = session?.user?.role === 'AGENT' || session?.user?.id === ticket.authorId;
+    // CLIENT só edita conteúdo enquanto o chamado está OPEN: sem isso o botão
+    // levava a um formulário que só recusava no envio.
+    const canEditContent = canEditTicketContent(session?.user, ticket);
 
     return (
         <div className={`max-w-4xl mx-auto space-y-6 pb-2 ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
@@ -295,7 +301,7 @@ export default function TicketDetailsPage() {
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pt-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 pt-2">
                     <div className={`p-3.5 rounded-xl border flex items-center gap-3 ${
                         theme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-800/40 border-slate-700/50'
                     }`}>
@@ -356,6 +362,30 @@ export default function TicketDetailsPage() {
                             <span className="block text-[11px] font-medium text-slate-400">Última Atualização</span>
                             <span className="block text-xs font-semibold">
                                 {new Date(ticket.updatedAt).toLocaleDateString('pt-BR')}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className={`p-3.5 rounded-xl border flex items-center gap-3 ${
+                        theme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-800/40 border-slate-700/50'
+                    }`}>
+                        <div className={`p-2 rounded-lg ${
+                            ticket.firstResponseAt
+                                ? theme === 'light' ? 'bg-sky-50 text-sky-600' : 'bg-sky-950/50 text-sky-400'
+                                : theme === 'light' ? 'bg-amber-50 text-amber-600' : 'bg-amber-950/50 text-amber-400'
+                        }`}>
+                            <LuMessageSquare size={16} />
+                        </div>
+                        <div className="min-w-0">
+                            <span className="block text-[11px] font-medium text-slate-400">1ª Resposta</span>
+                            <span
+                                data-cy="ticket-first-response"
+                                className="block text-xs font-semibold truncate"
+                                title={ticket.firstResponseAt ? new Date(ticket.firstResponseAt).toLocaleString('pt-BR') : 'Nenhum agente interagiu ainda'}
+                            >
+                                {ticket.firstResponseAt
+                                    ? `em ${formatDuration(new Date(ticket.firstResponseAt).getTime() - new Date(ticket.createdAt).getTime())}`
+                                    : 'Aguardando agente'}
                             </span>
                         </div>
                     </div>
@@ -472,17 +502,33 @@ export default function TicketDetailsPage() {
                                 </button>
                             )}
 
-                            <Link
-                                href={`/dashboard/ticket/${ticket.id}/edit`}
-                                className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition ${
-                                    theme === 'light'
-                                        ? 'border-slate-300 bg-white hover:border-emerald-500 hover:text-emerald-600 text-slate-700 shadow-sm'
-                                        : 'border-slate-700 bg-slate-800/80 hover:border-emerald-400 hover:text-emerald-300 text-slate-200 shadow-sm'
-                                }`}
-                            >
-                                <LuPencil size={15} />
-                                Editar Informações Completas
-                            </Link>
+                            {canEditContent ? (
+                                <Link
+                                    data-cy="ticket-detail-edit-link"
+                                    href={`/dashboard/ticket/${ticket.id}/edit`}
+                                    className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition ${
+                                        theme === 'light'
+                                            ? 'border-slate-300 bg-white hover:border-emerald-500 hover:text-emerald-600 text-slate-700 shadow-sm'
+                                            : 'border-slate-700 bg-slate-800/80 hover:border-emerald-400 hover:text-emerald-300 text-slate-200 shadow-sm'
+                                    }`}
+                                >
+                                    <LuPencil size={15} />
+                                    Editar Informações Completas
+                                </Link>
+                            ) : (
+                                <span
+                                    data-cy="ticket-edit-blocked"
+                                    title="Só é possível editar o chamado enquanto ele está Aberto"
+                                    className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium ${
+                                        theme === 'light'
+                                            ? 'border-slate-200 bg-slate-50 text-slate-400'
+                                            : 'border-slate-800 bg-slate-900/60 text-slate-500'
+                                    }`}
+                                >
+                                    <LuPencil size={15} />
+                                    Edição disponível só com o chamado Aberto
+                                </span>
+                            )}
                         </div>
 
                         <button

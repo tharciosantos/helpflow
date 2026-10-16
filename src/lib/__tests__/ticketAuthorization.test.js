@@ -6,6 +6,7 @@ import {
   getForbiddenTicketFields,
   canCommentOnTicket,
   canDeleteComment,
+  getEditDenialMessage,
 } from '../ticketAuthorization';
 
 const owner = { id: 'client-1', role: 'CLIENT', companyId: 'company-A' };
@@ -67,6 +68,24 @@ describe('autorização de tickets com isolamento multi-empresa', () => {
     expect(getForbiddenTicketFields(owner, { status: 'CLOSED' })).toEqual(['status']);
     expect(getForbiddenTicketFields(owner, { priority: 'URGENT', agentId: 'agent-1' }))
       .toEqual(['priority', 'agentId']);
+  });
+
+  describe('mensagem de recusa de edição', () => {
+    it('explica ao autor que o chamado saiu de OPEN', () => {
+      expect(getEditDenialMessage(owner, closedTicket))
+        .toBe('Chamados em atendimento ou fechados só podem ser editados pela equipe de suporte.');
+      expect(getEditDenialMessage(owner, { ...ticket, status: 'IN_PROGRESS' }))
+        .toBe('Chamados em atendimento ou fechados só podem ser editados pela equipe de suporte.');
+    });
+
+    it('mantém mensagem genérica para quem não é o autor', () => {
+      expect(getEditDenialMessage(otherClientSameCompany, closedTicket)).toBe('Não autorizado');
+      expect(getEditDenialMessage(otherCompanyClient, closedTicket)).toBe('Não autorizado');
+    });
+
+    it('não vaza detalhe do chamado para o AGENT', () => {
+      expect(getEditDenialMessage(agentSameCompany, closedTicket)).toBe('Não autorizado');
+    });
   });
 
   it('permite campos administrativos ao AGENT', () => {

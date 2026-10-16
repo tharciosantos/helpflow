@@ -5,6 +5,11 @@ import prisma from '@/lib/prisma';
 import { createTicketSchema } from '@/lib/schemas';
 import { checkRateLimit, buildRateLimitHeaders } from '@/lib/rateLimiter';
 import { computeDueAt } from '@/lib/sla';
+import {
+  averageFirstResponseMs,
+  averageResolutionMs,
+  METRICS_SAMPLE_LIMIT,
+} from '@/lib/metrics';
 
 export async function POST(req) {
   const session = await getServerSession(authOptions);
@@ -82,6 +87,9 @@ export async function GET(req) {
     const status = searchParams.get('status');
     const priority = searchParams.get('priority');
     const search = searchParams.get('search')?.trim();
+    const onlyOverdue = searchParams.get('overdue') === 'true';
+    const onlyMine = searchParams.get('mine') === 'true';
+    const sort = searchParams.get('sort') === 'dueDate' ? 'dueDate' : 'recent';
     const validStatuses = ['OPEN', 'IN_PROGRESS', 'CLOSED'];
     const validPriorities = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'];
 
@@ -98,34 +106,66 @@ export async function GET(req) {
         : {}),
     };
 
+    // AND separado: "só atrasados" usa status: { not: 'CLOSED' }, que
+    // sobrescreveria o filtro simples de status no mesmo objeto.
+    const andConditions = [];
+
+    if (baseVisibility.OR) andConditions.push({ OR: baseVisibility.OR });
+
+    if (search) {
+      andConditions.push({
+        OR: [
+          { title: { contains: search, mode: 'insensitive' } },
+          { description: { contains: search, mode: 'insensitive' } },
+        ],
+      });
+    }
+
+    if (onlyOverdue) {
+      andConditions.push({ dueAt: { lt: new Date() }, status: { not: 'CLOSED' } });
+    }
+
+    if (onlyMine) {
+      andConditions.push(
+        role === 'AGENT' ? { agentId: session.user.id } : { authorId: session.user.id }
+      );
+    }
+
     const where = {
       ...(companyId ? { companyId } : {}),
       ...(validStatuses.includes(status) ? { status } : {}),
       ...(validPriorities.includes(priority) ? { priority } : {}),
-      ...(search
-        ? {
-            AND: [
-              ...(baseVisibility.OR ? [{ OR: baseVisibility.OR }] : []),
-              {
-                OR: [
-                  { title: { contains: search, mode: 'insensitive' } },
-                  { description: { contains: search, mode: 'insensitive' } },
-                ],
-              },
-            ],
-          }
-        : baseVisibility.OR ? { OR: baseVisibility.OR } : {}),
+      ...(andConditions.length > 0 ? { AND: andConditions } : {}),
     };
 
-    // Buscar tickets E totais em paralelo
-    const [tickets, total, openCount, inProgressCount, closedCount] = await Promise.all([
+    // dueDate: prazo mais próximo primeiro, sem prazo no fim da lista.
+    const orderBy = sort === 'dueDate'
+      ? [{ dueAt: { sort: 'asc', nulls: 'last' } }, { createdAt: 'desc' }]
+      : [{ createdAt: 'desc' }];
+
+    // KPIs ignoram os filtros da lista para não mudar a cada busca.
+    const metricsScope = {
+      ...(companyId ? { companyId } : {}),
+      ...(baseVisibility.OR ? { OR: baseVisibility.OR } : {}),
+    };
+
+    const [
+      tickets,
+      total,
+      openCount,
+      inProgressCount,
+      closedCount,
+      overdueCount,
+      resolutionSample,
+      firstResponseSample,
+    ] = await Promise.all([
       prisma.ticket.findMany({
         where,
         include: {
           author: { select: { id: true, name: true, email: true, image: true } },
           agent: { select: { id: true, name: true, email: true, image: true } },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy,
         skip,
         take: limit,
       }),
@@ -133,18 +173,22 @@ export async function GET(req) {
       prisma.ticket.count({ where: { ...baseVisibility, status: 'OPEN' } }),
       prisma.ticket.count({ where: { ...baseVisibility, status: 'IN_PROGRESS' } }),
       prisma.ticket.count({ where: { ...baseVisibility, status: 'CLOSED' } }),
+      prisma.ticket.count({
+        where: { ...metricsScope, dueAt: { lt: new Date() }, status: { not: 'CLOSED' } },
+      }),
+      prisma.ticket.findMany({
+        where: { ...metricsScope, resolvedAt: { not: null } },
+        select: { createdAt: true, resolvedAt: true },
+        orderBy: { resolvedAt: 'desc' },
+        take: METRICS_SAMPLE_LIMIT,
+      }),
+      prisma.ticket.findMany({
+        where: { ...metricsScope, firstResponseAt: { not: null } },
+        select: { createdAt: true, firstResponseAt: true },
+        orderBy: { firstResponseAt: 'desc' },
+        take: METRICS_SAMPLE_LIMIT,
+      }),
     ]);
-
-    // SLA: contagem de atrasados respeitando o escopo de visibilidade.
-    // Regra on-read: tem prazo, prazo já venceu e ainda não foi fechado.
-    const overdueCount = await prisma.ticket.count({
-      where: {
-        ...(companyId ? { companyId } : {}),
-        ...(baseVisibility.OR ? { OR: baseVisibility.OR } : {}),
-        dueAt: { lt: new Date() },
-        status: { not: 'CLOSED' },
-      },
-    });
 
     return NextResponse.json({
       tickets,
@@ -162,6 +206,11 @@ export async function GET(req) {
         inProgress: inProgressCount,
         closed: closedCount,
         overdue: overdueCount,
+        // Médias em ms; o front formata com formatDuration().
+        avgResolutionMs: averageResolutionMs(resolutionSample),
+        avgFirstResponseMs: averageFirstResponseMs(firstResponseSample),
+        resolvedSample: resolutionSample.length,
+        firstResponseSample: firstResponseSample.length,
       },
     }, { status: 200 });
 

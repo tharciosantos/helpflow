@@ -40,6 +40,17 @@ export function canCommentOnTicket(user, ticket) {
   return canViewTicket(user, ticket);
 }
 
+// Explica a recusa de edição sem revelar dados de chamados de terceiros:
+// o autor legítimo entende que o chamado saiu de OPEN; os demais recebem
+// a mensagem genérica.
+export function getEditDenialMessage(user, ticket) {
+  if (user?.role === 'AGENT') return 'Não autorizado';
+  if (ticket?.authorId === user?.id) {
+    return 'Chamados em atendimento ou fechados só podem ser editados pela equipe de suporte.';
+  }
+  return 'Não autorizado';
+}
+
 export function canDeleteComment(user, comment, ticket) {
   if (!user?.id || !comment || !ticket) return false;
   if (!canViewTicket(user, ticket)) return false;

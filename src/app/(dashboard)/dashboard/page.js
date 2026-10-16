@@ -3,9 +3,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useSession } from "next-auth/react";
-import { LuPlus, LuSearch, LuLayers, LuClock, LuListFilter, LuCircleCheck, LuCopy, LuCheck, LuBuilding, LuShare2, LuCircleAlert } from 'react-icons/lu';
+import { LuPlus, LuSearch, LuLayers, LuClock, LuListFilter, LuCircleCheck, LuCopy, LuCheck, LuBuilding, LuShare2, LuCircleAlert, LuUser, LuArrowUpDown } from 'react-icons/lu';
 import TicketList from "../../components/TicketList";
 import { useTheme } from "../../components/ThemeProvider";
+import { formatDuration } from '@/lib/metrics';
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
@@ -21,7 +22,10 @@ export default function DashboardPage() {
   const [inProgressCount, setInProgressCount] = useState(0);
   const [closedCount, setClosedCount] = useState(0);
   const [overdueCount, setOverdueCount] = useState(0);
-  const [filters, setFilters] = useState({ search: '', status: '', priority: '' });
+  const [avgResolutionMs, setAvgResolutionMs] = useState(null);
+  const [avgFirstResponseMs, setAvgFirstResponseMs] = useState(null);
+  const [resolvedSample, setResolvedSample] = useState(0);
+  const [filters, setFilters] = useState({ search: '', status: '', priority: '', overdue: false, mine: false, sort: 'recent' });
   const [agents, setAgents] = useState([]);
   const [copiedType, setCopiedType] = useState('');
   const abortRef = useRef(null);
@@ -39,11 +43,14 @@ export default function DashboardPage() {
     setLoading(true);
     setError('');
     try {
-      const { search = '', status = '', priority = '' } = activeFilters;
+      const { search = '', status = '', priority = '', overdue = false, mine = false, sort = 'recent' } = activeFilters;
       const params = new URLSearchParams({ page: String(page), limit: '10' });
       if (search.trim()) params.set('search', search.trim());
       if (status) params.set('status', status);
       if (priority) params.set('priority', priority);
+      if (overdue) params.set('overdue', 'true');
+      if (mine) params.set('mine', 'true');
+      if (sort === 'dueDate') params.set('sort', 'dueDate');
 
       const res = await fetch(`/api/tickets?${params.toString()}`, { signal: controller.signal });
       if (!res.ok) throw new Error('Falha ao carregar tickets.');
@@ -58,6 +65,9 @@ export default function DashboardPage() {
       setInProgressCount(data.summary.inProgress);
       setClosedCount(data.summary.closed);
       setOverdueCount(data.summary.overdue || 0);
+      setAvgResolutionMs(data.summary.avgResolutionMs ?? null);
+      setAvgFirstResponseMs(data.summary.avgFirstResponseMs ?? null);
+      setResolvedSample(data.summary.resolvedSample || 0);
     } catch (err) {
       if (err?.name === 'AbortError') return;
       setError(err.message);
@@ -129,9 +139,28 @@ export default function DashboardPage() {
   };
 
   const clearFilters = () => {
-    const emptyFilters = { search: '', status: '', priority: '' };
+    const emptyFilters = { search: '', status: '', priority: '', overdue: false, mine: false, sort: 'recent' };
     setFilters(emptyFilters);
-    // O debounce cobre o search; status/priority disparam abaixo
+    // O debounce só observa `search`; os demais filtros precisam de refetch.
+    fetchTickets(1, emptyFilters);
+  };
+
+  const handleToggleOverdue = () => {
+    const next = { ...filters, overdue: !filters.overdue };
+    setFilters(next);
+    fetchTickets(1, next);
+  };
+
+  const handleToggleMine = () => {
+    const next = { ...filters, mine: !filters.mine };
+    setFilters(next);
+    fetchTickets(1, next);
+  };
+
+  const handleSortChange = (value) => {
+    const next = { ...filters, sort: value };
+    setFilters(next);
+    fetchTickets(1, next);
   };
 
   const handleStatusFilter = (value) => {
@@ -335,6 +364,74 @@ export default function DashboardPage() {
         </button>
       </form>
 
+      {/* Atalhos de produtividade + ordenação por prazo */}
+      <div
+        data-cy="ticket-productivity-bar"
+        className={`flex flex-wrap items-center gap-2 rounded-xl border p-3 ${
+          theme === 'light' ? 'bg-white border-slate-200 shadow-xs' : 'border-slate-800 bg-slate-900/70'
+        }`}
+      >
+        <span className={`mr-1 text-xs font-semibold uppercase tracking-wider ${
+          theme === 'light' ? 'text-slate-600' : 'text-slate-400'
+        }`}>
+          Atalhos
+        </span>
+
+        <button
+          type="button"
+          data-cy="ticket-filter-overdue"
+          onClick={handleToggleOverdue}
+          aria-pressed={filters.overdue}
+          className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition active:scale-[0.98] ${
+            filters.overdue
+              ? 'border-red-500 bg-red-600 text-white'
+              : theme === 'light'
+                ? 'border-slate-300 text-slate-700 hover:bg-red-50 hover:text-red-700 hover:border-red-300'
+                : 'border-slate-700 text-slate-300 hover:bg-red-950/40 hover:text-red-300 hover:border-red-800'
+          }`}
+        >
+          <LuCircleAlert size={14} />
+          Só atrasados
+        </button>
+
+        <button
+          type="button"
+          data-cy="ticket-filter-mine"
+          onClick={handleToggleMine}
+          aria-pressed={filters.mine}
+          className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition active:scale-[0.98] ${
+            filters.mine
+              ? 'border-emerald-500 bg-emerald-600 text-white'
+              : theme === 'light'
+                ? 'border-slate-300 text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300'
+                : 'border-slate-700 text-slate-300 hover:bg-emerald-950/40 hover:text-emerald-300 hover:border-emerald-800'
+          }`}
+        >
+          <LuUser size={14} />
+          {session?.user?.role === 'AGENT' ? 'Só meus' : 'Só os que abri'}
+        </button>
+
+        <label className={`ml-auto flex items-center gap-2 text-xs font-semibold uppercase tracking-wider ${
+          theme === 'light' ? 'text-slate-600' : 'text-slate-400'
+        }`}>
+          <LuArrowUpDown size={14} />
+          Ordenar
+          <select
+            data-cy="ticket-sort"
+            value={filters.sort}
+            onChange={(event) => handleSortChange(event.target.value)}
+            className={`rounded-lg border px-3 py-2 text-sm font-medium normal-case tracking-normal focus:outline-none focus:ring-2 ${
+              theme === 'light'
+                ? 'border-slate-300 bg-white text-slate-900 focus:border-emerald-500 focus:ring-emerald-400/20'
+                : 'border-slate-700 bg-slate-800 text-white focus:border-emerald-400 focus:ring-emerald-400/20'
+            }`}
+          >
+            <option value="recent">Mais recentes</option>
+            <option value="dueDate">Prazo mais próximo</option>
+          </select>
+        </label>
+      </div>
+
       {/* Resumo rápido + lista */}
       <section className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
         {/* Lista de tickets + controles de paginação */}
@@ -352,7 +449,7 @@ export default function DashboardPage() {
               onTicketUpdated={handleTicketUpdated}
               session={session}
               agents={agents}
-              hasActiveFilters={Boolean(filters.search || filters.status || filters.priority)}
+              hasActiveFilters={Boolean(filters.search || filters.status || filters.priority || filters.overdue || filters.mine)}
             />
           </div>
 
@@ -497,6 +594,70 @@ export default function DashboardPage() {
                 }`}>{closedCount}</span>
               </div>
             </div>
+          </div>
+
+          <div
+            data-cy="metrics-card"
+            className={`rounded-xl border p-4 shadow-sm ${
+              theme === 'light' ? 'bg-white border-slate-200' : 'border-slate-800 bg-slate-900/80'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <h2 className={`text-sm font-bold uppercase tracking-wider ${
+                theme === 'light' ? 'text-slate-900' : 'text-slate-200'
+              }`}>
+                Métricas de Atendimento
+              </h2>
+              <span className="font-mono text-xs text-slate-500">
+                {resolvedSample} {resolvedSample === 1 ? 'resolvido' : 'resolvidos'}
+              </span>
+            </div>
+
+            <div className="space-y-2.5">
+              <div className={`flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5 ${
+                theme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-800/60 border-slate-700/60'
+              }`}>
+                <span className={`flex items-center gap-2 text-xs font-medium ${
+                  theme === 'light' ? 'text-slate-600' : 'text-slate-300'
+                }`}>
+                  <LuCircleCheck size={14} className="text-emerald-500" />
+                  Tempo médio de resolução
+                </span>
+                <span
+                  data-cy="metric-avg-resolution"
+                  className={`font-mono text-sm font-bold ${
+                    theme === 'light' ? 'text-slate-900' : 'text-white'
+                  }`}
+                >
+                  {formatDuration(avgResolutionMs)}
+                </span>
+              </div>
+
+              <div className={`flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5 ${
+                theme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-800/60 border-slate-700/60'
+              }`}>
+                <span className={`flex items-center gap-2 text-xs font-medium ${
+                  theme === 'light' ? 'text-slate-600' : 'text-slate-300'
+                }`}>
+                  <LuClock size={14} className="text-sky-500" />
+                  Tempo até a 1ª resposta
+                </span>
+                <span
+                  data-cy="metric-avg-first-response"
+                  className={`font-mono text-sm font-bold ${
+                    theme === 'light' ? 'text-slate-900' : 'text-white'
+                  }`}
+                >
+                  {formatDuration(avgFirstResponseMs)}
+                </span>
+              </div>
+            </div>
+
+            <p className={`mt-3 text-[11px] leading-relaxed ${
+              theme === 'light' ? 'text-slate-500' : 'text-slate-400'
+            }`}>
+              Médias sobre os chamados já resolvidos, dentro do seu escopo de visão. Os filtros da lista não alteram estes números.
+            </p>
           </div>
 
           <div className={`rounded-xl border p-4 text-xs leading-relaxed ${

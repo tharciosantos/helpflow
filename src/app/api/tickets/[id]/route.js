@@ -11,6 +11,7 @@ import {
   canDeleteTicket,
   canEditTicketContent,
   canViewTicket,
+  getEditDenialMessage,
   getForbiddenTicketFields,
 } from '@/lib/ticketAuthorization';
 
@@ -91,7 +92,10 @@ export async function PATCH(req, { params }) {
     }
 
     if (!canEditTicketContent(session.user, ticket)) {
-      return NextResponse.json({ message: 'Não autorizado' }, { status: 403 });
+      return NextResponse.json(
+        { message: getEditDenialMessage(session.user, ticket) },
+        { status: 403 }
+      );
     }
 
     const forbiddenFields = getForbiddenTicketFields(session.user, body);
@@ -169,6 +173,11 @@ export async function PATCH(req, { params }) {
       data.resolvedAt = null;
     }
 
+    // Primeira interação de AGENT: grava uma vez e só se algo mudou de fato.
+    if (isAgentEditor && !ticket.firstResponseAt) {
+      const pendingChanges = buildHistoryEntries({ ticket, data, actorId: session.user.id });
+      if (pendingChanges.length > 0) data.firstResponseAt = new Date();
+    }
 
 
     const updatedTicket = await prisma.$transaction(async (tx) => {
