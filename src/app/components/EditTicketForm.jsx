@@ -27,6 +27,10 @@ export default function EditTicketForm({ ticket, onTicketUpdated, isAgent = fals
     const [dueDate, setDueDate] = useState(initialDue.date);
     const [dueTime, setDueTime] = useState(initialDue.time || '09:00');
     const [recalcDue, setRecalcDue] = useState(false);
+    const todayStr = (() => {
+        const t = new Date();
+        return `${t.getFullYear()}-${pad2(t.getMonth() + 1)}-${pad2(t.getDate())}`;
+    })();
     // Resumo legível do prazo escolhido (ex: "Segunda, 20/10 às 14:30").
     const dueSummary = (() => {
         if (!dueDate) return '';
@@ -38,6 +42,12 @@ export default function EditTicketForm({ ticket, onTicketUpdated, isAgent = fals
         const resto = diffDays <= 0 ? ' (hoje)' : diffDays === 1 ? ' (amanhã)' : ` (faltam ${diffDays} dias)`;
         return `${dia} às ${hora}${resto}`;
     })();
+    // Flag: prazo no passado (comparação só de data, sem hora).
+    // Evita que o resumo minta "(hoje)" quando digitam data anterior.
+    const isPastDue = (() => {
+        if (!dueDate) return false;
+        return dueDate < todayStr;
+    })();
     // Opções de hora em blocos de 30 min.
     const timeOptions = (() => {
         const opts = [];
@@ -46,15 +56,15 @@ export default function EditTicketForm({ ticket, onTicketUpdated, isAgent = fals
         }
         return opts;
     })();
-    const todayStr = (() => {
-        const t = new Date();
-        return `${t.getFullYear()}-${pad2(t.getMonth() + 1)}-${pad2(t.getDate())}`;
-    })();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (dueDate && dueDate < todayStr) {
+            setError('O prazo deve ser hoje ou uma data futura.');
+            return;
+        }
         setLoading(true);
         setError('');
 
@@ -238,7 +248,7 @@ export default function EditTicketForm({ ticket, onTicketUpdated, isAgent = fals
                             </select>
                         </div>
                     </div>
-                    {dueSummary && (<p data-cy="ticket-edit-due-summary" className={`mt-2 rounded-lg px-3 py-2 text-xs font-medium ${theme === 'light' ? 'bg-emerald-50 text-emerald-700' : 'bg-emerald-950/40 text-emerald-300'}`}>Prazo: {dueSummary}</p>)}
+                    {dueSummary && (<p data-cy="ticket-edit-due-summary" className={`mt-2 rounded-lg px-3 py-2 text-xs font-medium ${isPastDue ? (theme === 'light' ? 'bg-red-50 text-red-700' : 'bg-red-950/40 text-red-300') : (theme === 'light' ? 'bg-emerald-50 text-emerald-700' : 'bg-emerald-950/40 text-emerald-300')}`}>{isPastDue ? `Data no passado — escolha hoje ou uma data futura.` : `Prazo: ${dueSummary}`}</p>)}
                     <div className="mt-2 flex flex-wrap gap-1.5">
                         <button type="button" data-cy="chip-amanha" onClick={() => { const b = new Date(); b.setDate(b.getDate() + 1); setDueDate(b.getFullYear() + '-' + pad2(b.getMonth() + 1) + '-' + pad2(b.getDate())); if (!dueTime) setDueTime('09:00'); }} className={`rounded-lg border px-2.5 py-1 text-xs font-semibold transition ${theme === 'light' ? 'border-slate-300 bg-slate-50 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300' : 'border-slate-700 bg-slate-800/60 text-slate-300 hover:bg-emerald-950/40 hover:text-emerald-300 hover:border-emerald-800'}`}>Amanhã</button>
                     </div>
@@ -263,7 +273,7 @@ export default function EditTicketForm({ ticket, onTicketUpdated, isAgent = fals
                 <button
                     data-cy="ticket-edit-submit"
                     type="submit"
-                    disabled={loading}
+                    disabled={loading || isPastDue}
                     className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 text-sm font-semibold shadow-xs transition active:scale-[0.99] disabled:opacity-50"
                 >
                     {loading ? 'Salvando...' : 'Salvar Alterações'}
