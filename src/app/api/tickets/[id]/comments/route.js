@@ -88,6 +88,7 @@ export async function POST(req, { params }) {
         agentId: true,
         companyId: true,
         status: true,
+        firstResponseAt: true,
       },
     });
 
@@ -137,9 +138,16 @@ export async function POST(req, { params }) {
       });
 
       // Mantém o ticket no topo das listas ordenadas por atualização
+      const ticketTouch = { updatedAt: new Date() };
+
+      // Comentário de AGENT marca a primeira resposta, uma única vez.
+      if (session.user.role === 'AGENT' && !ticket.firstResponseAt) {
+        ticketTouch.firstResponseAt = new Date();
+      }
+
       await tx.ticket.update({
         where: { id },
-        data: { updatedAt: new Date() },
+        data: ticketTouch,
       });
 
       // Notificacao in-app: apenas comentarios PUBLICOS notificam o outro lado.

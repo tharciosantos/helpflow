@@ -169,6 +169,11 @@ export async function PATCH(req, { params }) {
       data.resolvedAt = null;
     }
 
+    // Primeira interação de AGENT: grava uma vez e só se algo mudou de fato.
+    if (isAgentEditor && !ticket.firstResponseAt) {
+      const pendingChanges = buildHistoryEntries({ ticket, data, actorId: session.user.id });
+      if (pendingChanges.length > 0) data.firstResponseAt = new Date();
+    }
 
 
     const updatedTicket = await prisma.$transaction(async (tx) => {

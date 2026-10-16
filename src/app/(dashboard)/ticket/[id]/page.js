@@ -11,9 +11,11 @@ import {
     LuShield,
     LuClock,
     LuPencil,
-    LuTrash2
+    LuTrash2,
+    LuMessageSquare
 } from 'react-icons/lu';
 import { getStatusDisplayNamePT, getStatusBadgeClasses, getPriorityBadge } from '@/lib/ticketUtils';
+import { formatDuration } from '@/lib/metrics';
 import CommentsSection from '../../../components/CommentsSection';
 import ConfirmDialog from '../../../components/ConfirmDialog';
 import { useTheme } from '../../../components/ThemeProvider';
@@ -295,7 +297,7 @@ export default function TicketDetailsPage() {
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pt-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 pt-2">
                     <div className={`p-3.5 rounded-xl border flex items-center gap-3 ${
                         theme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-800/40 border-slate-700/50'
                     }`}>
@@ -356,6 +358,30 @@ export default function TicketDetailsPage() {
                             <span className="block text-[11px] font-medium text-slate-400">Última Atualização</span>
                             <span className="block text-xs font-semibold">
                                 {new Date(ticket.updatedAt).toLocaleDateString('pt-BR')}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className={`p-3.5 rounded-xl border flex items-center gap-3 ${
+                        theme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-800/40 border-slate-700/50'
+                    }`}>
+                        <div className={`p-2 rounded-lg ${
+                            ticket.firstResponseAt
+                                ? theme === 'light' ? 'bg-sky-50 text-sky-600' : 'bg-sky-950/50 text-sky-400'
+                                : theme === 'light' ? 'bg-amber-50 text-amber-600' : 'bg-amber-950/50 text-amber-400'
+                        }`}>
+                            <LuMessageSquare size={16} />
+                        </div>
+                        <div className="min-w-0">
+                            <span className="block text-[11px] font-medium text-slate-400">1ª Resposta</span>
+                            <span
+                                data-cy="ticket-first-response"
+                                className="block text-xs font-semibold truncate"
+                                title={ticket.firstResponseAt ? new Date(ticket.firstResponseAt).toLocaleString('pt-BR') : 'Nenhum agente interagiu ainda'}
+                            >
+                                {ticket.firstResponseAt
+                                    ? `em ${formatDuration(new Date(ticket.firstResponseAt).getTime() - new Date(ticket.createdAt).getTime())}`
+                                    : 'Aguardando agente'}
                             </span>
                         </div>
                     </div>
