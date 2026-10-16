@@ -140,9 +140,26 @@ export async function PATCH(req, { params }) {
       }
     }
     // SLA - prazo e resolução derivados do estado do ticket:
-    // 1) Se a prioridade mudou, recalculamos o prazo a partir de AGORA.
-    // 2) Se fechou, gravamos resolvedAt; se reabriu, limpamos resolvedAt.
-    if (data.priority !== undefined && data.priority !== ticket.priority) {
+    // 1) Prazo MANUAL (só AGENT): se dueAt veio no body, ele vence.
+    // 2) Se não veio manual mas o agente marcou recalcDue + trocou a
+    //    prioridade, recalculamos o prazo do SLA a partir de AGORA.
+    // 3) Se fechou, gravamos resolvedAt; se reabriu, limpamos resolvedAt.
+    const isAgentEditor = session.user.role === 'AGENT';
+    // body.dueAt/body.recalcDue: campos fora do schema Zod (strip). O CLIENT
+    // já foi barrado acima pelo getForbiddenTicketFields; aqui só AGENT prossegue.
+    if (body.dueAt !== undefined && body.dueAt !== null && body.dueAt !== '') {
+      if (!isAgentEditor) {
+        return NextResponse.json({ message: 'Não autorizado' }, { status: 403 });
+      }
+      const manualDue = new Date(body.dueAt);
+      if (Number.isNaN(manualDue.getTime())) {
+        return NextResponse.json({ message: 'Prazo inválido.' }, { status: 400 });
+      }
+      if (manualDue.getTime() <= Date.now()) {
+        return NextResponse.json({ message: 'O prazo deve ser uma data futura.' }, { status: 400 });
+      }
+      data.dueAt = manualDue;
+    } else if (isAgentEditor && body.recalcDue === true && data.priority !== undefined && data.priority !== ticket.priority) {
       data.dueAt = computeDueAt(data.priority);
     }
     if (data.status === 'CLOSED' && ticket.status !== 'CLOSED') {
