@@ -6,12 +6,13 @@ import { useParams, useRouter } from 'next/navigation';
 import { LuArrowLeft, LuPencil } from 'react-icons/lu';
 import EditTicketForm from '../../../../../components/EditTicketForm';
 import { useSession } from 'next-auth/react';
+import { canEditTicketContent } from '@/lib/ticketAuthorization';
 import { useTheme } from '../../../../../components/ThemeProvider';
 
 export default function EditTicketPage() {
     const { id } = useParams();
     const router = useRouter();
-    const { data: session } = useSession();
+    const { data: session, status: sessionStatus } = useSession();
     const { theme } = useTheme();
     const [ticket, setTicket] = useState(null);
     const [agents, setAgents] = useState([]);
@@ -59,12 +60,57 @@ export default function EditTicketPage() {
         router.push('/dashboard');
     };
 
-    if (loading) {
+    if (loading || sessionStatus === 'loading') {
         return <p className={`text-center mt-12 ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>Carregando ticket...</p>;
     }
 
     if (error) {
         return <p className={`text-center mt-12 ${theme === 'light' ? 'text-red-600' : 'text-red-400'}`}>{error}</p>;
+    }
+
+    // CLIENT só edita conteúdo com o chamado OPEN: sem esta barreira o
+    // formulário abria e a API só recusava no envio.
+    if (ticket && !canEditTicketContent(session?.user, ticket)) {
+        const isOwner = ticket.authorId === session?.user?.id;
+        return (
+            <div className="max-w-2xl mx-auto space-y-6">
+                <div>
+                    <Link
+                        href={`/dashboard/ticket/${id}`}
+                        className={`inline-flex items-center gap-2 text-sm font-medium transition ${
+                            theme === 'light'
+                                ? 'text-slate-500 hover:text-teal-600'
+                                : 'text-slate-400 hover:text-teal-400'
+                        }`}
+                    >
+                        <LuArrowLeft size={16} />
+                        Voltar para o chamado
+                    </Link>
+                </div>
+
+                <div
+                    data-cy="ticket-edit-blocked"
+                    className={`rounded-2xl border p-6 sm:p-8 text-center ${
+                        theme === 'light'
+                            ? 'bg-white border-slate-200/90'
+                            : 'bg-slate-900/80 border-slate-800'
+                    }`}
+                >
+                    <h1 className={`text-xl font-bold tracking-tight ${
+                        theme === 'light' ? 'text-slate-900' : 'text-white'
+                    }`}>
+                        Edição indisponível
+                    </h1>
+                    <p className={`mt-2 text-sm ${
+                        theme === 'light' ? 'text-slate-600' : 'text-slate-400'
+                    }`}>
+                        {isOwner
+                            ? 'Este chamado já está em atendimento ou foi fechado. Só a equipe de suporte pode alterar as informações agora.'
+                            : 'Você não tem permissão para editar este chamado.'}
+                    </p>
+                </div>
+            </div>
+        );
     }
 
     return (

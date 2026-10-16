@@ -16,6 +16,7 @@ import {
 } from 'react-icons/lu';
 import { getStatusDisplayNamePT, getStatusBadgeClasses, getPriorityBadge } from '@/lib/ticketUtils';
 import { formatDuration } from '@/lib/metrics';
+import { canEditTicketContent } from '@/lib/ticketAuthorization';
 import CommentsSection from '../../../components/CommentsSection';
 import ConfirmDialog from '../../../components/ConfirmDialog';
 import { useTheme } from '../../../components/ThemeProvider';
@@ -229,6 +230,9 @@ export default function TicketDetailsPage() {
     }
 
     const canManageTicket = session?.user?.role === 'AGENT' || session?.user?.id === ticket.authorId;
+    // CLIENT só edita conteúdo enquanto o chamado está OPEN: sem isso o botão
+    // levava a um formulário que só recusava no envio.
+    const canEditContent = canEditTicketContent(session?.user, ticket);
 
     return (
         <div className={`max-w-4xl mx-auto space-y-6 pb-2 ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
@@ -498,17 +502,33 @@ export default function TicketDetailsPage() {
                                 </button>
                             )}
 
-                            <Link
-                                href={`/dashboard/ticket/${ticket.id}/edit`}
-                                className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition ${
-                                    theme === 'light'
-                                        ? 'border-slate-300 bg-white hover:border-emerald-500 hover:text-emerald-600 text-slate-700 shadow-sm'
-                                        : 'border-slate-700 bg-slate-800/80 hover:border-emerald-400 hover:text-emerald-300 text-slate-200 shadow-sm'
-                                }`}
-                            >
-                                <LuPencil size={15} />
-                                Editar Informações Completas
-                            </Link>
+                            {canEditContent ? (
+                                <Link
+                                    data-cy="ticket-detail-edit-link"
+                                    href={`/dashboard/ticket/${ticket.id}/edit`}
+                                    className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition ${
+                                        theme === 'light'
+                                            ? 'border-slate-300 bg-white hover:border-emerald-500 hover:text-emerald-600 text-slate-700 shadow-sm'
+                                            : 'border-slate-700 bg-slate-800/80 hover:border-emerald-400 hover:text-emerald-300 text-slate-200 shadow-sm'
+                                    }`}
+                                >
+                                    <LuPencil size={15} />
+                                    Editar Informações Completas
+                                </Link>
+                            ) : (
+                                <span
+                                    data-cy="ticket-edit-blocked"
+                                    title="Só é possível editar o chamado enquanto ele está Aberto"
+                                    className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium ${
+                                        theme === 'light'
+                                            ? 'border-slate-200 bg-slate-50 text-slate-400'
+                                            : 'border-slate-800 bg-slate-900/60 text-slate-500'
+                                    }`}
+                                >
+                                    <LuPencil size={15} />
+                                    Edição disponível só com o chamado Aberto
+                                </span>
+                            )}
                         </div>
 
                         <button
