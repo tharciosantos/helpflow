@@ -12,6 +12,44 @@ export default function EditTicketForm({ ticket, onTicketUpdated, isAgent = fals
     const [status, setStatus] = useState(ticket.status);
     const [priority, setPriority] = useState(ticket.priority || 'MEDIUM');
     const [agentId, setAgentId] = useState(ticket.agentId || '');
+    // Prazo separado em Data + Hora: mais claro que o datetime-local único.
+    const pad2 = (n) => String(n).padStart(2, '0');
+    const splitDue = (v) => {
+        if (!v) return { date: '', time: '' };
+        const d = new Date(v);
+        if (Number.isNaN(d.getTime())) return { date: '', time: '' };
+        return {
+            date: `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`,
+            time: `${pad2(d.getHours())}:${pad2(d.getMinutes())}`,
+        };
+    };
+    const initialDue = splitDue(ticket.dueAt);
+    const [dueDate, setDueDate] = useState(initialDue.date);
+    const [dueTime, setDueTime] = useState(initialDue.time || '09:00');
+    const [recalcDue, setRecalcDue] = useState(false);
+    // Resumo legível do prazo escolhido (ex: "Segunda, 20/10 às 14:30").
+    const dueSummary = (() => {
+        if (!dueDate) return '';
+        const d = new Date(dueTime ? `${dueDate}T${dueTime}` : `${dueDate}T00:00`);
+        if (Number.isNaN(d.getTime())) return '';
+        const dia = d.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit' });
+        const hora = dueTime || '00:00';
+        const diffDays = Math.ceil((d.getTime() - Date.now()) / 86400000);
+        const resto = diffDays <= 0 ? ' (hoje)' : diffDays === 1 ? ' (amanhã)' : ` (faltam ${diffDays} dias)`;
+        return `${dia} às ${hora}${resto}`;
+    })();
+    // Opções de hora em blocos de 30 min.
+    const timeOptions = (() => {
+        const opts = [];
+        for (let h = 0; h < 24; h++) {
+            for (const m of [0, 30]) opts.push(`${pad2(h)}:${pad2(m)}`);
+        }
+        return opts;
+    })();
+    const todayStr = (() => {
+        const t = new Date();
+        return `${t.getFullYear()}-${pad2(t.getMonth() + 1)}-${pad2(t.getDate())}`;
+    })();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -27,7 +65,13 @@ export default function EditTicketForm({ ticket, onTicketUpdated, isAgent = fals
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(isAgent
-                    ? { title, description, status, priority, agentId: agentId || null }
+                    ? (() => {
+                        const duePayload = {};
+                        if (dueDate) {
+                            duePayload.dueAt = dueTime ? `${dueDate}T${dueTime}` : dueDate;
+                        }
+                        return { title, description, status, priority, agentId: agentId || null, ...duePayload, recalcDue };
+                    })()
                     : { title, description }),
             });
 
@@ -180,7 +224,39 @@ export default function EditTicketForm({ ticket, onTicketUpdated, isAgent = fals
                             ))}
                         </select>
                     </div>
-                </div>
+
+                                        <div className="grid gap-4 sm:grid-cols-2">
+                        <div>
+                            <label htmlFor="dueDate" className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>Data do prazo</label>
+                            <input data-cy="ticket-edit-duedate" type="date" id="dueDate" value={dueDate} min={todayStr} onChange={(e) => setDueDate(e.target.value)} className={`block w-full rounded-xl border px-3.5 py-2.5 text-sm transition focus:outline-none focus:ring-2 ${theme === 'light' ? 'bg-white border-slate-300 text-slate-900 focus:border-emerald-500 focus:ring-emerald-400/20' : 'bg-slate-800/60 border-slate-700 text-white focus:bg-slate-800 focus:border-emerald-400 focus:ring-emerald-400/20'}`} />
+                        </div>
+                        <div>
+                            <label htmlFor="dueTime" className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>Hora do prazo</label>
+                            <select data-cy="ticket-edit-duetime" id="dueTime" value={dueTime} onChange={(e) => setDueTime(e.target.value)} className={`block w-full rounded-xl border px-3.5 py-2.5 text-sm transition focus:outline-none focus:ring-2 ${theme === 'light' ? 'bg-white border-slate-300 text-slate-900 focus:border-emerald-500 focus:ring-emerald-400/20' : 'bg-slate-800/60 border-slate-700 text-white focus:bg-slate-800 focus:border-emerald-400 focus:ring-emerald-400/20'}`}>
+                                <option value="">Sem hora definida</option>
+                                {timeOptions.map((t) => (<option key={t} value={t}>{t}</option>))}
+                            </select>
+                        </div>
+                    </div>
+                    {dueSummary && (<p data-cy="ticket-edit-due-summary" className={`mt-2 rounded-lg px-3 py-2 text-xs font-medium ${theme === 'light' ? 'bg-emerald-50 text-emerald-700' : 'bg-emerald-950/40 text-emerald-300'}`}>Prazo: {dueSummary}</p>)}
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                        <button type="button" data-cy="chip-amanha" onClick={() => { const b = new Date(); b.setDate(b.getDate() + 1); setDueDate(b.getFullYear() + '-' + pad2(b.getMonth() + 1) + '-' + pad2(b.getDate())); if (!dueTime) setDueTime('09:00'); }} className={`rounded-lg border px-2.5 py-1 text-xs font-semibold transition ${theme === 'light' ? 'border-slate-300 bg-slate-50 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300' : 'border-slate-700 bg-slate-800/60 text-slate-300 hover:bg-emerald-950/40 hover:text-emerald-300 hover:border-emerald-800'}`}>Amanhã</button>
+                    </div>
+<div className="flex items-end pb-1">
+                            <label className="inline-flex cursor-pointer items-center gap-2 text-sm">
+                                <input
+                                    data-cy="ticket-edit-recalc"
+                                    type="checkbox"
+                                    checked={recalcDue}
+                                    onChange={(e) => setRecalcDue(e.target.checked)}
+                                    className="h-4 w-4 rounded accent-emerald-600"
+                                />
+                                <span className={theme === 'light' ? 'text-slate-700' : 'text-slate-300'}>
+                                    Recalcular prazo ao trocar a prioridade
+                                </span>
+                            </label>
+                        </div>
+                    </div>
             )}
 
             <div className="mt-8 flex justify-end">

@@ -1,7 +1,7 @@
 // Auditoria de chamados: registra quem mudou o quê, quando.
 // Usado em PATCH /api/tickets/[id] dentro da mesma transação do update.
 
-const AUDITABLE_FIELDS = ['status', 'priority', 'agentId', 'title', 'description'];
+const AUDITABLE_FIELDS = ['status', 'priority', 'agentId', 'title', 'description', 'dueAt'];
 
 function normalizeValue(value) {
   if (value === null || value === undefined) return null;

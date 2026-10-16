@@ -1,4 +1,4 @@
-const AGENT_ONLY_FIELDS = ['status', 'priority', 'agentId'];
+const AGENT_ONLY_FIELDS = ['status', 'priority', 'agentId', 'dueAt', 'recalcDue'];
 
 export function canViewTicket(user, ticket) {
   if (!user?.id || !ticket) return false;

@@ -38,6 +38,11 @@ export const updateTicketSchema = z.object({
     status: z.enum(['OPEN', 'IN_PROGRESS', 'CLOSED']).optional(),
     priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).optional(),
     agentId: z.string().uuid().nullable().optional(),
+    // Prazo manual (só AGENT; rota barra CLIENT via getForbiddenTicketFields).
+    // Aceita string do <input type="datetime-local">; rota valida formato e futuro.
+    dueAt: z.string().min(1).optional(),
+    // Quando true e a prioridade mudou, o prazo é recalculado do SLA.
+    recalcDue: z.boolean().optional(),
 });
 
 export const registerCompanySchema = z.object({
