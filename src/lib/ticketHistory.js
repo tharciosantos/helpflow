@@ -1,3 +1,5 @@
+import { canViewTicket } from './ticketAuthorization';
+
 // Auditoria de chamados: registra quem mudou o quê, quando.
 // Usado em PATCH /api/tickets/[id] dentro da mesma transação do update.
 
@@ -39,10 +41,5 @@ export function buildHistoryEntries({ ticket, data, actorId }) {
 
 export function canViewHistory(user, ticket) {
   // Mesma regra de visibilidade do ticket: sem acesso ao ticket, sem histórico.
-  if (!user?.id || !ticket) return false;
-  if (user.companyId && ticket.companyId && user.companyId !== ticket.companyId) {
-    return false;
-  }
-  if (user.role === 'AGENT') return true;
-  return ticket.authorId === user.id || ticket.agentId === user.id;
+  return canViewTicket(user, ticket);
 }

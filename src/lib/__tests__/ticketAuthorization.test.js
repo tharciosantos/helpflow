@@ -49,6 +49,37 @@ describe('autorização de tickets com isolamento multi-empresa', () => {
     expect(canDeleteTicket(otherCompanyClient, ticket)).toBe(false);
   });
 
+  describe('contas sem empresa (legado/standalone)', () => {
+    const noCompanyAgent = { id: 'agent-legacy', role: 'AGENT', companyId: null };
+    const noCompanyClient = { id: 'client-legacy', role: 'CLIENT', companyId: null };
+    const legacyOwnTicket = {
+      id: 'ticket-legacy',
+      authorId: noCompanyClient.id,
+      agentId: null,
+      companyId: null,
+      status: 'OPEN',
+    };
+
+    it('não deixa AGENT sem empresa enxergar tickets de empresas', () => {
+      expect(canViewTicket(noCompanyAgent, ticket)).toBe(false);
+      expect(canEditTicketContent(noCompanyAgent, ticket)).toBe(false);
+      expect(canDeleteTicket(noCompanyAgent, ticket)).toBe(false);
+    });
+
+    it('não deixa usuário de empresa enxergar ticket sem empresa', () => {
+      expect(canViewTicket(agentSameCompany, legacyOwnTicket)).toBe(false);
+      expect(canViewTicket(owner, legacyOwnTicket)).toBe(false);
+    });
+
+    it('limita conta sem empresa aos próprios tickets (autor ou responsável)', () => {
+      expect(canViewTicket(noCompanyClient, legacyOwnTicket)).toBe(true);
+      expect(canViewTicket(noCompanyAgent, legacyOwnTicket)).toBe(false);
+
+      const assignedLegacy = { ...legacyOwnTicket, agentId: noCompanyAgent.id };
+      expect(canViewTicket(noCompanyAgent, assignedLegacy)).toBe(true);
+    });
+  });
+
   it('permite ao CLIENT funcionário visualizar o ticket caso tenha sido atribuído como responsável', () => {
     const assignedEmployee = { id: 'client-2', role: 'CLIENT', companyId: 'company-A' };
     const ticketAssigned = { id: 'ticket-2', authorId: owner.id, agentId: 'client-2', companyId: 'company-A' };

@@ -26,9 +26,11 @@ export default function DashboardPage() {
   const [avgFirstResponseMs, setAvgFirstResponseMs] = useState(null);
   const [resolvedSample, setResolvedSample] = useState(0);
   const [filters, setFilters] = useState({ search: '', status: '', priority: '', overdue: false, mine: false, sort: 'recent' });
+  const [filterVersion, setFilterVersion] = useState(0);
   const [agents, setAgents] = useState([]);
   const [copiedType, setCopiedType] = useState('');
   const abortRef = useRef(null);
+  const filterTimerRef = useRef(null);
 
   const handleCopy = (text, type) => {
     navigator.clipboard.writeText(text);
@@ -78,21 +80,23 @@ export default function DashboardPage() {
 
   useEffect(() => () => abortRef.current?.abort(), []);
 
-  // Debounce da busca textual (status/prioridade continuam instantâneos via selects)
+  // Um único fluxo de fetch: qualquer mudança em `filters` reagenda a busca.
+  // O timer anterior é sempre cancelado, então trocar status/prioridade logo
+  // após digitar não deixa um timeout antigo sobrescrever a lista com filtros
+  // desatualizados. Busca textual tem debounce; os demais filtros são imediatos.
   useEffect(() => {
     if (status !== 'authenticated') return;
-    const t = setTimeout(() => {
+    // Cancela a requisição anterior para uma resposta velha não sobrescrever
+    // a lista enquanto o novo debounce está esperando.
+    abortRef.current?.abort();
+    const delay = filters.search.trim() ? 350 : 0;
+    filterTimerRef.current = setTimeout(() => {
       fetchTickets(1, filters);
-    }, 350);
-    return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.search, status]);
-
-  useEffect(() => {
-    if (status === 'authenticated') {
-      fetchTickets(1, {});
-    }
-  }, [status, fetchTickets]);
+    }, delay);
+    return () => {
+      if (filterTimerRef.current) clearTimeout(filterTimerRef.current);
+    };
+  }, [filters, filterVersion, status, session?.user?.id, fetchTickets]);
 
   useEffect(() => {
     if (status !== 'authenticated' || session?.user?.role !== 'AGENT') return;
@@ -132,47 +136,41 @@ export default function DashboardPage() {
     setTickets(prev => prev.map(ticket => (ticket.id === updatedTicket.id ? updatedTicket : ticket)));
   };
 
+  // Paginação não muda filtros: cancela um debounce pendente antes de buscar.
+  const fetchPage = (page) => {
+    if (filterTimerRef.current) clearTimeout(filterTimerRef.current);
+    fetchTickets(page, filters);
+  };
+
   const applyFilters = (event) => {
     event.preventDefault();
     abortRef.current?.abort();
-    fetchTickets(1, filters);
+    // Reexecuta o efeito mesmo quando os filtros não mudaram.
+    setFilterVersion((version) => version + 1);
   };
 
   const clearFilters = () => {
-    const emptyFilters = { search: '', status: '', priority: '', overdue: false, mine: false, sort: 'recent' };
-    setFilters(emptyFilters);
-    // O debounce só observa `search`; os demais filtros precisam de refetch.
-    fetchTickets(1, emptyFilters);
+    setFilters({ search: '', status: '', priority: '', overdue: false, mine: false, sort: 'recent' });
   };
 
   const handleToggleOverdue = () => {
-    const next = { ...filters, overdue: !filters.overdue };
-    setFilters(next);
-    fetchTickets(1, next);
+    setFilters((prev) => ({ ...prev, overdue: !prev.overdue }));
   };
 
   const handleToggleMine = () => {
-    const next = { ...filters, mine: !filters.mine };
-    setFilters(next);
-    fetchTickets(1, next);
+    setFilters((prev) => ({ ...prev, mine: !prev.mine }));
   };
 
   const handleSortChange = (value) => {
-    const next = { ...filters, sort: value };
-    setFilters(next);
-    fetchTickets(1, next);
+    setFilters((prev) => ({ ...prev, sort: value }));
   };
 
   const handleStatusFilter = (value) => {
-    const next = { ...filters, status: value };
-    setFilters(next);
-    fetchTickets(1, next);
+    setFilters((prev) => ({ ...prev, status: value }));
   };
 
   const handlePriorityFilter = (value) => {
-    const next = { ...filters, priority: value };
-    setFilters(next);
-    fetchTickets(1, next);
+    setFilters((prev) => ({ ...prev, priority: value }));
   };
 
   return (
@@ -458,7 +456,7 @@ export default function DashboardPage() {
             <div className="flex flex-col min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-center items-stretch justify-stretch gap-2.5 min-[420px]:gap-4 py-2">
               <button
                 data-cy="pagination-prev"
-                onClick={() => fetchTickets(currentPage - 1, filters)}
+                onClick={() => fetchPage(currentPage - 1)}
                 disabled={currentPage === 1}
                 className={`px-4 py-2.5 sm:py-2 rounded-lg text-sm font-medium transition disabled:opacity-40 ${
                   theme === 'light'
@@ -475,7 +473,7 @@ export default function DashboardPage() {
               </span>
               <button
                 data-cy="pagination-next"
-                onClick={() => fetchTickets(currentPage + 1, filters)}
+                onClick={() => fetchPage(currentPage + 1)}
                 disabled={currentPage === totalPages}
                 className={`px-4 py-2.5 sm:py-2 rounded-lg text-sm font-medium transition disabled:opacity-40 ${
                   theme === 'light'

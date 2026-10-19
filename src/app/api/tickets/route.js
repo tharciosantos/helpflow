@@ -93,18 +93,22 @@ export async function GET(req) {
     const validStatuses = ['OPEN', 'IN_PROGRESS', 'CLOSED'];
     const validPriorities = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'];
 
-    // Isolamento multi-empresa: AGENT vê todos da sua empresa; CLIENT vê os que criou ou onde é responsável
-    const baseVisibility = {
-      ...(companyId ? { companyId } : {}),
-      ...(role !== 'AGENT'
-        ? {
-            OR: [
-              { authorId: session.user.id },
-              { agentId: session.user.id },
-            ],
-          }
-        : {}),
+    // Isolamento multi-empresa fail-closed:
+    // - com empresa: AGENT vê todos da empresa; CLIENT vê os que criou/é responsável;
+    // - sem empresa (contas legadas/standalone): todos veem apenas os próprios
+    //   tickets, nunca o acervo global.
+    const personalScope = {
+      OR: [
+        { authorId: session.user.id },
+        { agentId: session.user.id },
+      ],
     };
+    const baseVisibility = companyId
+      ? {
+          companyId,
+          ...(role !== 'AGENT' ? personalScope : {}),
+        }
+      : personalScope;
 
     // AND separado: "só atrasados" usa status: { not: 'CLOSED' }, que
     // sobrescreveria o filtro simples de status no mesmo objeto.

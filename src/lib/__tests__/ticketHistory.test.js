@@ -76,4 +76,14 @@ describe('canViewHistory', () => {
   it('bloqueia empresa diferente', () => {
     expect(canViewHistory(otherCompany, baseTicket)).toBe(false);
   });
+
+  it('fecha o acesso quando um dos lados não tem empresa', () => {
+    const noCompanyAgent = { id: 'agent-legacy', role: 'AGENT', companyId: null };
+    const noCompanyTicket = { ...baseTicket, companyId: null };
+
+    expect(canViewHistory(noCompanyAgent, baseTicket)).toBe(false);
+    expect(canViewHistory(agentSame, noCompanyTicket)).toBe(false);
+    expect(canViewHistory(noCompanyAgent, noCompanyTicket)).toBe(false);
+    expect(canViewHistory(noCompanyAgent, { ...noCompanyTicket, authorId: noCompanyAgent.id })).toBe(true);
+  });
 });

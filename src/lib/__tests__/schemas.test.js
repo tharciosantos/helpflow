@@ -162,6 +162,16 @@ describe('updateTicketSchema', () => {
     it('deve rejeitar um identificador de agente inválido', () => {
         expect(updateTicketSchema.safeParse({ agentId: 'agente-invalido' }).success).toBe(false);
     });
+
+    it('deve aceitar dueAt ISO com fuso ou null para limpar', () => {
+        expect(updateTicketSchema.safeParse({ dueAt: '2026-10-20T17:30:00.000Z' }).success).toBe(true);
+        expect(updateTicketSchema.safeParse({ dueAt: null }).success).toBe(true);
+        expect(updateTicketSchema.safeParse({ recalcDue: true }).success).toBe(true);
+    });
+
+    it('deve rejeitar dueAt vazio', () => {
+        expect(updateTicketSchema.safeParse({ dueAt: '' }).success).toBe(false);
+    });
 });
 
 // ─────────────────────────────────────────────
