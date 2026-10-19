@@ -102,7 +102,7 @@ export default function EditTicketForm({ ticket, onTicketUpdated, isAgent = fals
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="min-w-0 space-y-5">
             {error && (
                 <div role="alert" className={`rounded-xl border p-3 text-sm ${
                     theme === 'light' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-red-950/40 border-red-900/60 text-red-300'

@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useTheme } from './ThemeProvider';
 import NotificationBell from './NotificationBell';
 
-export default function SidebarNav({ dataCyPrefix = 'sidebar' }) {
+export default function SidebarNav({ dataCyPrefix = 'sidebar', showNotifications = true }) {
   const pathname = usePathname();
   const { theme } = useTheme();
 
@@ -41,7 +41,7 @@ export default function SidebarNav({ dataCyPrefix = 'sidebar' }) {
         <LuTicketPlus size={20} />
         <span>Novo Ticket</span>
       </Link>
-      <NotificationBell />
+      {showNotifications && <NotificationBell />}
     </nav>
   );
 }

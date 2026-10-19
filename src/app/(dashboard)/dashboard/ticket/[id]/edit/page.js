@@ -131,16 +131,16 @@ export default function EditTicketPage() {
             </div>
 
             {/* Cabeçalho */}
-            <div className="flex items-center gap-3.5">
-                <div className={`flex h-11 w-11 items-center justify-center rounded-xl border ${
+            <div className="flex min-w-0 items-start gap-3 sm:items-center sm:gap-3.5">
+                <div className={`flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl border ${
                     theme === 'light'
                         ? 'bg-teal-50 border-teal-200/80 text-teal-600'
                         : 'bg-teal-950/40 border-teal-800/60 text-teal-400'
                 }`}>
                     <LuPencil size={20} />
                 </div>
-                <div>
-                    <h1 className={`text-2xl font-bold tracking-tight ${
+                <div className="min-w-0">
+                    <h1 className={`text-xl sm:text-2xl font-bold tracking-tight break-words ${
                         theme === 'light' ? 'text-slate-900' : 'text-white'
                     }`}>
                         Editar Ticket
@@ -155,7 +155,7 @@ export default function EditTicketPage() {
 
             {/* Formulário */}
             {ticket && (
-                <div className={`rounded-2xl border p-6 sm:p-8 shadow-xs transition-colors ${
+                <div className={`rounded-2xl border p-4 sm:p-8 min-w-0 shadow-xs transition-colors ${
                     theme === 'light'
                         ? 'bg-white border-slate-200/90'
                         : 'bg-slate-900/80 border-slate-800'

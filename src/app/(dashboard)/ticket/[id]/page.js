@@ -235,7 +235,7 @@ export default function TicketDetailsPage() {
     const canEditContent = canEditTicketContent(session?.user, ticket);
 
     return (
-        <div className={`max-w-4xl mx-auto space-y-6 pb-2 ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+        <div className={`max-w-4xl mx-auto min-w-0 space-y-5 sm:space-y-6 pb-2 ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
             <div>
                 <Link 
                     href="/dashboard" 
@@ -250,13 +250,13 @@ export default function TicketDetailsPage() {
             </div>
 
             {/* Card Principal de Informações do Ticket */}
-            <div className={`rounded-2xl border shadow-sm p-6 sm:p-8 space-y-6 ${
+            <div className={`rounded-2xl border shadow-sm p-4 sm:p-8 space-y-5 sm:space-y-6 min-w-0 ${
                 theme === 'light'
                     ? 'bg-white border-slate-200'
                     : 'bg-slate-900/90 border-slate-800'
             }`}>
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                    <div className="space-y-1.5 flex-1">
+                <div className="flex min-w-0 flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
+                    <div className="space-y-1.5 flex-1 min-w-0">
                         <span className={`inline-flex items-center font-mono text-xs font-semibold px-2.5 py-0.5 rounded-full border ${
                             theme === 'light' 
                                 ? 'bg-slate-100 text-slate-600 border-slate-200' 
@@ -264,7 +264,7 @@ export default function TicketDetailsPage() {
                         }`}>
                             #{ticket.id.slice(-6)}
                         </span>
-                        <h1 className={`text-2xl sm:text-3xl font-bold tracking-tight ${
+                        <h1 className={`text-xl sm:text-3xl font-bold tracking-tight break-words ${
                             theme === 'light' ? 'text-slate-900' : 'text-white'
                         }`}>
                             {ticket.title}
@@ -286,7 +286,7 @@ export default function TicketDetailsPage() {
                     </div>
                 </div>
 
-                <div className={`rounded-xl p-5 border ${
+                <div className={`rounded-xl p-4 sm:p-5 border min-w-0 ${
                     theme === 'light'
                         ? 'bg-slate-50 border-slate-200 text-slate-800'
                         : 'bg-slate-950/40 border-slate-800/80 text-slate-200'
@@ -296,12 +296,12 @@ export default function TicketDetailsPage() {
                     }`}>
                         Descrição do Chamado
                     </h3>
-                    <p className="whitespace-pre-wrap text-sm sm:text-base leading-relaxed">
+                    <p className="whitespace-pre-wrap break-words text-sm sm:text-base leading-relaxed [overflow-wrap:anywhere]">
                         {ticket.description}
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 pt-2">
+                <div className="grid grid-cols-1 min-[420px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3 pt-2">
                     <div className={`p-3.5 rounded-xl border flex items-center gap-3 ${
                         theme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-800/40 border-slate-700/50'
                     }`}>
@@ -394,7 +394,7 @@ export default function TicketDetailsPage() {
 
             {/* Painel de Gestão e Triagem Rápida */}
             {canManageTicket && (
-                <div className={`rounded-2xl border shadow-sm p-6 space-y-4 ${
+                <div className={`rounded-2xl border shadow-sm p-4 sm:p-6 space-y-4 min-w-0 ${
                     theme === 'light' ? 'bg-white border-slate-200' : 'bg-slate-900/90 border-slate-800'
                 }`}>
                     <div className="flex items-center justify-between">
@@ -409,7 +409,7 @@ export default function TicketDetailsPage() {
                         <div className={`p-4 rounded-xl border ${
                             theme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-950/40 border-slate-800'
                         }`}>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 min-[420px]:grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
                                 <div>
                                     <label htmlFor="ticket-status-select" className={`block text-xs font-medium mb-1.5 ${
                                         theme === 'light' ? 'text-slate-600' : 'text-slate-300'
@@ -489,7 +489,7 @@ export default function TicketDetailsPage() {
                         </div>
                     )}
 
-                    <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-200/60 dark:border-slate-800/80">
+                    <div className="flex flex-col min-[420px]:flex-row min-[420px]:flex-wrap min-[420px]:items-center min-[420px]:justify-between gap-3 pt-3 border-t border-slate-200/60 dark:border-slate-800/80">
                         <div className="flex flex-wrap items-center gap-2">
                             {session?.user?.role === 'AGENT' && (
                                 <button

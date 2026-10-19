@@ -35,6 +35,42 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* ——— Responsivo mobile: hardening global ——— */
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+html,
+body {
+  overflow-x: clip;
+  min-width: 0;
+}
+
+img,
+video,
+svg {
+  max-width: 100%;
+}
+
+/* Evita zoom automático do iOS ao focar inputs (precisa de 16px no mobile).
+   sm: em diante o Tailwind (text-sm) reassume. */
+@media (max-width: 639px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Alvos de toque confortáveis em telas touch */
+@media (pointer: coarse) {
+  button,
+  select,
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
 :focus-visible {
   outline: 2px solid #10b981;
   outline-offset: 2px;

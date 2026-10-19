@@ -176,11 +176,11 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="min-w-0 space-y-6 sm:space-y-8">
       {/* Cabeçalho / boas-vindas */}
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className={`text-2xl sm:text-3xl font-bold tracking-tight ${
+        <div className="min-w-0">
+          <h1 className={`text-xl sm:text-3xl font-bold tracking-tight break-words ${
             theme === 'light' ? 'text-slate-900' : 'text-slate-100'
           }`}>
             Olá, {session?.user?.name || 'bem-vindo(a)'}
@@ -195,7 +195,7 @@ export default function DashboardPage() {
         <Link
           data-cy="dashboard-new-ticket-link"
           href="/dashboard/tickets/new"
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 px-4 py-2.5 text-sm font-semibold shadow-xs transition active:scale-[0.98]"
+          className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 px-4 py-2.5 text-sm font-semibold shadow-xs transition active:scale-[0.98]"
         >
           <LuPlus size={18} />
           Novo ticket
@@ -206,21 +206,21 @@ export default function DashboardPage() {
       {session?.user?.role === 'AGENT' && session?.user?.companyCode && (
         <div
           data-cy="company-invite-card"
-          className={`rounded-2xl border p-5 sm:p-6 transition-all ${
+          className={`rounded-2xl border p-4 sm:p-6 min-w-0 transition-all ${
             theme === 'light'
               ? 'bg-emerald-50/70 border-emerald-200 text-slate-900 shadow-xs'
               : 'bg-emerald-950/20 border-emerald-800/60 text-slate-100 shadow-xs'
           }`}
         >
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className={`p-1.5 rounded-lg ${
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 min-w-0">
+            <div className="space-y-1 min-w-0">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className={`p-1.5 rounded-lg shrink-0 ${
                   theme === 'light' ? 'bg-emerald-100 text-emerald-700' : 'bg-emerald-900/60 text-emerald-300'
                 }`}>
                   <LuBuilding size={18} />
                 </span>
-                <h2 className="text-base sm:text-lg font-bold">
+                <h2 className="text-base sm:text-lg font-bold break-words min-w-0">
                   {session.user.companyName || 'Sua Empresa'} · Painel de Atendimento
                 </h2>
               </div>
@@ -231,7 +231,7 @@ export default function DashboardPage() {
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
+            <div className="flex flex-col min-[420px]:flex-row min-[420px]:flex-wrap min-[420px]:items-center gap-2 sm:shrink-0">
               <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border font-mono text-sm font-bold tracking-wider ${
                 theme === 'light'
                   ? 'bg-white border-emerald-300 text-emerald-800'
@@ -282,16 +282,16 @@ export default function DashboardPage() {
       )}
 
       {/* Barra de Filtros */}
-      <form onSubmit={applyFilters} className={`grid gap-3 rounded-xl border p-4 sm:grid-cols-2 md:grid-cols-[minmax(0,1fr)_160px_160px_auto_auto] md:items-end ${
+      <form onSubmit={applyFilters} className={`grid gap-2.5 sm:gap-3 rounded-xl border p-3 sm:p-4 min-w-0 grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_160px_160px_auto_auto] lg:items-end ${
         theme === 'light'
           ? 'bg-white border-slate-200 shadow-xs'
           : 'border-slate-800 bg-slate-900/70'
       }`}>
-        <label className={`flex flex-col gap-1 text-xs font-semibold uppercase tracking-wider ${
+        <label className={`flex min-w-0 flex-col gap-1 text-xs font-semibold uppercase tracking-wider min-[420px]:col-span-2 lg:col-span-1 ${
           theme === 'light' ? 'text-slate-600' : 'text-slate-400'
         }`}>
           Buscar tickets
-          <div className="relative">
+          <div className="relative min-w-0">
             <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
               <LuSearch size={16} />
             </span>
@@ -300,7 +300,7 @@ export default function DashboardPage() {
               value={filters.search}
               onChange={(event) => setFilters(prev => ({ ...prev, search: event.target.value }))}
               placeholder="Título ou descrição..."
-              className={`w-full rounded-lg border py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 ${
+              className={`w-full min-w-0 rounded-lg border py-2.5 sm:py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 ${
                 theme === 'light'
                   ? 'border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-emerald-400/20'
                   : 'border-slate-700 bg-slate-800 text-white placeholder:text-slate-500 focus:border-emerald-400 focus:ring-emerald-400/20'
@@ -309,7 +309,7 @@ export default function DashboardPage() {
           </div>
         </label>
 
-        <label className={`flex flex-col gap-1 text-xs font-semibold uppercase tracking-wider ${
+        <label className={`flex min-w-0 flex-col gap-1 text-xs font-semibold uppercase tracking-wider ${
           theme === 'light' ? 'text-slate-600' : 'text-slate-400'
         }`}>
           Status
@@ -317,7 +317,7 @@ export default function DashboardPage() {
             data-cy="ticket-filter-status" 
             value={filters.status} 
             onChange={(event) => handleStatusFilter(event.target.value)} 
-            className={`rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
+            className={`w-full min-w-0 truncate rounded-lg border px-3 py-2.5 sm:py-2 text-sm focus:outline-none focus:ring-2 ${
               theme === 'light'
                 ? 'border-slate-300 bg-white text-slate-900 focus:border-emerald-500 focus:ring-emerald-400/20'
                 : 'border-slate-700 bg-slate-800 text-white focus:border-emerald-400 focus:ring-emerald-400/20'
@@ -330,7 +330,7 @@ export default function DashboardPage() {
           </select>
         </label>
 
-        <label className={`flex flex-col gap-1 text-xs font-semibold uppercase tracking-wider ${
+        <label className={`flex min-w-0 flex-col gap-1 text-xs font-semibold uppercase tracking-wider ${
           theme === 'light' ? 'text-slate-600' : 'text-slate-400'
         }`}>
           Prioridade
@@ -338,7 +338,7 @@ export default function DashboardPage() {
             data-cy="ticket-filter-priority" 
             value={filters.priority} 
             onChange={(event) => handlePriorityFilter(event.target.value)} 
-            className={`rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
+            className={`w-full min-w-0 truncate rounded-lg border px-3 py-2.5 sm:py-2 text-sm focus:outline-none focus:ring-2 ${
               theme === 'light'
                 ? 'border-slate-300 bg-white text-slate-900 focus:border-emerald-500 focus:ring-emerald-400/20'
                 : 'border-slate-700 bg-slate-800 text-white focus:border-emerald-400 focus:ring-emerald-400/20'
@@ -352,10 +352,10 @@ export default function DashboardPage() {
           </select>
         </label>
 
-        <button data-cy="ticket-filter-submit" type="submit" className="rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 px-4 py-2 text-sm font-semibold transition shadow-xs active:scale-[0.98]">
+        <button data-cy="ticket-filter-submit" type="submit" className="w-full min-[420px]:w-auto min-[420px]:col-span-1 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 px-4 py-2.5 sm:py-2 text-sm font-semibold transition shadow-xs active:scale-[0.98] min-h-[44px] sm:min-h-0">
           Filtrar
         </button>
-        <button data-cy="ticket-filter-clear" type="button" onClick={clearFilters} className={`rounded-lg border px-3.5 py-2 text-sm font-medium transition ${
+        <button data-cy="ticket-filter-clear" type="button" onClick={clearFilters} className={`w-full min-[420px]:w-auto min-[420px]:col-span-1 rounded-lg border px-3.5 py-2.5 sm:py-2 text-sm font-medium transition min-h-[44px] sm:min-h-0 ${
           theme === 'light' 
             ? 'border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-900' 
             : 'border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white'
@@ -367,11 +367,11 @@ export default function DashboardPage() {
       {/* Atalhos de produtividade + ordenação por prazo */}
       <div
         data-cy="ticket-productivity-bar"
-        className={`flex flex-wrap items-center gap-2 rounded-xl border p-3 ${
+        className={`flex min-w-0 flex-col gap-2 rounded-xl border p-3 min-[480px]:flex-row min-[480px]:flex-wrap min-[480px]:items-center ${
           theme === 'light' ? 'bg-white border-slate-200 shadow-xs' : 'border-slate-800 bg-slate-900/70'
         }`}
       >
-        <span className={`mr-1 text-xs font-semibold uppercase tracking-wider ${
+        <span className={`shrink-0 text-xs font-semibold uppercase tracking-wider ${
           theme === 'light' ? 'text-slate-600' : 'text-slate-400'
         }`}>
           Atalhos
@@ -382,7 +382,7 @@ export default function DashboardPage() {
           data-cy="ticket-filter-overdue"
           onClick={handleToggleOverdue}
           aria-pressed={filters.overdue}
-          className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition active:scale-[0.98] ${
+          className={`inline-flex min-h-[40px] flex-1 items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition active:scale-[0.98] min-[480px]:flex-none ${
             filters.overdue
               ? 'border-red-500 bg-red-600 text-white'
               : theme === 'light'
@@ -399,7 +399,7 @@ export default function DashboardPage() {
           data-cy="ticket-filter-mine"
           onClick={handleToggleMine}
           aria-pressed={filters.mine}
-          className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition active:scale-[0.98] ${
+          className={`inline-flex min-h-[40px] flex-1 items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition active:scale-[0.98] min-[480px]:flex-none ${
             filters.mine
               ? 'border-emerald-500 bg-emerald-600 text-white'
               : theme === 'light'
@@ -411,7 +411,7 @@ export default function DashboardPage() {
           {session?.user?.role === 'AGENT' ? 'Só meus' : 'Só os que abri'}
         </button>
 
-        <label className={`ml-auto flex items-center gap-2 text-xs font-semibold uppercase tracking-wider ${
+        <label className={`flex w-full min-[420px]:w-auto min-[420px]:ml-auto flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-wider ${
           theme === 'light' ? 'text-slate-600' : 'text-slate-400'
         }`}>
           <LuArrowUpDown size={14} />
@@ -420,7 +420,7 @@ export default function DashboardPage() {
             data-cy="ticket-sort"
             value={filters.sort}
             onChange={(event) => handleSortChange(event.target.value)}
-            className={`rounded-lg border px-3 py-2 text-sm font-medium normal-case tracking-normal focus:outline-none focus:ring-2 ${
+            className={`w-full min-[420px]:w-auto min-w-0 flex-1 rounded-lg border px-3 py-2.5 sm:py-2 text-sm font-medium normal-case tracking-normal focus:outline-none focus:ring-2 ${
               theme === 'light'
                 ? 'border-slate-300 bg-white text-slate-900 focus:border-emerald-500 focus:ring-emerald-400/20'
                 : 'border-slate-700 bg-slate-800 text-white focus:border-emerald-400 focus:ring-emerald-400/20'
@@ -433,10 +433,10 @@ export default function DashboardPage() {
       </div>
 
       {/* Resumo rápido + lista */}
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
+      <section className="grid min-w-0 gap-5 sm:gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
         {/* Lista de tickets + controles de paginação */}
-        <div className="flex flex-col gap-4">
-          <div className={`rounded-xl border p-4 md:p-6 shadow-sm ${
+        <div className="flex min-w-0 flex-col gap-4">
+          <div className={`rounded-xl border p-3 sm:p-4 md:p-6 min-w-0 shadow-sm ${
             theme === 'light'
               ? 'bg-white border-slate-200'
               : 'border-slate-800 bg-slate-900/60'
@@ -455,12 +455,12 @@ export default function DashboardPage() {
 
           {/* Paginação - só aparece quando há mais de 1 página */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-4 py-2">
+            <div className="flex flex-col min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-center items-stretch justify-stretch gap-2.5 min-[420px]:gap-4 py-2">
               <button
                 data-cy="pagination-prev"
                 onClick={() => fetchTickets(currentPage - 1, filters)}
                 disabled={currentPage === 1}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition disabled:opacity-40 ${
+                className={`px-4 py-2.5 sm:py-2 rounded-lg text-sm font-medium transition disabled:opacity-40 ${
                   theme === 'light'
                     ? 'bg-slate-200 text-slate-800 hover:bg-slate-300'
                     : 'bg-slate-800 text-white hover:bg-slate-700 border border-slate-700'
@@ -468,7 +468,7 @@ export default function DashboardPage() {
               >
                 ← Anterior
               </button>
-              <span className={`text-sm font-medium ${
+              <span className={`text-center text-sm font-medium ${
                 theme === 'light' ? 'text-slate-600' : 'text-slate-400'
               }`}>
                 Página {currentPage} de {totalPages}
@@ -477,7 +477,7 @@ export default function DashboardPage() {
                 data-cy="pagination-next"
                 onClick={() => fetchTickets(currentPage + 1, filters)}
                 disabled={currentPage === totalPages}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition disabled:opacity-40 ${
+                className={`px-4 py-2.5 sm:py-2 rounded-lg text-sm font-medium transition disabled:opacity-40 ${
                   theme === 'light'
                     ? 'bg-slate-200 text-slate-800 hover:bg-slate-300'
                     : 'bg-slate-800 text-white hover:bg-slate-700 border border-slate-700'
@@ -490,8 +490,8 @@ export default function DashboardPage() {
         </div>
 
         {/* Painel lateral com resumo e dicas */}
-        <aside className="space-y-4">
-          <div className={`rounded-xl border p-4 shadow-sm ${
+        <aside className="min-w-0 space-y-4">
+          <div className={`rounded-xl border p-4 min-w-0 shadow-sm ${
             theme === 'light' ? 'bg-white border-slate-200' : 'border-slate-800 bg-slate-900/80'
           }`}>
             <div className="flex items-center justify-between mb-3">
@@ -508,7 +508,7 @@ export default function DashboardPage() {
               Status consolidados de acordo com os filtros selecionados.
             </p>
 
-            <div className="grid grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-2 min-w-0 gap-2 sm:gap-2.5">
               <div className={`rounded-lg p-3 border transition-colors ${
                 theme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-800/60 border-slate-700/60'
               }`}>

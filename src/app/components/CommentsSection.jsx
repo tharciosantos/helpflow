@@ -72,10 +72,10 @@ export default function CommentsSection({
     ].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
     return (
-        <div className={`rounded-2xl border shadow-sm p-6 sm:p-8 space-y-6 ${
+        <div className={`rounded-2xl border shadow-sm p-4 sm:p-8 space-y-5 sm:space-y-6 min-w-0 ${
             theme === 'light' ? 'bg-white border-slate-200' : 'bg-slate-900/90 border-slate-800'
         }`}>
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200/60 dark:border-slate-800/80">
+            <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-200/60 dark:border-slate-800/80">
                 <div className="flex items-center gap-2.5">
                     <div className={`p-2 rounded-lg ${
                         theme === 'light' ? 'bg-emerald-50 text-emerald-600' : 'bg-emerald-950/50 text-emerald-400'
@@ -102,7 +102,7 @@ export default function CommentsSection({
                 </span>
             </div>
 
-            <div className="space-y-4">
+            <div className="min-w-0 space-y-4">
                 {timeline.length === 0 ? (
                     <div className={`text-center py-8 px-4 rounded-xl border border-dashed ${
                         theme === 'light'
@@ -114,14 +114,14 @@ export default function CommentsSection({
                         <p className="text-xs mt-1 opacity-75">Envie uma mensagem abaixo para registrar o andamento ou tirar dúvidas sobre o chamado.</p>
                     </div>
                 ) : (
-                    <div className="space-y-3.5">
+                    <div className="min-w-0 space-y-3 sm:space-y-3.5">
                         {timeline.map((item) => {
                             if (item.kind === 'history') {
                                 const { entry } = item;
                                 return (
                                     <div
                                         key={item.id}
-                                        className={`rounded-xl px-4 py-3 border border-dashed flex items-start gap-2.5 ${
+                                        className={`rounded-xl px-3 py-3 sm:px-4 border border-dashed flex min-w-0 items-start gap-2.5 ${
                                             theme === 'light'
                                                 ? 'bg-slate-50/70 border-slate-300 text-slate-600'
                                                 : 'bg-slate-950/40 border-slate-700 text-slate-300'
@@ -254,7 +254,7 @@ export default function CommentsSection({
                                         )}
                                     </div>
 
-                                    <p className={`text-sm whitespace-pre-wrap leading-relaxed pl-10 ${
+                                    <p className={`text-sm whitespace-pre-wrap leading-relaxed break-words pl-9 sm:pl-10 [overflow-wrap:anywhere] ${
                                         theme === 'light' ? 'text-slate-800' : 'text-slate-200'
                                     }`}>
                                         {comment.content}
