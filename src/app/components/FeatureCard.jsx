@@ -1,18 +1,21 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { LuUserCheck, LuShieldCheck, LuLock } from "react-icons/lu";
+import { LuUserCheck, LuShieldCheck, LuLock, LuBuilding2, LuInbox, LuKeyRound } from "react-icons/lu";
 
 const iconMap = {
   "Fluxo de cliente": LuUserCheck,
   "Fluxo de agente": LuShieldCheck,
   "Segurança por padrão": LuLock,
+  "Empresa isolada": LuBuilding2,
+  "Triagem simples": LuInbox,
+  "Convite por código": LuKeyRound,
 };
 
-export default function FeatureCard({ title, description, delay = 0, theme = "dark" }) {
+export default function FeatureCard({ title, description, delay = 0, theme = "dark", icon }) {
   const ref = useRef(null);
   const [hasAnimated, setHasAnimated] = useState(false);
-  const IconComponent = iconMap[title] || LuShieldCheck;
+  const IconComponent = iconMap[icon || title] || LuShieldCheck;
 
   useEffect(() => {
     const element = ref.current;
@@ -52,7 +55,7 @@ export default function FeatureCard({ title, description, delay = 0, theme = "da
   return (
     <article
       ref={ref}
-      className={`hover-lift group rounded-xl border p-3.5 sm:p-4 transition-all duration-300 ${
+      className={`hover-lift group h-full rounded-xl border p-4 sm:p-5 transition-all duration-300 ${
         hasAnimated ? "opacity-100" : "scroll-reveal"
       } ${
         theme === "light"
@@ -61,17 +64,17 @@ export default function FeatureCard({ title, description, delay = 0, theme = "da
       }`}
       style={{ animationDelay: hasAnimated ? "0ms" : `${delay}ms` }}
     >
-      <div className={`mb-2.5 inline-flex h-8 w-8 items-center justify-center rounded-lg border transition-transform duration-300 group-hover:scale-105 ${
+      <div className={`mb-3 inline-flex h-9 w-9 items-center justify-center rounded-xl border transition-transform duration-300 group-hover:scale-105 ${
         theme === "light"
           ? "border-emerald-200/80 bg-emerald-50 text-emerald-600"
           : "border-emerald-900/40 bg-emerald-950/40 text-emerald-400"
       }`}>
-        <IconComponent size={16} />
+        <IconComponent size={17} />
       </div>
       <h2 className={`text-sm sm:text-base font-bold ${
         theme === "light" ? "text-slate-900" : "text-white"
       }`}>{title}</h2>
-      <p className={`mt-1 text-xs leading-relaxed ${
+      <p className={`mt-1.5 text-[13px] sm:text-sm leading-relaxed ${
         theme === "light" ? "text-slate-600" : "text-slate-400"
       }`}>
         {description}
