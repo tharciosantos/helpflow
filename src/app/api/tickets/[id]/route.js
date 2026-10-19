@@ -134,7 +134,11 @@ export async function PATCH(req, { params }) {
     }
 
     if (data.agentId) {
-      const companyFilter = ticket.companyId ? { companyId: ticket.companyId } : {};
+      // Ticket sem empresa só pode receber responsável sem empresa (escopo
+      // legado/pessoal). Ticket com empresa não aceita usuário de outro tenant.
+      const companyFilter = ticket.companyId
+        ? { companyId: ticket.companyId }
+        : { companyId: null };
       const assignedMember = await prisma.user.findFirst({
         where: { id: data.agentId, ...companyFilter },
         select: { id: true },

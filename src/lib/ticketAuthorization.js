@@ -3,15 +3,21 @@ const AGENT_ONLY_FIELDS = ['status', 'priority', 'agentId', 'dueAt', 'recalcDue'
 export function canViewTicket(user, ticket) {
   if (!user?.id || !ticket) return false;
 
-  // Se ambos possuem companyId e são diferentes, bloqueia imediatamente
-  if (user.companyId && ticket.companyId && user.companyId !== ticket.companyId) {
-    return false;
-  }
+  // Isolamento multi-empresa fail-closed:
+  // - empresa diferente -> bloqueia;
+  // - usuário da empresa A x ticket sem empresa (ou vice-versa) -> bloqueia;
+  // - ambos sem empresa (contas legadas/standalone) -> apenas autor/responsável.
+  const sameCompany = Boolean(
+    user.companyId && ticket.companyId && user.companyId === ticket.companyId
+  );
+  const legacyPersonalScope = !user.companyId && !ticket.companyId;
 
-  // Agente da mesma empresa (ou sem empresa atribuída) pode ver
-  if (user.role === 'AGENT') return true;
+  if (!sameCompany && !legacyPersonalScope) return false;
 
-  // Funcionário pode ver o seu próprio ticket ou o ticket onde foi atribuído como responsável
+  // Agente só tem visão ampla dentro da própria empresa.
+  if (user.role === 'AGENT' && sameCompany) return true;
+
+  // Funcionário vê o próprio ticket ou onde foi atribuído como responsável.
   return ticket.authorId === user.id || ticket.agentId === user.id;
 }
 

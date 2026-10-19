@@ -14,10 +14,18 @@ export async function GET() {
   }
 
   try {
-    const companyFilter = session.user.companyId ? { companyId: session.user.companyId } : {};
+    // Sem empresa não existe diretório de membros: devolve apenas o próprio
+    // usuário (nunca a lista global, que vazaria usuários de outros tenants).
+    if (!session.user.companyId) {
+      const self = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { id: true, name: true, email: true, role: true },
+      });
+      return NextResponse.json(self ? [self] : []);
+    }
 
     const members = await prisma.user.findMany({
-      where: { ...companyFilter },
+      where: { companyId: session.user.companyId },
       select: { id: true, name: true, email: true, role: true },
       orderBy: [{ role: 'asc' }, { name: 'asc' }, { email: 'asc' }],
     });
