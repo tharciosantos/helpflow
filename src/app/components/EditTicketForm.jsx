@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { calendarDayDiff } from '@/lib/sla';
 import { useTheme } from './ThemeProvider';
 
 export default function EditTicketForm({ ticket, onTicketUpdated, isAgent = false, agents = [] }) {
@@ -26,28 +27,41 @@ export default function EditTicketForm({ ticket, onTicketUpdated, isAgent = fals
     const initialDue = splitDue(ticket.dueAt);
     const [dueDate, setDueDate] = useState(initialDue.date);
     const [dueTime, setDueTime] = useState(initialDue.time || '09:00');
+    // Só envia dueAt se o AGENT realmente mexeu no prazo. Sem isso o formulário
+    // reenviava o valor atual e o `recalcDue` nunca tinha efeito no servidor.
+    const [dueDirty, setDueDirty] = useState(false);
     const [recalcDue, setRecalcDue] = useState(false);
     const todayStr = (() => {
         const t = new Date();
         return `${t.getFullYear()}-${pad2(t.getMonth() + 1)}-${pad2(t.getDate())}`;
     })();
+    // Data/hora escolhida no fuso do NAVEGADOR. O envio converte para ISO/UTC,
+    // evitando o deslocamento de 3h que acontecia ao mandar "YYYY-MM-DDTHH:mm"
+    // sem offset (o servidor interpretava no fuso dele).
+    const selectedDueAt = (() => {
+        if (!dueDate) return null;
+        const parsed = new Date(`${dueDate}T${dueTime || '23:59'}:00`);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+    })();
     // Resumo legível do prazo escolhido (ex: "Segunda, 20/10 às 14:30").
     const dueSummary = (() => {
-        if (!dueDate) return '';
-        const d = new Date(dueTime ? `${dueDate}T${dueTime}` : `${dueDate}T00:00`);
-        if (Number.isNaN(d.getTime())) return '';
-        const dia = d.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit' });
-        const hora = dueTime || '00:00';
-        const diffDays = Math.ceil((d.getTime() - Date.now()) / 86400000);
-        const resto = diffDays <= 0 ? ' (hoje)' : diffDays === 1 ? ' (amanhã)' : ` (faltam ${diffDays} dias)`;
+        if (!selectedDueAt) return '';
+        const dia = selectedDueAt.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit' });
+        const hora = dueTime || '23:59';
+        // Compara dias de calendário, não blocos de 24h: hoje às 14:30 é
+        // "(hoje)" mesmo que o horário atual esteja a poucas horas.
+        const diffDays = calendarDayDiff(new Date(), selectedDueAt) ?? 0;
+        const resto = diffDays === 0
+            ? ' (hoje)'
+            : diffDays === 1
+                ? ' (amanhã)'
+                : diffDays > 1
+                    ? ` (faltam ${diffDays} dias)`
+                    : ' (atrasado)';
         return `${dia} às ${hora}${resto}`;
     })();
-    // Flag: prazo no passado (comparação só de data, sem hora).
-    // Evita que o resumo minta "(hoje)" quando digitam data anterior.
-    const isPastDue = (() => {
-        if (!dueDate) return false;
-        return dueDate < todayStr;
-    })();
+    // Inclui a hora: data de hoje com horário já passado também é inválida.
+    const isPastDue = selectedDueAt ? selectedDueAt.getTime() <= Date.now() : false;
     // Opções de hora em blocos de 30 min.
     const timeOptions = (() => {
         const opts = [];
@@ -61,28 +75,35 @@ export default function EditTicketForm({ ticket, onTicketUpdated, isAgent = fals
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (dueDate && dueDate < todayStr) {
-            setError('O prazo deve ser hoje ou uma data futura.');
+        if (dueDirty && isPastDue) {
+            setError('O prazo deve ser uma data e hora futuras.');
+            return;
+        }
+        if (dueDirty && dueDate && !selectedDueAt) {
+            setError('Prazo inválido. Verifique a data e a hora.');
             return;
         }
         setLoading(true);
         setError('');
 
         try {
+            const isAgentPayload = isAgent
+                ? (() => {
+                    const payload = { title, description, status, priority, agentId: agentId || null, recalcDue };
+                    if (dueDirty) {
+                        // ISO com Z: o servidor não reinterpreta no fuso dele.
+                        payload.dueAt = selectedDueAt ? selectedDueAt.toISOString() : null;
+                    }
+                    return payload;
+                })()
+                : { title, description };
+
             const res = await fetch(`/api/tickets/${ticket.id}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(isAgent
-                    ? (() => {
-                        const duePayload = {};
-                        if (dueDate) {
-                            duePayload.dueAt = dueTime ? `${dueDate}T${dueTime}` : dueDate;
-                        }
-                        return { title, description, status, priority, agentId: agentId || null, ...duePayload, recalcDue };
-                    })()
-                    : { title, description }),
+                body: JSON.stringify(isAgentPayload),
             });
 
             if (!res.ok) {
@@ -238,19 +259,19 @@ export default function EditTicketForm({ ticket, onTicketUpdated, isAgent = fals
                                         <div className="grid gap-4 sm:grid-cols-2">
                         <div>
                             <label htmlFor="dueDate" className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>Data do prazo</label>
-                            <input data-cy="ticket-edit-duedate" type="date" id="dueDate" value={dueDate} min={todayStr} onChange={(e) => setDueDate(e.target.value)} className={`block w-full rounded-xl border px-3.5 py-2.5 text-sm transition focus:outline-none focus:ring-2 ${theme === 'light' ? 'bg-white border-slate-300 text-slate-900 focus:border-emerald-500 focus:ring-emerald-400/20' : 'bg-slate-800/60 border-slate-700 text-white focus:bg-slate-800 focus:border-emerald-400 focus:ring-emerald-400/20'}`} />
+                            <input data-cy="ticket-edit-duedate" type="date" id="dueDate" value={dueDate} min={todayStr} onChange={(e) => { setDueDate(e.target.value); setDueDirty(true); }} className={`block w-full rounded-xl border px-3.5 py-2.5 text-sm transition focus:outline-none focus:ring-2 ${theme === 'light' ? 'bg-white border-slate-300 text-slate-900 focus:border-emerald-500 focus:ring-emerald-400/20' : 'bg-slate-800/60 border-slate-700 text-white focus:bg-slate-800 focus:border-emerald-400 focus:ring-emerald-400/20'}`} />
                         </div>
                         <div>
                             <label htmlFor="dueTime" className={`block text-xs font-bold uppercase tracking-wider mb-1.5 ${theme === 'light' ? 'text-slate-700' : 'text-slate-300'}`}>Hora do prazo</label>
-                            <select data-cy="ticket-edit-duetime" id="dueTime" value={dueTime} onChange={(e) => setDueTime(e.target.value)} className={`block w-full rounded-xl border px-3.5 py-2.5 text-sm transition focus:outline-none focus:ring-2 ${theme === 'light' ? 'bg-white border-slate-300 text-slate-900 focus:border-emerald-500 focus:ring-emerald-400/20' : 'bg-slate-800/60 border-slate-700 text-white focus:bg-slate-800 focus:border-emerald-400 focus:ring-emerald-400/20'}`}>
+                            <select data-cy="ticket-edit-duetime" id="dueTime" value={dueTime} onChange={(e) => { setDueTime(e.target.value); setDueDirty(true); }} className={`block w-full rounded-xl border px-3.5 py-2.5 text-sm transition focus:outline-none focus:ring-2 ${theme === 'light' ? 'bg-white border-slate-300 text-slate-900 focus:border-emerald-500 focus:ring-emerald-400/20' : 'bg-slate-800/60 border-slate-700 text-white focus:bg-slate-800 focus:border-emerald-400 focus:ring-emerald-400/20'}`}>
                                 <option value="">Sem hora definida</option>
                                 {timeOptions.map((t) => (<option key={t} value={t}>{t}</option>))}
                             </select>
                         </div>
                     </div>
-                    {dueSummary && (<p data-cy="ticket-edit-due-summary" className={`mt-2 rounded-lg px-3 py-2 text-xs font-medium ${isPastDue ? (theme === 'light' ? 'bg-red-50 text-red-700' : 'bg-red-950/40 text-red-300') : (theme === 'light' ? 'bg-emerald-50 text-emerald-700' : 'bg-emerald-950/40 text-emerald-300')}`}>{isPastDue ? `Data no passado — escolha hoje ou uma data futura.` : `Prazo: ${dueSummary}`}</p>)}
+                    {dueSummary && (<p data-cy="ticket-edit-due-summary" className={`mt-2 rounded-lg px-3 py-2 text-xs font-medium ${dueDirty && isPastDue ? (theme === 'light' ? 'bg-red-50 text-red-700' : 'bg-red-950/40 text-red-300') : (theme === 'light' ? 'bg-emerald-50 text-emerald-700' : 'bg-emerald-950/40 text-emerald-300')}`}>{dueDirty && isPastDue ? `Data no passado — escolha hoje ou uma data futura.` : `Prazo: ${dueSummary}`}</p>)}
                     <div className="mt-2 flex flex-wrap gap-1.5">
-                        <button type="button" data-cy="chip-amanha" onClick={() => { const b = new Date(); b.setDate(b.getDate() + 1); setDueDate(b.getFullYear() + '-' + pad2(b.getMonth() + 1) + '-' + pad2(b.getDate())); if (!dueTime) setDueTime('09:00'); }} className={`rounded-lg border px-2.5 py-1 text-xs font-semibold transition ${theme === 'light' ? 'border-slate-300 bg-slate-50 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300' : 'border-slate-700 bg-slate-800/60 text-slate-300 hover:bg-emerald-950/40 hover:text-emerald-300 hover:border-emerald-800'}`}>Amanhã</button>
+                        <button type="button" data-cy="chip-amanha" onClick={() => { const b = new Date(); b.setDate(b.getDate() + 1); setDueDate(b.getFullYear() + '-' + pad2(b.getMonth() + 1) + '-' + pad2(b.getDate())); if (!dueTime) setDueTime('09:00'); setDueDirty(true); }} className={`rounded-lg border px-2.5 py-1 text-xs font-semibold transition ${theme === 'light' ? 'border-slate-300 bg-slate-50 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300' : 'border-slate-700 bg-slate-800/60 text-slate-300 hover:bg-emerald-950/40 hover:text-emerald-300 hover:border-emerald-800'}`}>Amanhã</button>
                     </div>
 <div className="flex items-end pb-1">
                             <label className="inline-flex cursor-pointer items-center gap-2 text-sm">
@@ -273,7 +294,7 @@ export default function EditTicketForm({ ticket, onTicketUpdated, isAgent = fals
                 <button
                     data-cy="ticket-edit-submit"
                     type="submit"
-                    disabled={loading || isPastDue}
+                    disabled={loading || (dueDirty && isPastDue)}
                     className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 text-sm font-semibold shadow-xs transition active:scale-[0.99] disabled:opacity-50"
                 >
                     {loading ? 'Salvando...' : 'Salvar Alterações'}
