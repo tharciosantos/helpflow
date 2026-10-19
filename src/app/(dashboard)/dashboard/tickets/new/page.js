@@ -17,7 +17,7 @@ export default function NewTicketPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-2xl mx-auto min-w-0 space-y-5 sm:space-y-6">
       {/* Voltar ao Dashboard */}
       <div>
         <Link
@@ -34,16 +34,16 @@ export default function NewTicketPage() {
       </div>
 
       {/* Cabeçalho */}
-      <div className="flex items-center gap-3.5">
-        <div className={`flex h-11 w-11 items-center justify-center rounded-xl border ${
+      <div className="flex min-w-0 items-start gap-3 sm:items-center sm:gap-3.5">
+        <div className={`flex h-10 w-10 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl border ${
           theme === 'light'
             ? 'bg-teal-50 border-teal-200/80 text-teal-600'
             : 'bg-teal-950/40 border-teal-800/60 text-teal-400'
         }`}>
           <LuTicketPlus size={22} />
         </div>
-        <div>
-          <h1 className={`text-2xl font-bold tracking-tight ${
+        <div className="min-w-0">
+          <h1 className={`text-xl sm:text-2xl font-bold tracking-tight break-words ${
             theme === 'light' ? 'text-slate-900' : 'text-white'
           }`}>
             Abrir Novo Ticket

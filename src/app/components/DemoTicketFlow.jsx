@@ -135,7 +135,7 @@ export default function DemoTicketFlow({ theme = "dark" }) {
         <section
             ref={rootRef}
             data-demo-flow
-            className="relative mx-auto w-full max-w-md"
+            className="relative mx-auto w-full min-w-0 max-w-md"
             aria-labelledby="demo-ticket-title"
         >
             <div

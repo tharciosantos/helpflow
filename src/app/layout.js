@@ -20,6 +20,12 @@ export const metadata = {
   description: "Gerencie seus chamados de suporte de forma eficiente.",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export default async function RootLayout({ children }) {
   // Ler o cookie do tema durante o SSR. Isso garante que o HTML já sai
   // do servidor com a classe correta (<html class="light">), eliminando

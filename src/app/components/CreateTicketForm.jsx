@@ -48,7 +48,7 @@ export default function CreateTicketForm({ onTicketCreated }) {
   return (
     <form
       onSubmit={handleSubmit}
-      className={`rounded-2xl border p-6 sm:p-8 shadow-xs transition-colors ${
+      className={`rounded-2xl border p-4 sm:p-8 min-w-0 shadow-xs transition-colors ${
         theme === 'light'
           ? 'bg-white border-slate-200/90'
           : 'bg-slate-900/80 border-slate-800'

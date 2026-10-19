@@ -153,16 +153,16 @@ export default function TicketList({
               <div
                 key={ticket.id}
                 data-cy={`ticket-card-${ticket.id}`}
-                className={`group relative rounded-xl border p-5 transition-all duration-200 hover:shadow-md ${
+                className={`group relative rounded-xl border p-4 sm:p-5 min-w-0 transition-all duration-200 hover:shadow-md ${
                   theme === 'light'
                     ? 'bg-white border-slate-200 hover:border-emerald-200 shadow-xs'
                     : 'bg-slate-900/80 border-slate-800 hover:border-slate-700'
                 }`}
               >
-                <div className="flex flex-col gap-3.5">
+                <div className="flex min-w-0 flex-col gap-3.5">
                   {/* Cabeçalho do Card */}
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <h3 className="text-base sm:text-lg font-semibold leading-snug">
+                  <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
+                    <h3 className="min-w-0 flex-1 basis-48 text-base sm:text-lg font-semibold leading-snug break-words">
                       <Link
                         href={`/ticket/${ticket.id}`}
                         className={`transition-colors hover:text-emerald-600 dark:hover:text-emerald-400 ${
@@ -205,7 +205,7 @@ export default function TicketList({
                   </p>
 
                   {/* Metadados */}
-                  <div className={`flex flex-wrap items-center gap-x-4 gap-y-2 text-xs pt-2 border-t ${
+                  <div className={`flex flex-wrap items-center gap-x-4 gap-y-2 text-xs pt-2 border-t [overflow-wrap:anywhere] ${
                     theme === 'light' ? 'border-slate-100 text-slate-500' : 'border-slate-800/80 text-slate-400'
                   }`}>
                     <span className={`font-mono font-medium px-2 py-0.5 rounded border text-[11px] ${
@@ -231,20 +231,20 @@ export default function TicketList({
 
                   {/* Ações Rápidas (Agente / Autor) */}
                   {(session?.user?.id === ticket.authorId || session?.user?.role === 'AGENT') && (
-                    <div className={`mt-1 flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-dashed ${
+                    <div className={`mt-1 flex flex-col gap-3 pt-3 border-t border-dashed min-[560px]:flex-row min-[560px]:flex-wrap min-[560px]:items-center min-[560px]:justify-between ${
                       theme === 'light' ? 'border-slate-200' : 'border-slate-800'
                     }`}>
-                      <div className="flex flex-wrap items-center gap-3">
+                      <div className="grid min-w-0 grid-cols-1 gap-2 min-[420px]:grid-cols-2 min-[560px]:flex min-[560px]:flex-wrap min-[560px]:items-center min-[560px]:gap-3">
                         {session?.user?.role === 'AGENT' && (
-                          <div className="flex items-center gap-2">
-                            <span className={`text-xs font-semibold uppercase tracking-wider ${
+                          <div className="flex min-w-0 items-center gap-1.5">
+                            <span className={`shrink-0 text-[11px] font-semibold uppercase tracking-wider ${
                               theme === 'light' ? 'text-slate-500' : 'text-slate-400'
                             }`}>Status:</span>
                             <select
                               disabled={updatingId === ticket.id}
                               value={ticket.status}
                               onChange={(e) => handleStatusChange(ticket.id, e.target.value)}
-                              className={`rounded-lg px-2.5 py-1 text-xs font-medium border focus:outline-none focus:ring-1 focus:ring-emerald-400 ${
+                              className={`min-w-0 flex-1 truncate rounded-lg px-2 py-1.5 text-xs font-medium border focus:outline-none focus:ring-1 focus:ring-emerald-400 min-[560px]:flex-none ${
                                 theme === 'light'
                                   ? 'bg-slate-50 border-slate-300 text-slate-900'
                                   : 'bg-slate-800 border-slate-700 text-white'
@@ -258,15 +258,15 @@ export default function TicketList({
                         )}
 
                         {session?.user?.role === 'AGENT' && (
-                          <div className="flex items-center gap-2">
-                            <span className={`text-xs font-semibold uppercase tracking-wider ${
+                          <div className="flex min-w-0 items-center gap-1.5">
+                            <span className={`shrink-0 text-[11px] font-semibold uppercase tracking-wider ${
                               theme === 'light' ? 'text-slate-500' : 'text-slate-400'
                             }`}>Responsável:</span>
                             <select
                               disabled={updatingId === ticket.id}
                               value={ticket.agentId || ''}
                               onChange={(e) => handleAgentChange(ticket.id, e.target.value)}
-                              className={`rounded-lg px-2.5 py-1 text-xs font-medium border focus:outline-none focus:ring-1 focus:ring-emerald-400 ${
+                              className={`min-w-0 flex-1 truncate rounded-lg px-2 py-1.5 text-xs font-medium border focus:outline-none focus:ring-1 focus:ring-emerald-400 min-[420px]:max-w-[11rem] min-[560px]:max-w-[12rem] ${
                                 theme === 'light'
                                   ? 'bg-slate-50 border-slate-300 text-slate-900'
                                   : 'bg-slate-800 border-slate-700 text-white'
@@ -275,7 +275,7 @@ export default function TicketList({
                               <option value="">Não atribuído</option>
                               {agents.map((member) => (
                                 <option key={member.id} value={member.id}>
-                                  {member.name || member.email} {member.role === 'AGENT' ? '(TI / Suporte)' : '(Funcionário)'}
+                                  {(member.name || member.email || '').slice(0, 28)}{member.role === 'AGENT' ? ' (TI)' : ''}
                                 </option>
                               ))}
                             </select>
@@ -283,7 +283,7 @@ export default function TicketList({
                         )}
                       </div>
 
-                      <div className="flex items-center gap-2 sm:ml-auto">
+                      <div className="flex flex-wrap items-center gap-2 min-[560px]:ml-auto">
                         <Link
                           href={`/dashboard/ticket/${ticket.id}/edit`}
                           className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-semibold transition ${

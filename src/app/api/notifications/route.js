@@ -14,7 +14,11 @@ export async function GET() {
     const [notifications, unreadCount] = await Promise.all([
       prisma.notification.findMany({
         where: { userId: session.user.id },
-        orderBy: [{ readAt: "asc" }, { createdAt: "desc" }],
+        // Não lidas (readAt NULL) primeiro, depois as mais recentes.
+        // No Postgres, ASC coloca NULLS LAST por padrão — por isso o
+        // `nulls: "first"` explícito. O cliente também reordena por
+        // segurança (ver sortNotifications).
+        orderBy: [{ readAt: { sort: "asc", nulls: "first" } }, { createdAt: "desc" }],
         take: 30,
         include: {
           ticket: { select: { id: true, title: true, status: true } },
