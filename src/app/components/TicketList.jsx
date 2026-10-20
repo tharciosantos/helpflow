@@ -2,6 +2,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { LuTicket, LuInbox, LuUser, LuCalendar, LuCircleAlert, LuPencil, LuTrash2, LuShield } from "react-icons/lu";
 import { getStatusDisplayNamePT, getStatusBadgeClasses, getPriorityBadge } from '@/lib/ticketUtils';
+import { canDeleteTicket, canEditTicketContent } from '@/lib/ticketAuthorization';
 import { isOverdue } from '@/lib/sla';
 import { useTheme } from "./ThemeProvider";
 import ConfirmDialog from "./ConfirmDialog";
@@ -229,8 +230,10 @@ export default function TicketList({
                     </span>
                   </div>
 
-                  {/* Ações Rápidas (Agente / Autor) */}
-                  {(session?.user?.id === ticket.authorId || session?.user?.role === 'AGENT') && (
+                  {/* Ações Rápidas (Agente / Autor com permissão) */}
+                  {(session?.user?.role === 'AGENT'
+                    || canEditTicketContent(session?.user, ticket)
+                    || canDeleteTicket(session?.user, ticket)) && (
                     <div className={`mt-1 flex flex-col gap-3 pt-3 border-t border-dashed min-[560px]:flex-row min-[560px]:flex-wrap min-[560px]:items-center min-[560px]:justify-between ${
                       theme === 'light' ? 'border-slate-200' : 'border-slate-800'
                     }`}>
@@ -284,29 +287,33 @@ export default function TicketList({
                       </div>
 
                       <div className="flex flex-wrap items-center gap-2 min-[560px]:ml-auto">
-                        <Link
-                          href={`/dashboard/ticket/${ticket.id}/edit`}
-                          className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-semibold transition ${
-                            theme === 'light'
-                              ? 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-emerald-600 hover:border-slate-300'
-                              : 'border-slate-700 bg-slate-800/60 text-slate-300 hover:bg-slate-800 hover:text-white hover:border-slate-600'
-                          }`}
-                        >
-                          <LuPencil size={12} />
-                          Editar
-                        </Link>
-                        <button
-                          onClick={() => setPendingDeleteId(ticket.id)}
-                          disabled={deletingId === ticket.id}
-                          className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-semibold transition disabled:opacity-50 ${
-                            theme === 'light'
-                              ? 'border-slate-200 bg-white text-slate-700 hover:bg-red-50 hover:text-red-600 hover:border-red-200'
-                              : 'border-slate-700 bg-slate-800/60 text-slate-300 hover:bg-red-950/40 hover:text-red-400 hover:border-red-800/60'
-                          }`}
-                        >
-                          <LuTrash2 size={12} />
-                          {deletingId === ticket.id ? "Excluindo..." : "Excluir"}
-                        </button>
+                        {canEditTicketContent(session?.user, ticket) && (
+                          <Link
+                            href={`/dashboard/ticket/${ticket.id}/edit`}
+                            className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-semibold transition ${
+                              theme === 'light'
+                                ? 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:text-emerald-600 hover:border-slate-300'
+                                : 'border-slate-700 bg-slate-800/60 text-slate-300 hover:bg-slate-800 hover:text-white hover:border-slate-600'
+                            }`}
+                          >
+                            <LuPencil size={12} />
+                            Editar
+                          </Link>
+                        )}
+                        {canDeleteTicket(session?.user, ticket) && (
+                          <button
+                            onClick={() => setPendingDeleteId(ticket.id)}
+                            disabled={deletingId === ticket.id}
+                            className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-semibold transition disabled:opacity-50 ${
+                              theme === 'light'
+                                ? 'border-slate-200 bg-white text-slate-700 hover:bg-red-50 hover:text-red-600 hover:border-red-200'
+                                : 'border-slate-700 bg-slate-800/60 text-slate-300 hover:bg-red-950/40 hover:text-red-400 hover:border-red-800/60'
+                            }`}
+                          >
+                            <LuTrash2 size={12} />
+                            {deletingId === ticket.id ? "Excluindo..." : "Excluir"}
+                          </button>
+                        )}
                       </div>
                     </div>
                   )}

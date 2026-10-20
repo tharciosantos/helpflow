@@ -151,22 +151,28 @@ export default function NotificationBell({ variant = 'nav' }) {
 
   const markRead = async (id) => {
     try {
-      await fetch(`/api/notifications/${id}`, { method: 'PATCH' });
+      const res = await fetch(`/api/notifications/${id}`, { method: 'PATCH' });
+      // 404 = já estava lida; recarrega para alinhar o badge ao servidor.
+      if (!res.ok) {
+        load();
+        return;
+      }
       setNotifications((prev) =>
         sortNotifications(prev.map((n) => (n.id === id ? { ...n, readAt: new Date().toISOString() } : n)))
       );
       setUnreadCount((c) => Math.max(0, c - 1));
     } catch {
-      // noop
+      // noop: falha de rede não deve quebrar a experiência
     }
   };
 
   const markAllRead = async () => {
-    const unread = notifications.filter((n) => !n.readAt);
-    if (unread.length === 0 || markingAll) return;
+    if (unreadCount === 0 || markingAll) return;
     setMarkingAll(true);
     try {
-      await Promise.all(unread.map((n) => fetch(`/api/notifications/${n.id}`, { method: 'PATCH' })));
+      // Endpoint bulk: o GET lista só 30, mas o servidor marca TODAS.
+      const res = await fetch('/api/notifications', { method: 'PATCH' });
+      if (!res.ok) throw new Error('Falha ao marcar notificações como lidas.');
       const now = new Date().toISOString();
       setNotifications((prev) => sortNotifications(prev.map((n) => ({ ...n, readAt: n.readAt || now }))));
       setUnreadCount(0);
@@ -328,7 +334,7 @@ export default function NotificationBell({ variant = 'nav' }) {
                             {n.ticket && (
                               <Link
                                 href={`/ticket/${n.ticket.id}`}
-                                onClick={() => { markRead(n.id); setOpen(false); }}
+                                onClick={() => { if (!n.readAt) markRead(n.id); setOpen(false); }}
                                 className="inline-flex min-h-[32px] items-center text-xs font-bold text-emerald-600 hover:underline dark:text-emerald-400"
                               >
                                 Abrir chamado →
