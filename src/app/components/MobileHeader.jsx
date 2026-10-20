@@ -15,7 +15,7 @@ export default function MobileHeader() {
   const { theme } = useTheme();
   const pathname = usePathname();
 
-  // Fecha o drawer ao navegar e trava o scroll do body enquanto aberto
+  // Fecha o drawer ao navegar
   useEffect(() => {
     setIsSidebarOpen(false);
   }, [pathname]);
@@ -26,11 +26,10 @@ export default function MobileHeader() {
       if (e.key === 'Escape') setIsSidebarOpen(false);
     };
     document.addEventListener('keydown', onKey);
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    // O scroll do dashboard já é travado pelo DashboardShell (html + body).
+    // Não mexer no body aqui evita dois donos disputando o overflow.
     return () => {
       document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = previous;
     };
   }, [isSidebarOpen]);
 
