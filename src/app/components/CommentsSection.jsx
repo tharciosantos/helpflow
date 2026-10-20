@@ -1,36 +1,6 @@
 import { LuMessageSquare, LuSend, LuTrash2, LuHistory, LuLock } from 'react-icons/lu';
 import { canDeleteComment } from '@/lib/ticketAuthorization';
-
-const FIELD_LABELS = {
-    status: 'Status',
-    priority: 'Prioridade',
-    agentId: 'Responsável',
-    title: 'Título',
-    description: 'Descrição',
-};
-
-const STATUS_LABELS = { OPEN: 'Aberto', IN_PROGRESS: 'Em Progresso', CLOSED: 'Fechado' };
-const PRIORITY_LABELS = { LOW: 'Baixa', MEDIUM: 'Média', HIGH: 'Alta', URGENT: 'Urgente' };
-
-function formatHistoryValue(field, value) {
-    if (value === null || value === undefined) return 'Não atribuído';
-    if (field === 'status') return STATUS_LABELS[value] ?? value;
-    if (field === 'priority') return PRIORITY_LABELS[value] ?? value;
-    if (field === 'description') return value.length > 80 ? `${value.slice(0, 80)}...` : value;
-    return value;
-}
-
-function formatHistoryText(entry, actorNameMap) {
-    const field = FIELD_LABELS[entry.field] ?? entry.field;
-    const from = formatHistoryValue(entry.field, entry.from);
-    const to = formatHistoryValue(entry.field, entry.to);
-    if (entry.field === 'agentId') {
-        const fromName = entry.from ? (actorNameMap[entry.from] ?? 'Membro') : 'Não atribuído';
-        const toName = entry.to ? (actorNameMap[entry.to] ?? 'Membro') : 'Não atribuído';
-        return `${field}: ${fromName} → ${toName}`;
-    }
-    return `${field}: ${from} → ${to}`;
-}
+import { formatHistoryText } from '@/lib/ticketHistoryFormat';
 
 export default function CommentsSection({
     ticket,

@@ -7,6 +7,8 @@ const AUDITABLE_FIELDS = ['status', 'priority', 'agentId', 'title', 'description
 
 function normalizeValue(value) {
   if (value === null || value === undefined) return null;
+  // Datas (dueAt) viram ISO para não depender do fuso/nome do servidor.
+  if (value instanceof Date) return value.toISOString();
   return String(value);
 }
 
