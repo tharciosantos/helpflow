@@ -13,14 +13,21 @@ export default function DashboardShell({ children }) {
   const { theme } = useTheme();
 
   // App shell: enquanto o dashboard esta montado, o scroll pertence ao <main>,
-  // nunca ao <body>. Travar o overflow do body aqui e a defesa final contra o
-  // classico "100vh que estoura" - aconteca o que acontecer nos filhos, o body
-  // nao rola, entao nenhuma faixa de fundo vaza abaixo do shell.
+  // nunca ao <body> nem ao <html>. Travar apenas o body nao bastava em alguns
+  // navegadores: o viewport continuava com scroll proprio e apareciam duas
+  // barras (uma do main e outra da janela), com a de fora passando do layout.
   useEffect(() => {
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    const root = document.documentElement;
+    const body = document.body;
+    const previousRootOverflow = root.style.overflow;
+    const previousBodyOverflow = body.style.overflow;
+
+    root.style.overflow = 'hidden';
+    body.style.overflow = 'hidden';
+
     return () => {
-      document.body.style.overflow = previous;
+      root.style.overflow = previousRootOverflow;
+      body.style.overflow = previousBodyOverflow;
     };
   }, []);
 
