@@ -49,43 +49,23 @@ Além disso, qualquer visitante pode cadastrar sua própria **Empresa** ou se re
 
 ## Demonstração Visual da Jornada
 
-O HelpFlow guia a organização desde a criação do espaço até a resolução e acompanhamento dos chamados:
+O HelpFlow guia a organização desde a criação do espaço até a resolução e acompanhamento dos chamados. As telas abaixo seguem o tema claro; o tema escuro aparece no fim como alternativa nativa.
 
-### 1. Descoberta e Apresentação
-Apresentação moderna com simulador interativo de chamados e proposta de valor clara.
-![Landing Page do HelpFlow](docs/screenshots/01-landing-page-hero.png)
-
-### 2. Cadastro Corporativo Segmentado
-Ambiente unificado para criação do espaço da Empresa ou entrada do Funcionário via código corporativo.
-![Cadastro Corporativo Multi-Empresa](docs/screenshots/02-cadastro-multitenant.png)
-
-### 3. Autenticação e Acesso Rápido de Demonstração
-Tela de login com suporte a credenciais seguras e acesso 1-clique para teste das duas visões.
-![Tela de Login e Demonstração](docs/screenshots/03-login-acesso-demo.png)
-
-### 4. Visão da Empresa / TI (Gestão Geral e Convites)
-Fila geral de tickets corporativos, indicadores de atendimento e código de convite da empresa.
-![Dashboard da Empresa / TI](docs/screenshots/04-dashboard-empresa-ti.png)
-
-### 5. Visão do Colaborador (Privacidade Total)
-Histórico estritamente privado dos chamados do funcionário dentro da organização.
-![Dashboard do Funcionário](docs/screenshots/05-dashboard-funcionario-privado.png)
-
-### 6. Abertura de Novo Chamado Interno
-Interface simples e direta para solicitação de suporte com categorização por severidade.
-![Abertura de Chamado](docs/screenshots/06-abertura-novo-chamado.png)
+| | |
+|---|---|
+| **1. Descoberta e Apresentação**<br>Landing page com simulador interativo e proposta de valor clara.<br>![Landing Page do HelpFlow](docs/screenshots/01-landing-page-hero.png) | **2. Cadastro Corporativo Segmentado**<br>Criação da Empresa ou entrada do Funcionário via código corporativo.<br>![Cadastro Corporativo Multi-Empresa](docs/screenshots/02-cadastro-multitenant.png) |
+| **3. Autenticação e Acesso Rápido**<br>Login com credenciais seguras e acesso de demonstração em 1 clique.<br>![Tela de Login e Demonstração](docs/screenshots/03-login-acesso-demo.png) | **4. Visão da Empresa / TI**<br>Fila geral, indicadores de atendimento e código de convite da empresa.<br>![Dashboard da Empresa / TI](docs/screenshots/04-dashboard-empresa-ti.png) |
+| **5. Visão do Colaborador**<br>Histórico estritamente privado dos chamados do funcionário.<br>![Dashboard do Funcionário](docs/screenshots/05-dashboard-funcionario-privado.png) | **6. Abertura de Novo Chamado**<br>Solicitação de suporte com categorização por severidade.<br>![Abertura de Chamado](docs/screenshots/06-abertura-novo-chamado.png) |
 
 ### 7. Triagem Ágil e Acompanhamento de Detalhes
 Painel de triagem completa na página de detalhes, permitindo alterar status, prioridade e atribuir qualquer membro da empresa.
+
 ![Triagem e Detalhes do Chamado](docs/screenshots/07-triagem-e-detalhes-ticket.png)
 
-### 8. Experiência em Tema Claro
-Consistência e legibilidade com contraste balanceado para ambientes claros.
-![Tema Claro e Responsividade](docs/screenshots/08-tema-claro-responsivo.png)
+### 8. Experiência em Tema Escuro
+Design em modo dark nativo com paleta de tons neutros e acentos esmeralda.
 
-### 9. Experiência em Tema Escuro
-Design sofisticado em modo dark nativo com paleta de tons neutros e acentos esmeralda.
-![Tema Escuro e Responsividade](docs/screenshots/09-tema-escuro-responsivo.png)
+![Tema Escuro e Responsividade](docs/screenshots/08-tema-escuro-responsivo.png)
 
 ---
 
@@ -99,21 +79,20 @@ O sistema adota regras rigorosas de autorização no servidor (RBAC + Multi-tena
 | **Visualizar chamado** | Sim | Bloqueado | Sim | Sim (todos da empresa) | Bloqueado |
 | **Comentar no chamado** | Sim | Bloqueado | Sim | Sim | Bloqueado |
 | **Excluir comentário** | Sim (próprio) | Bloqueado | Sim (próprio) | Sim (qualquer da empresa) | Bloqueado |
-| **Editar título/descrição** | Sim | Bloqueado | Sim | Sim | Bloqueado |
+| **Editar título/descrição** | Sim (se Aberto) | Bloqueado | Bloqueado | Sim | Bloqueado |
 | **Alterar status/prioridade** | Bloqueado | Bloqueado | Bloqueado | Sim | Bloqueado |
 | **Atribuir responsável** | Bloqueado | Bloqueado | Bloqueado | Sim | Bloqueado |
-| **Excluir chamado** | Sim | Bloqueado | Bloqueado | Sim | Bloqueado |
+| **Excluir chamado** | Sim (próprio, se Aberto) | Bloqueado | Bloqueado | Sim | Bloqueado |
 
 ---
 
 ## Endpoints da API REST
 
-A API do HelpFlow segue os padrões REST com validação de payload via Zod, rate limiting em memória e verificação estrita de sessão:
+A API do HelpFlow segue os padrões REST com validação de payload via Zod, rate limiting distribuído (Upstash) com fallback em memória e verificação estrita de sessão:
 
 | Método | Rota | Descrição | Acesso |
 |---|---|---|---|
-| `POST` | `/api/register/company` | Cadastro de nova empresa e criação da conta de gestão (AGENT) | Público |
-| `POST` | `/api/register/employee` | Cadastro de colaborador vinculado via código de convite da empresa | Público |
+| `POST` | `/api/register` | Cadastro de Empresa (AGENT) ou Funcionário (CLIENT), via `accountType` e código de convite | Público |
 | `POST` | `/api/auth/[...nextauth]` | Autenticação por credenciais e sessões JWT com NextAuth | Público |
 | `POST` | `/api/auth/forgot-password` | Solicitação de redefinição de senha por e-mail | Público |
 | `POST` | `/api/auth/reset-password` | Validação de token de segurança e definição de nova senha | Público |
@@ -126,6 +105,9 @@ A API do HelpFlow segue os padrões REST com validação de payload via Zod, rat
 | `POST` | `/api/tickets/[id]/comments` | Envio de nova mensagem no chamado com sanitização de texto | Autenticado (RBAC) |
 | `DELETE` | `/api/tickets/[id]/comments/[commentId]` | Remoção de comentário | Autor / AGENT |
 | `GET` | `/api/agents` | Listagem de membros da organização para delegação de atendimento | Empresa / TI (AGENT) |
+| `GET` | `/api/notifications` | Lista as notificações do usuário, com não lidas primeiro | Autenticado |
+| `PATCH` | `/api/notifications` | Marca todas as notificações do usuário como lidas | Autenticado |
+| `PATCH` | `/api/notifications/[id]` | Marca uma notificação específica como lida | Autenticado |
 | `GET` | `/api/health` | Verificação de integridade da API e conectividade com PostgreSQL | Público |
 
 ---
@@ -142,7 +124,7 @@ A API do HelpFlow segue os padrões REST com validação de payload via Zod, rat
 - Cadastro segmentado em abas (Cadastrar Empresa vs Sou Funcionário).
 - Criptografia de senhas com hash `bcryptjs` (salt rounds = 10).
 - Sessões protegidas com NextAuth.js (JWT) propagando `companyId`, `companyName` e `companyCode`.
-- Rate limiting em memória com expiração automática nas rotas de login, cadastro, comentários e tickets.
+- Rate limiting distribuído com Upstash Redis e fallback em memória nas rotas de login, cadastro, comentários e tickets.
 - Validação estrita de schemas com Zod no servidor.
 - Headers de segurança HTTP configurados (`X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`).
 
