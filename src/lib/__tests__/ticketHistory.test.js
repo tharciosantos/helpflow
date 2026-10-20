@@ -61,6 +61,30 @@ describe('buildHistoryEntries', () => {
     expect(buildHistoryEntries({ ticket: baseTicket, data: null, actorId: 'a' })).toEqual([]);
     expect(buildHistoryEntries({ ticket: baseTicket, data: {}, actorId: null })).toEqual([]);
   });
+
+  it('normaliza mudanças de dueAt como ISO (sem depender do fuso do servidor)', () => {
+    const entries = buildHistoryEntries({
+      ticket: { ...baseTicket, dueAt: new Date('2026-10-19T12:00:00.000Z') },
+      data: { dueAt: new Date('2026-10-20T17:30:00.000Z') },
+      actorId: 'agent-1',
+    });
+
+    expect(entries[0]).toMatchObject({
+      field: 'dueAt',
+      from: '2026-10-19T12:00:00.000Z',
+      to: '2026-10-20T17:30:00.000Z',
+    });
+  });
+
+  it('registra remoção de dueAt com to nulo', () => {
+    const entries = buildHistoryEntries({
+      ticket: { ...baseTicket, dueAt: new Date('2026-10-20T17:30:00.000Z') },
+      data: { dueAt: null },
+      actorId: 'agent-1',
+    });
+
+    expect(entries[0]).toMatchObject({ field: 'dueAt', from: '2026-10-20T17:30:00.000Z', to: null });
+  });
 });
 
 describe('canViewHistory', () => {
