@@ -35,3 +35,25 @@ export async function GET() {
     return NextResponse.json({ message: "Erro interno do servidor" }, { status: 500 });
   }
 }
+
+// PATCH /api/notifications - marca TODAS as notificações do usuário como lidas.
+// O GET devolve no máximo 30 itens; o "Ler todas" precisa atingir também as
+// antigas que não estão na lista (por isso o updateMany, não N requests).
+export async function PATCH() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) {
+    return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
+  }
+
+  try {
+    const result = await prisma.notification.updateMany({
+      where: { userId: session.user.id, readAt: null },
+      data: { readAt: new Date() },
+    });
+
+    return NextResponse.json({ updated: result.count }, { status: 200 });
+  } catch (error) {
+    console.error("Erro ao marcar todas as notificações como lidas:", error);
+    return NextResponse.json({ message: "Erro interno do servidor" }, { status: 500 });
+  }
+}

@@ -16,7 +16,7 @@ import {
 } from 'react-icons/lu';
 import { getStatusDisplayNamePT, getStatusBadgeClasses, getPriorityBadge } from '@/lib/ticketUtils';
 import { formatDuration } from '@/lib/metrics';
-import { canEditTicketContent } from '@/lib/ticketAuthorization';
+import { canDeleteTicket, canEditTicketContent } from '@/lib/ticketAuthorization';
 import CommentsSection from '../../../components/CommentsSection';
 import ConfirmDialog from '../../../components/ConfirmDialog';
 import { useTheme } from '../../../components/ThemeProvider';
@@ -233,6 +233,8 @@ export default function TicketDetailsPage() {
     // CLIENT só edita conteúdo enquanto o chamado está OPEN: sem isso o botão
     // levava a um formulário que só recusava no envio.
     const canEditContent = canEditTicketContent(session?.user, ticket);
+    // Mesma regra da API: CLIENT só exclui o próprio chamado enquanto OPEN.
+    const canDeleteContent = canDeleteTicket(session?.user, ticket);
 
     return (
         <div className={`max-w-4xl mx-auto min-w-0 space-y-5 sm:space-y-6 pb-2 ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
@@ -531,21 +533,23 @@ export default function TicketDetailsPage() {
                             )}
                         </div>
 
-                        <button
-                            data-cy="ticket-detail-delete"
-                            onClick={() => setConfirmDeleteTicket(true)}
-                            disabled={isDeleting}
-                            className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-all ${
-                                isDeleting
-                                    ? 'opacity-50 cursor-not-allowed border-slate-300 text-slate-400'
-                                    : theme === 'light'
-                                        ? 'border-red-200 bg-red-50/60 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 shadow-sm'
-                                        : 'border-red-900/60 bg-red-950/40 text-red-400 hover:bg-red-600 hover:text-white hover:border-red-600 shadow-sm'
-                            }`}
-                        >
-                            <LuTrash2 size={16} />
-                            {isDeleting ? 'Deletando...' : 'Deletar Ticket'}
-                        </button>
+                        {canDeleteContent && (
+                            <button
+                                data-cy="ticket-detail-delete"
+                                onClick={() => setConfirmDeleteTicket(true)}
+                                disabled={isDeleting}
+                                className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-all ${
+                                    isDeleting
+                                        ? 'opacity-50 cursor-not-allowed border-slate-300 text-slate-400'
+                                        : theme === 'light'
+                                            ? 'border-red-200 bg-red-50/60 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 shadow-sm'
+                                            : 'border-red-900/60 bg-red-950/40 text-red-400 hover:bg-red-600 hover:text-white hover:border-red-600 shadow-sm'
+                                }`}
+                            >
+                                <LuTrash2 size={16} />
+                                {isDeleting ? 'Deletando...' : 'Deletar Ticket'}
+                            </button>
+                        )}
                     </div>
 
                     {error && <p role="alert" className={`text-sm mt-2 ${theme === 'light' ? 'text-red-600' : 'text-red-500'}`}>{error}</p>}
