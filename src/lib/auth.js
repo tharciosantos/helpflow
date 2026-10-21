@@ -4,6 +4,7 @@ import GitHubProvider from "next-auth/providers/github";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { checkRateLimit } from "@/lib/rateLimiter";
+import { isTokenVersionCurrent } from "@/lib/sessionVersion";
 
 export const authOptions = {
   adapter: PrismaAdapter(prisma),
@@ -67,6 +68,7 @@ export const authOptions = {
           companyId: user.companyId || null,
           companyName: user.company?.name || null,
           companyCode: user.company?.code || null,
+          tokenVersion: user.tokenVersion ?? 0,
         };
       },
     }),
@@ -75,17 +77,57 @@ export const authOptions = {
     strategy: "jwt",
   },
   callbacks: {
-    async jwt({ token, user, account }) {
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
         token.role = user.role;
         token.companyId = user.companyId || null;
         token.companyName = user.companyName || null;
         token.companyCode = user.companyCode || null;
+        token.tokenVersion = user.tokenVersion ?? 0;
+        token.revoked = false;
       }
+
+      // Tokens emitidos antes da existência do tokenVersion são inválidos.
+      if (!token.id || token.tokenVersion === undefined || token.tokenVersion === null) {
+        token.revoked = true;
+        return token;
+      }
+
+      try {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id },
+          select: {
+            tokenVersion: true,
+            role: true,
+            companyId: true,
+            company: { select: { name: true, code: true } },
+          },
+        });
+
+        if (!dbUser || !isTokenVersionCurrent(token.tokenVersion, dbUser.tokenVersion)) {
+          token.revoked = true;
+          return token;
+        }
+
+        // Mantém role/empresa atualizados sem exigir novo login.
+        token.revoked = false;
+        token.role = dbUser.role;
+        token.companyId = dbUser.companyId || null;
+        token.companyName = dbUser.company?.name || null;
+        token.companyCode = dbUser.company?.code || null;
+      } catch (error) {
+        // Falha fechada: se não for possível validar a versão, invalida a sessão.
+        console.error('[auth] Falha ao validar tokenVersion:', error?.message);
+        token.revoked = true;
+      }
+
       return token;
     },
     async session({ session, token }) {
+      // Sessão nula derruba getServerSession/useSession e força novo login.
+      if (!token || token.revoked) return null;
+
       if (session.user) {
         session.user.id = token.id;
         session.user.role = token.role;

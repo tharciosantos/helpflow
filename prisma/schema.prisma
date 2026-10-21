@@ -30,6 +30,9 @@ model User {
   image         String?
   role          Role      @default(CLIENT)
   auth_provider String    @default("credentials")
+  // Incrementado em eventos que devem invalidar todas as sessões JWT
+  // (ex.: redefinição de senha). Tokens antigos deixam de valer.
+  tokenVersion  Int       @default(0)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
