@@ -44,7 +44,10 @@ describe('consumo do token de redefinição de senha', () => {
     });
     expect(transaction.user.update).toHaveBeenCalledWith({
       where: { id: 'user-1' },
-      data: { password_hash: 'hash-seguro' },
+      data: {
+        password_hash: 'hash-seguro',
+        tokenVersion: { increment: 1 },
+      },
     });
   });
 

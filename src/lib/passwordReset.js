@@ -22,7 +22,11 @@ export async function updatePasswordWithResetToken({
 
     await transaction.user.update({
       where: { id: passwordReset.userId },
-      data: { password_hash: hashedPassword },
+      data: {
+        password_hash: hashedPassword,
+        // Invalida todos os JWTs emitidos antes da troca de senha.
+        tokenVersion: { increment: 1 },
+      },
     });
   });
 }
