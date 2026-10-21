@@ -109,6 +109,7 @@ A API do HelpFlow segue os padrões REST com validação de payload via Zod, rat
 | `PATCH` | `/api/notifications` | Marca todas as notificações do usuário como lidas | Autenticado |
 | `PATCH` | `/api/notifications/[id]` | Marca uma notificação específica como lida | Autenticado |
 | `GET` | `/api/health` | Verificação de integridade da API e conectividade com PostgreSQL | Público |
+| `GET` | `/api/cron/keep-alive` | Keep-alive do banco usado pelo Cron da Vercel | `CRON_SECRET` |
 
 ---
 
@@ -124,6 +125,7 @@ A API do HelpFlow segue os padrões REST com validação de payload via Zod, rat
 - Cadastro segmentado em abas (Cadastrar Empresa vs Sou Funcionário).
 - Criptografia de senhas com hash `bcryptjs` (salt rounds = 10).
 - Sessões protegidas com NextAuth.js (JWT) propagando `companyId`, `companyName` e `companyCode`.
+- Revogação de sessões via `tokenVersion`: redefinir a senha invalida todos os JWTs anteriores.
 - Rate limiting distribuído com Upstash Redis e fallback em memória nas rotas de login, cadastro, comentários e tickets.
 - Validação estrita de schemas com Zod no servidor.
 - Headers de segurança HTTP configurados (`X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`).
@@ -133,14 +135,29 @@ A API do HelpFlow segue os padrões REST com validação de payload via Zod, rat
 - Estados de chamado: Aberto (`OPEN`), Em Progresso (`IN_PROGRESS`) e Fechado (`CLOSED`).
 - Níveis de prioridade: Baixa (`LOW`), Média (`MEDIUM`), Alta (`HIGH`) e Urgente (`URGENT`).
 - **Sistema de Mensagens e Comentários Internos:** Linha do tempo de interações entre solicitante e suporte diretamente na página de detalhes com identificação visual de papel (`TI / Suporte` vs `Funcionário`).
+- **Auditoria de chamados:** `TicketHistory` registra quem alterou status, prioridade, responsável, título, descrição ou prazo.
 - Painel de triagem ágil na página de detalhes e no dashboard (alteração rápida de status, prioridade e responsável).
 - Atribuição flexível de responsáveis entre todos os membros e técnicos da empresa.
 - Indicadores numéricos (KPIs) calculados dinamicamente com base no escopo visível ao usuário.
+
+### SLA, Prazos e Métricas
+- Prazo (`dueAt`) derivado da prioridade na abertura: Urgente 4h, Alta 24h, Média 72h e Baixa 7 dias.
+- Prazo editável pelo AGENT, com recálculo opcional ao trocar a prioridade.
+- Badges e contadores de chamados atrasados calculados on-read.
+- `resolvedAt` e `firstResponseAt` para medir tempo de resolução e primeira ação do agente.
+- Card de métricas com tempo médio de resolução e tempo até a primeira resposta.
+
+### Notificações In-App
+- Sino com contador de não lidas e polling de 30 segundos.
+- Notificações para atribuição, comentário público e mudança de status.
+- Marcação individual ou em massa (“Ler todas”) via `PATCH /api/notifications`.
+- Painel responsivo: bottom-sheet no mobile e flyout no desktop.
 
 ### Recuperação de Senhas
 - Solicitação de redefinição por e-mail com token seguro de alta entropia (expiração em 15 minutos).
 - Envio de e-mail formatado via Nodemailer.
 - Validação e invalidação atômica de tokens no banco de dados.
+- A redefinição incrementa `tokenVersion` e encerra todas as sessões JWT anteriores do usuário.
 
 ### Interface e Experiência do Usuário (UI/UX)
 - Tema claro e escuro persistido via cookie `helpflow-theme` e `localStorage`.
@@ -167,15 +184,23 @@ model Company {
 }
 
 model User {
-  id            String    @id @default(uuid())
-  name          String?
-  email         String    @unique
-  role          Role      @default(CLIENT)
-  companyId     String?
-  company       Company?  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  id             String    @id @default(uuid())
+  name           String?
+  email          String    @unique
+  password_hash  String?
+  image          String?
+  role           Role      @default(CLIENT)
+  auth_provider  String    @default("credentials")
+  tokenVersion   Int       @default(0) // invalida JWTs no reset de senha
+  companyId      String?
+  company        Company?  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
   createdTickets  Ticket[] @relation("TicketAuthor")
   assignedTickets Ticket[] @relation("TicketAgent")
   comments        TicketComment[]
+  ticketHistories TicketHistory[]
+  notifications   Notification[]
+  passwordResets  PasswordReset[]
 }
 
 model Ticket {
@@ -184,24 +209,69 @@ model Ticket {
   description String
   status      Status   @default(OPEN)
   priority    Priority @default(MEDIUM)
+
   companyId   String?
-  company       Company?  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  company     Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
   authorId    String
   author      User     @relation("TicketAuthor", fields: [authorId], references: [id])
   agentId     String?
   agent       User?    @relation("TicketAgent", fields: [agentId], references: [id])
-  comments    TicketComment[]
+
+  dueAt           DateTime? // SLA derivado da prioridade ou ajustado pelo AGENT
+  resolvedAt      DateTime? // gravado ao fechar, limpo ao reabrir
+  firstResponseAt DateTime? // primeira ação de AGENT no chamado
+
+  comments      TicketComment[]
+  histories     TicketHistory[]
+  notifications Notification[]
 }
 
 model TicketComment {
+  id         String            @id @default(cuid())
+  content    String            @db.Text
+  visibility CommentVisibility @default(PUBLIC)
+  ticketId   String
+  ticket     Ticket            @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorId   String
+  author     User              @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model TicketHistory {
   id        String   @id @default(cuid())
-  content   String   @db.Text
   ticketId  String
   ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  authorId  String
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  actorId   String
+  actor     User     @relation(fields: [actorId], references: [id], onDelete: Cascade)
+  field     String   // status | priority | agentId | title | description | dueAt
+  from      String?
+  to        String?
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ticketId  String?
+  ticket    Ticket?   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  type      String    // ASSIGNED | COMMENT | STATUS
+  message   String
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model PasswordReset {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
 }
 ```
+
+> Os modelos `Account` e `Session` do NextAuth também fazem parte do schema completo.
 
 ---
 
@@ -225,8 +295,8 @@ model TicketComment {
 - **ORM:** Prisma ORM 6
 
 ### Qualidade & Testes
-- **Testes Unitários:** Vitest (82 testes cobrindo schemas, autorização RBAC, utilitários e rate limiter)
-- **Testes E2E:** Cypress 15 (fluxos de login, permissões e tickets)
+- **Testes Unitários:** Vitest — 169 testes em 14 arquivos, cobrindo schemas, RBAC/multiempresa, SLA, métricas, notificações, histórico, sessões e rate limiter.
+- **Testes E2E:** Cypress 15 — autenticação, permissões, tickets e comentários.
 - **Linter:** ESLint 9
 
 ---
@@ -241,14 +311,19 @@ src/
 │   ├── api/                 # Endpoints REST (auth, register, tickets, agents, health, cron)
 │   └── components/          # Componentes de interface (TicketList, EditTicketForm, ThemeToggle, etc.)
 ├── lib/
-│   ├── __tests__/           # Suíte de 82 testes unitários do Vitest
-│   ├── auth.js              # Configuração do NextAuth e callbacks de sessão
+│   ├── __tests__/           # Suíte de 169 testes unitários do Vitest
+│   ├── auth.js              # NextAuth, callbacks de sessão e tokenVersion
 │   ├── prisma.js            # Instância singleton do PrismaClient
-│   ├── rateLimiter.js       # Middleware de taxa limite
-│   ├── schemas.js           # Schemas Zod de validação (auth, empresa, funcionário, tickets, comentários)
-│   └── ticketAuthorization.js # Regras de autorização e isolamento multi-empresa
+│   ├── rateLimiter.js       # Rate limit Upstash + fallback em memória
+│   ├── schemas.js           # Schemas Zod (auth, empresa, funcionário, tickets, comentários)
+│   ├── sla.js               # SLA, dueAt, parse de prazo e dias de calendário
+│   ├── metrics.js           # Médias de resolução/primeira resposta
+│   ├── notifications.js     # Regras de destinatários e mensagens do sino
+│   ├── ticketAuthorization.js # RBAC e isolamento multiempresa
+│   ├── ticketHistory.js     # Auditoria de mudanças do chamado
+│   └── ticketHistoryFormat.js # Formatação da timeline
 prisma/
-├── schema.prisma            # Modelos relacionais (Company, User, Ticket, Account, TicketComment, etc.)
+├── schema.prisma            # Modelos relacionais (Company, User, Ticket, TicketHistory, Notification, etc.)
 └── migrations/              # Histórico de migrações PostgreSQL
 ```
 
@@ -263,6 +338,8 @@ cd helpflow
 ```
 
 ### 2. Instalar dependências
+Requisito: **Node.js 20+**.
+
 ```bash
 npm install
 ```
@@ -273,19 +350,35 @@ Crie um arquivo `.env` a partir do modelo `.env.example`:
 cp .env.example .env
 ```
 
-Preencha as variáveis de banco de dados e autenticação:
+Preencha as variáveis de banco, autenticação, Redis e e-mail:
 ```env
 DATABASE_URL="postgresql://user:password@host:5432/helpflow?schema=public"
 DIRECT_URL="postgresql://user:password@host:5432/helpflow?schema=public"
+
 NEXTAUTH_URL="http://localhost:3000"
 NEXTAUTH_SECRET="sua-chave-secreta-de-desenvolvimento"
+
+UPSTASH_REDIS_REST_URL="https://seu-redis.upstash.io"
+UPSTASH_REDIS_REST_TOKEN="seu-token"
+
+SMTP_HOST="smtp.gmail.com"
+SMTP_PORT=587
+SMTP_USER="seu-email@gmail.com"
+SMTP_PASS="sua-app-password"
+EMAIL_FROM="HelpFlow <suporte@helpflow.com>"
+
+# Opcional (login social)
+AUTH_GITHUB_ID=""
+AUTH_GITHUB_SECRET=""
 ```
 
-### 4. Sincronizar o banco de dados
+### 4. Aplicar migrations e gerar o Prisma Client
 ```bash
-npx prisma db push
+npx prisma migrate dev
 npx prisma generate
 ```
+
+> O `npm run build` executa `prisma migrate deploy` antes do `next build`.
 
 ### 5. Iniciar o servidor local
 ```bash
@@ -298,14 +391,20 @@ Acesse [http://localhost:3000](http://localhost:3000) no seu navegador.
 ## Testes e Validação
 
 ```bash
-# Executar 82 testes unitários com Vitest
+# Executar os 169 testes unitários com Vitest
 npm test
 
 # Executar testes em modo watch
 npm run test:watch
 
+# Cobertura de testes
+npm run test:coverage
+
 # Executar linter ESLint
 npm run lint
+
+# Build de produção (aplica migrations pendentes)
+npm run build
 
 # Executar testes E2E com Cypress
 npm run cypress:run
