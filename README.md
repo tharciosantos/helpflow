@@ -295,8 +295,8 @@ model PasswordReset {
 - **ORM:** Prisma ORM 6
 
 ### Qualidade & Testes
-- **Testes Unitários:** Vitest — 169 testes em 14 arquivos, cobrindo schemas, RBAC/multiempresa, SLA, métricas, notificações, histórico, sessões e rate limiter.
-- **Testes E2E:** Cypress 15 — autenticação, permissões, tickets e comentários.
+- **Testes Unitários:** Vitest — 169 testes unitários (14 suítes), cobrindo schemas, RBAC/multiempresa, SLA, métricas, notificações, histórico, sessões e rate limiter.
+- **Testes E2E:** Cypress 15 — 15 fluxos E2E cobrindo autenticação, permissões, tickets e comentários.
 - **Linter:** ESLint 9
 
 ---
@@ -350,7 +350,7 @@ Crie um arquivo `.env` a partir do modelo `.env.example`:
 cp .env.example .env
 ```
 
-Preencha as variáveis de banco, autenticação, Redis e e-mail:
+Preencha as variáveis de banco, autenticação, Redis, e-mail, cron e testes:
 ```env
 DATABASE_URL="postgresql://user:password@host:5432/helpflow?schema=public"
 DIRECT_URL="postgresql://user:password@host:5432/helpflow?schema=public"
@@ -361,11 +361,11 @@ NEXTAUTH_SECRET="sua-chave-secreta-de-desenvolvimento"
 UPSTASH_REDIS_REST_URL="https://seu-redis.upstash.io"
 UPSTASH_REDIS_REST_TOKEN="seu-token"
 
-SMTP_HOST="smtp.gmail.com"
-SMTP_PORT=587
-SMTP_USER="seu-email@gmail.com"
-SMTP_PASS="sua-app-password"
-EMAIL_FROM="HelpFlow <suporte@helpflow.com>"
+EMAIL_USER="seu-email@gmail.com"
+EMAIL_PASS="sua-app-password"
+
+CRON_SECRET="seu-segredo-cron"
+CYPRESS_TEST_SECRET="seu-segredo-cypress"
 
 # Opcional (login social)
 AUTH_GITHUB_ID=""
@@ -391,8 +391,8 @@ Acesse [http://localhost:3000](http://localhost:3000) no seu navegador.
 ## Testes e Validação
 
 ```bash
-# Executar os 169 testes unitários com Vitest
-npm test
+# Executar os 169 testes unitários (14 suítes) com Vitest
+npm run test:run
 
 # Executar testes em modo watch
 npm run test:watch
@@ -406,7 +406,7 @@ npm run lint
 # Build de produção (aplica migrations pendentes)
 npm run build
 
-# Executar testes E2E com Cypress
+# Executar os 15 fluxos E2E com Cypress
 npm run cypress:run
 ```
 

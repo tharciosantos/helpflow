@@ -12,6 +12,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
+    "test:run": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "cypress:open": "cypress open",
