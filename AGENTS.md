@@ -1,6 +1,6 @@
 # AGENTS.md — HelpFlow
 
-> Manual Operacional para Agentes de IA · v2.0
+> Manual Operacional para Agentes de IA · v2.1
 
 Este documento é a **fonte única de verdade** para agentes que trabalham no repositório **HelpFlow**.
 
@@ -12,7 +12,7 @@ Este documento é a **fonte única de verdade** para agentes que trabalham no re
 2. [Stack Tecnológica](#2-stack-tecnológica)
 3. [Estrutura do Projeto](#3-estrutura-do-projeto)
 4. [Comandos e Scripts](#4-comandos-e-scripts)
-5. [Variáveis de Ambiente](#5-variáveis-de-ambiente)
+5. [Variáveis de Ambiente](#5-variáveis-de-ambiente-env)
 6. [Autenticação e Sessão](#6-autenticação-e-sessão)
 7. [Banco de Dados e Prisma](#7-banco-de-dados-e-prisma)
 8. [Regras de Negócio e Domínio](#8-regras-de-negócio-e-domínio)
@@ -20,6 +20,9 @@ Este documento é a **fonte única de verdade** para agentes que trabalham no re
 10. [Testes e Validação](#10-testes-e-validação)
 11. [Padrões de Código e UI](#11-padrões-de-código-e-ui)
 12. [Git Flow e Conventional Commits](#12-git-flow-e-conventional-commits)
+13. [Pull Request](#13-pull-request)
+14. [Checklists](#14-checklists)
+15. [Exemplos Completos](#15-exemplos-completos)
 
 ---
 
@@ -108,13 +111,14 @@ npm run dev              # Inicia servidor Next.js em http://localhost:3000
 
 # Validação e Build
 npm run lint             # Executa ESLint em flat config (zero erros)
-npm run test             # Executa a suíte de testes com Vitest
+npm run test:run         # Executa a suíte de testes com Vitest (single run)
+npm run test             # Alias para vitest run
 npm run test:watch       # Modo watch interativo de testes
 npm run test:coverage    # Relatório de cobertura de testes (threshold)
-npm run build            # Gera build de produção otimizado
+npm run build            # prisma migrate deploy && next build
 
 # Banco de Dados (Prisma)
-npx prisma generate      # Gera o client do Prisma tipado
+npx prisma generate      # Gera o client do Prisma
 npx prisma migrate dev   # Aplica migrations em ambiente local
 npx prisma db push       # Sincroniza schema sem criar migration
 
@@ -211,7 +215,16 @@ EMAIL_FROM="HelpFlow <suporte@helpflow.com>"
   - Rate Limiting e Fallback em Memória (`rateLimiter.test.js`)
   - Fluxo do Simulador Interativo (`demoTicketFlow.test.js`)
 
-Execute sempre `npm run test` e `npm run lint` antes de submeter código.
+### 10.1 Validação Obrigatória (Antes do Commit / Push / PR)
+
+Execute e confirme saída limpa (exit code 0) em todos os comandos do projeto:
+
+```bash
+npx prisma generate   # 1° — valida schema e gera Prisma Client
+npm run lint          # 2° — qualidade de código (ESLint)
+npm run test:run      # 3° — suíte unitária (Vitest)
+npm run build         # 4° — build de produção Next.js
+```
 
 ---
 
@@ -225,7 +238,218 @@ Execute sempre `npm run test` e `npm run lint` antes de submeter código.
 
 ## 12. Git Flow e Conventional Commits
 
-- Trabalhe sempre em branches nomeadas como `feat/`, `fix/`, `refactor/`, `docs/`, `chore/`.
+- Trabalhe sempre em branches nomeadas como `feat/`, `fix/`, `refactor/`, `docs/`, `chore/`, `test/`.
 - **Regra Obrigatória:** Sempre apresente as alterações e aguarde a avaliação/validação do usuário antes de executar o commit ou push.
 - Commits no formato Conventional Commits: `tipo(escopo): descrição concisa`.
-- PR com checklist e validação verde em `test`, `lint` e `build`.
+- PR com checklist e validação verde em `npx prisma generate`, `npm run lint`, `npm run test:run` e `npm run build`.
+
+---
+
+## 13. Pull Request
+
+### 13.1 Título
+
+```
+tipo(escopo): descrição concisa no presente do indicativo (≤ 72 caracteres)
+```
+
+Exemplo: `fix(auth): revoga sessoes JWT no reset de senha`
+
+### 13.2 Regras de Redação e Densidade Técnica (Gold Standard)
+
+Para garantir máxima clareza para revisores humanos e indexadores de código:
+- **Sem emojis nos cabeçalhos ou listas:** Use Markdown puro (`### Features`, `### Fixes`, `### Docs`, `- [x] Feature`). É proibido usar emojis como `✨`, `🐛`, `📝` no corpo ou título do PR.
+- **Resumo de alta densidade (1 a 3 frases):** Descreva o que foi entregue citando nominalmente os módulos, componentes, páginas, rotas ou métricas impactadas (ex: `/dashboard`, `/ticket/[id]`, `/reset-password`, `TicketList`, `src/lib/auth.js`). Evite frases genéricas.
+- **Verbos de ação na 3ª pessoa do singular:** Inicie os itens do Changelog com verbos no presente do indicativo: *Adiciona*, *Atualiza*, *Corrige*, *Remove*, *Sincroniza*, *Concentra*, *Extrai*, *Revoga*, *Formata*.
+- **Como Testar reprodutível:** Comece sempre com o comando de execução (`1. Rode npm run dev.`) e indique as rotas exatas (ex: `/dashboard`, `/ticket`, `/login`, `/forgot-password`) ou interações exatas para validar a entrega.
+- **Tipo de Mudança vertical e limpo:** Liste uma opção por linha, sem emojis, marcando com `[x]` apenas os tipos aplicáveis ao PR.
+- **Validação real antes de marcar o Checklist:** O agente DEVE executar cada comando do checklist no terminal e confirmar saída limpa (exit code 0) antes de marcar `[x]`.
+
+### 13.3 Changelog
+
+Agrupe apenas pelas categorias presentes no PR, em texto limpo:
+
+```markdown
+### Fixes
+
+- Revoga sessões JWT anteriores após redefinição de senha
+- Atualiza validação de sessão em src/lib/auth.js
+
+### Tests
+
+- Adiciona cobertura para invalidação de token em passwordReset.test.js
+```
+
+### 13.4 Template Oficial
+
+```markdown
+## Resumo
+
+<!-- 1 a 3 frases diretas explicando o que mudou, quais componentes/rotas foram afetados e o impacto. -->
+
+## Tipo de Mudança
+
+- [ ] Feature
+- [ ] Fix
+- [ ] Refactor
+- [ ] Docs
+- [ ] Test
+- [ ] Chore
+
+## Changelog
+
+### Features
+
+- <!-- Verbo no presente + entrega objetiva -->
+
+## Como Testar
+
+1. Rode `npm run dev`.
+2. Abra `<!-- rota ou página (ex: /dashboard ou /ticket) -->` e confira `<!-- comportamento esperado -->`.
+
+## Checklist
+
+- [ ] Build passa (`npm run build`)
+- [ ] Lint passa (`npm run lint`)
+- [ ] Testes passam (`npm run test:run`)
+- [ ] Prisma Client gerado sem erros (`npx prisma generate`)
+- [ ] Apenas arquivos do escopo alterados
+```
+
+### 13.5 Exemplo Real de Referência (Gold Standard)
+
+Título: `fix(auth): revoga sessoes JWT no reset de senha`
+
+```markdown
+## Resumo
+
+Invalida sessões JWT emitidas antes da redefinição de senha ao sincronizar o timestamp de alteração da credencial no callback `jwt` de `src/lib/auth.js` e no fluxo de `/reset-password`. Inclui cobertura unitária em `src/lib/__tests__/passwordReset.test.js`.
+
+## Tipo de Mudança
+
+- [x] Fix
+- [x] Test
+
+## Changelog
+
+### Fixes
+
+- Revoga tokens JWT emitidos antes da última troca de senha do usuário
+- Atualiza o fluxo de redefinição em `/reset-password` para registrar invalidação de sessão
+
+### Tests
+
+- Adiciona testes de revogação de sessão em `passwordReset.test.js`
+
+## Como Testar
+
+1. Rode `npm run dev`.
+2. Faça login em `/login` e mantenha a sessão ativa.
+3. Solicite a redefinição em `/forgot-password` e conclua a troca em `/reset-password`.
+4. Acesse `/dashboard` com a sessão anterior e confirme o redirecionamento para `/login`.
+
+## Checklist
+
+- [x] Build passa (`npm run build`)
+- [x] Lint passa (`npm run lint`)
+- [x] Testes passam (`npm run test:run`)
+- [x] Prisma Client gerado sem erros (`npx prisma generate`)
+- [x] Apenas arquivos do escopo alterados
+```
+
+---
+
+## 14. Checklists
+
+### 14.1 Antes do Commit
+
+- [ ] Alterações apresentadas e aprovadas pelo usuário?
+- [ ] Mudança atômica (uma única responsabilidade)?
+- [ ] Entradas de API validadas com schemas Zod (`src/lib/schemas.js`)?
+- [ ] Controle de autorização (`CLIENT` vs `AGENT`) preservado?
+- [ ] Sem `console.log`, `debugger` ou credenciais hardcoded?
+- [ ] Mensagem de commit segue Conventional Commits?
+
+### 14.2 Antes do Push
+
+- [ ] `npm run build` passou?
+- [ ] `npm run lint` passou?
+- [ ] `npm run test:run` passou?
+- [ ] `npx prisma generate` passou?
+- [ ] `git diff` contém apenas os arquivos esperados?
+
+### 14.3 Antes do PR
+
+- [ ] Checklist 14.2 completo (todos os comandos executados no terminal com exit code 0)
+- [ ] Título no formato `tipo(escopo): descrição` (sem emojis)?
+- [ ] Resumo de alta densidade (1 a 3 frases) citando módulos/rotas afetados?
+- [ ] Tipo de Mudança listado verticalmente sem emojis?
+- [ ] Changelog preenchido sem emojis e com verbos na 3ª pessoa do presente?
+- [ ] Passos para teste claros e reprodutíveis (iniciando com `1. Rode npm run dev.`)?
+
+---
+
+## 15. Exemplos Completos
+
+### 15.1 Formatar Histórico de Prazo do Chamado
+
+**Tarefa:** Formatar datas no histórico de alterações de prazo na página de detalhes do ticket
+
+**Branch:** `fix/formata-historico-prazo-chamado`
+
+**Commits:**
+
+```
+fix(timeline): formata historico de prazo do chamado
+test(ticketUtils): adiciona testes de formatacao de prazo na timeline
+```
+
+**Arquivos:** `src/lib/ticketUtils.js` + `src/app/(dashboard)/ticket/[id]/page.js` + `src/lib/__tests__/ticketUtils.test.js`
+
+**PR:**
+
+```markdown
+## Resumo
+
+Corrige a formatação de datas no histórico de alterações de prazo exibido na timeline do chamado em `/ticket/[id]`, utilizando `ticketUtils.js` para padronizar datas no formato `dd/MM/yyyy` sem deslocamento de fuso horário.
+
+## Tipo de Mudança
+
+- [x] Fix
+- [x] Test
+
+## Changelog
+
+### Fixes
+
+- Formata datas de prazo na timeline de `/ticket/[id]` no padrão brasileiro
+- Corrige parsing de strings ISO em `src/lib/ticketUtils.js`
+
+### Tests
+
+- Adiciona testes unitários para formatação de histórico de prazo em `ticketUtils.test.js`
+
+## Como Testar
+
+1. Rode `npm run dev`.
+2. Acesse `/login` com a conta Agente Demo (`agente@helpflow.com`) e abra `/dashboard`.
+3. Abra os detalhes de um chamado em `/ticket/[id]`, altere o prazo e confira o evento na timeline.
+
+## Checklist
+
+- [x] Build passa (`npm run build`)
+- [x] Lint passa (`npm run lint`)
+- [x] Testes passam (`npm run test:run`)
+- [x] Prisma Client gerado sem erros (`npx prisma generate`)
+- [x] Apenas arquivos do escopo alterados
+```
+
+---
+
+> **Versão 2.1** · Fonte única de verdade para agentes de IA · Mantido por Tharcio Santos
+>
+> | Versão | Data     | Mudanças                                                                                                                                             |
+> | ------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | 1.0    | —        | Documentação inicial do projeto                                                                                                                      |
+> | 2.0    | Out/2026 | Manual operacional completo para agentes de IA                                                                                                       |
+> | 2.1    | Out/2026 | Refina padrão de Pull Request com template limpo sem emojis, inclusão de verificação de formatação/tipos no checklist e exemplo Gold Standard        |
