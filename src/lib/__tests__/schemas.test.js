@@ -8,6 +8,7 @@ import {
     registerEmployeeSchema,
     generateCompanyCode,
     createCommentSchema,
+    forgotPasswordSchema,
 } from '../schemas.js';
 
 // ─────────────────────────────────────────────
@@ -310,6 +311,36 @@ describe('createCommentSchema', () => {
         });
         expect(result.success).toBe(false);
         expect(result.error.flatten().fieldErrors.content).toBeDefined();
+    });
+});
+
+// ─────────────────────────────────────────────
+// Normalização de e-mail (login e recuperação)
+// ─────────────────────────────────────────────
+describe('normalização de e-mail', () => {
+    it('registerSchema normaliza e-mail com espaços e maiúsculas', () => {
+        const result = registerSchema.safeParse({
+            name: 'João Silva',
+            email: '  Joao@Exemplo.COM ',
+            password: 'senha1234',
+            confirmPassword: 'senha1234',
+        });
+        expect(result.success).toBe(true);
+        expect(result.data.email).toBe('joao@exemplo.com');
+    });
+
+    it('forgotPasswordSchema normaliza e-mail com espaços e maiúsculas', () => {
+        const result = forgotPasswordSchema.safeParse({
+            email: '  Joao@Exemplo.COM ',
+        });
+        expect(result.success).toBe(true);
+        expect(result.data.email).toBe('joao@exemplo.com');
+    });
+
+    it('forgotPasswordSchema rejeita e-mail inválido', () => {
+        const result = forgotPasswordSchema.safeParse({ email: 'nao-e-um-email' });
+        expect(result.success).toBe(false);
+        expect(result.error.flatten().fieldErrors.email).toBeDefined();
     });
 });
 
