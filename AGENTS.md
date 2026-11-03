@@ -1,6 +1,6 @@
 # AGENTS.md — HelpFlow
 
-> Manual Operacional para Agentes de IA · v2.2
+> Manual Operacional para Agentes de IA · v2.3
 
 Este documento é a **fonte única de verdade** para agentes que trabalham no repositório **HelpFlow**.
 
@@ -30,6 +30,18 @@ Este documento é a **fonte única de verdade** para agentes que trabalham no re
 
 O **HelpFlow** é um sistema de help desk e gestão de chamados (tickets) com suporte a múltiplos papéis de usuário (`CLIENT` e `AGENT`), controle de ciclo de vida de tickets, atribuição para agentes, simulação interativa na landing page institucional, recuperação de senhas por e-mail e rate limiting distribuído.
 
+### 1.1 Documentos vivos
+
+| Arquivo | Papel |
+|---|---|
+| `AGENTS.md` | Fonte única de verdade para agentes de IA |
+| `README.md` | Apresentação pública, demonstração e stack |
+| `DEVELOPMENT.md` | Setup local e troubleshooting |
+| `ESTADO_ATUAL.md` | Estado da `main` ao fim de cada fase |
+| `docs/AUDITORIA.md` | Backlog local de correções com IDs estáveis (não versionado) |
+
+Regra: toda correção de um item `AUD-xx` deve atualizar o status, o commit e a validação no backlog local (`docs/AUDITORIA.md`, fora do versionamento).
+
 ---
 
 ## 2. Stack Tecnológica
@@ -37,6 +49,7 @@ O **HelpFlow** é um sistema de help desk e gestão de chamados (tickets) com su
 | Camada | Tecnologia | Versão / Detalhes |
 |--------|-----------|-------------------|
 | **Framework** | Next.js (App Router) | 15.5.x |
+| **Runtime** | Node.js | `>=22.23.4` (`package.json` / CI) |
 | **Linguagem / UI** | JavaScript (ES2022) / React | 19.1.x |
 | **Estilização** | Tailwind CSS v4 (@tailwindcss/postcss) | 4.1.x |
 | **ORM / Banco** | Prisma ORM + PostgreSQL | Prisma 6.x |
@@ -58,9 +71,9 @@ helpflow/
 ├── prisma/
 │   ├── schema.prisma          # Modelos: Company, User, Ticket, TicketComment, TicketHistory,
 │   │                          #   Notification, Account, Session, PasswordReset
-│   └── migrations/            # Histórico de migrations PostgreSQL (10 migrations)
+│   └── migrations/            # Histórico de migrations PostgreSQL (11 migrations)
 ├── src/
-│   ├── middleware.js          # withAuth — protege /dashboard/:path* no servidor
+│   ├── middleware.js          # withAuth — protege /dashboard/:path*; /ticket/[id] via layout
 │   ├── app/
 │   │   ├── (auth)/            # Rotas de autenticação
 │   │   │   ├── login/         # Página de login com credenciais de demonstração
@@ -70,7 +83,8 @@ helpflow/
 │   │   ├── (dashboard)/       # Área autenticada protegida
 │   │   │   ├── dashboard/     # Painel operacional (KPIs, lista de tickets e filtros)
 │   │   │   │   ├── tickets/new/          # Nova chamada
-│   │   │   │   └── ticket/[id]/          # Detalhe e edição do chamado
+│   │   │   │   └── ticket/[id]/edit/     # Edição do chamado
+│   │   │   ├── ticket/[id]/   # Detalhe do chamado (URL /ticket/[id])
 │   │   │   └── layout.js      # Server Component: getServerSession + redirect('/')
 │   │   ├── api/               # API Routes (Next.js App Router)
 │   │   │   ├── auth/          # [...nextauth], forgot-password, reset-password
@@ -95,7 +109,7 @@ helpflow/
 │   │   │   ├── ThemeProvider.jsx   # Gestão de tema claro/escuro
 │   │   │   └── ThemeToggle.jsx     # Botão seletor de tema
 │   │   ├── hooks/
-│   │   │   └── useScrollReveal.js  # Intersection Observer para animar a landing
+│   │   │   └── useScrollReveal.js  # Intersection Observer (sem uso atual — AUD-14)
 │   │   ├── page.js            # Landing Page institucional com simulador
 │   │   ├── layout.js          # RootLayout com ThemeProvider e AuthProvider
 │   │   └── globals.css        # Tailwind v4 directives e estilos base
@@ -121,7 +135,8 @@ helpflow/
 ├── cypress/
 │   ├── e2e/                   # auth · tickets · permissions · comments (4 specs)
 │   └── support/               # commands.js (createTestUser, login)
-└── docs/                      # Screenshots e notas de incidentes
+└── docs/                      # Screenshots, notas de incidentes, plano de rate limit
+                               #   e AUDITORIA.md (backlog de correções)
 ```
 
 ---
@@ -208,6 +223,7 @@ CYPRESS_TEST_SECRET="seu-segredo-cypress"
 - Contas de demonstração (definidas em `src/app/(auth)/login/page.jsx`):
   - **Agente Demo**: `agent.demo@helpflow.com` / `Demo@123456`
   - **Cliente Demo**: `client.demo@helpflow.com` / `Demo@123456`
+  - **Atenção:** não existe `prisma/seed.js` no repositório; essas contas precisam existir no banco (ver `AUD-07` em `docs/AUDITORIA.md`).
 
 ---
 
@@ -252,6 +268,7 @@ CYPRESS_TEST_SECRET="seu-segredo-cypress"
 - `POST /api/auth/forgot-password` — Gera token (256 bits, 15 min) e envia e-mail. Resposta genérica anti-enumeração.
 - `POST /api/auth/reset-password` — Consome o token atomicamente e redefine a senha, incrementando `tokenVersion`.
 - `GET /api/tickets` — Lista tickets com busca (`search`), filtros `status`, `priority`, `overdue`, `mine`, ordenação `sort=dueDate|recent` e paginação (`page`, `limit`). Retorna também `summary` com KPIs e médias.
+  - **Nota:** os KPIs de `summary` usam a visibilidade base (empresa/escopo pessoal) e **ignoram** `status`, `priority`, `search` e `overdue` da lista. Ver `AUD-04` em `docs/AUDITORIA.md`.
 - `POST /api/tickets` — Cria ticket associado ao usuário autenticado e à sua empresa, derivando o `dueAt` do SLA.
 - `GET /api/tickets/[id]` — Retorna detalhes do ticket com autor, responsável, comentários (filtrados por `visibility`) e histórico.
 - `PATCH /api/tickets/[id]` — Atualiza status, prioridade, responsável, prazo ou conteúdo, com verificação de permissões, auditoria e notificações em transação.
@@ -297,6 +314,8 @@ npm run build         # 4° — build de produção Next.js (roda prisma migrate
 ```
 
 > `npm run build` executa `prisma migrate deploy`: ele aplica migrations pendentes no banco apontado por `DATABASE_URL`. O CI (`.github/workflows/ci.yml`) roda apenas `prisma generate`, `lint` e `test:run`.
+>
+> Quando a mudança resolver um item auditado, atualize `docs/AUDITORIA.md` (status, branch/commit e comandos validados).
 
 ---
 
@@ -313,6 +332,7 @@ npm run build         # 4° — build de produção Next.js (roda prisma migrate
 - Trabalhe sempre em branches nomeadas como `feat/`, `fix/`, `refactor/`, `docs/`, `chore/`, `test/`.
 - **Regra Obrigatória:** Sempre apresente as alterações e aguarde a avaliação/validação do usuário antes de executar o commit ou push.
 - Commits no formato Conventional Commits: `tipo(escopo): descrição concisa`.
+- Não misture correção de bug com refactor/limpeza no mesmo PR. Agrupe por pacote coeso (ex.: P1 auth, P1 UI, docs).
 - PR com checklist e validação verde em `npx prisma generate`, `npm run lint`, `npm run test:run` e `npm run build`.
 
 ---
@@ -331,7 +351,7 @@ Exemplo: `fix(auth): revoga sessoes JWT no reset de senha`
 
 Para garantir máxima clareza para revisores humanos e indexadores de código:
 - **Sem emojis nos cabeçalhos ou listas:** Use Markdown puro (`### Features`, `### Fixes`, `### Docs`, `- [x] Feature`). É proibido usar emojis como `✨`, `🐛`, `📝` no corpo ou título do PR.
-- **Resumo de alta densidade (1 a 3 frases):** Descreva o que foi entregue citando nominalmente os módulos, componentes, páginas, rotas ou métricas impactadas (ex: `/dashboard`, `/dashboard/ticket/[id]`, `/reset-password`, `TicketList`, `src/lib/auth.js`). Evite frases genéricas.
+- **Resumo de alta densidade (1 a 3 frases):** Descreva o que foi entregue citando nominalmente os módulos, componentes, páginas, rotas ou métricas impactadas (ex: `/dashboard`, `/ticket/[id]`, `/reset-password`, `TicketList`, `src/lib/auth.js`). Evite frases genéricas.
 - **Verbos de ação na 3ª pessoa do singular:** Inicie os itens do Changelog com verbos no presente do indicativo: *Adiciona*, *Atualiza*, *Corrige*, *Remove*, *Sincroniza*, *Concentra*, *Extrai*, *Revoga*, *Formata*.
 - **Como Testar reprodutível:** Comece sempre com o comando de execução (`1. Rode npm run dev.`) e indique as rotas exatas (ex: `/dashboard`, `/dashboard/tickets/new`, `/login`, `/forgot-password`) ou interações exatas para validar a entrega.
 - **Tipo de Mudança vertical e limpo:** Liste uma opção por linha, sem emojis, marcando com `[x]` apenas os tipos aplicáveis ao PR.
@@ -441,6 +461,7 @@ Invalida sessões JWT emitidas antes da redefinição de senha ao sincronizar o 
 - [ ] Controle de autorização (`CLIENT` vs `AGENT`) preservado?
 - [ ] Sem `console.log`, `debugger` ou credenciais hardcoded?
 - [ ] Mensagem de commit segue Conventional Commits?
+- [ ] Item da auditoria atualizado em `docs/AUDITORIA.md` (quando aplicável)?
 
 ### 14.2 Antes do Push
 
@@ -458,6 +479,7 @@ Invalida sessões JWT emitidas antes da redefinição de senha ao sincronizar o 
 - [ ] Tipo de Mudança listado verticalmente sem emojis?
 - [ ] Changelog preenchido sem emojis e com verbos na 3ª pessoa do presente?
 - [ ] Passos para teste claros e reprodutíveis (iniciando com `1. Rode npm run dev.`)?
+- [ ] Item da auditoria atualizado em `docs/AUDITORIA.md`?
 
 ---
 
@@ -483,7 +505,7 @@ test(ticketHistoryFormat): adiciona testes de formatacao de prazo na timeline
 ```markdown
 ## Resumo
 
-Corrige a formatação de datas no histórico de alterações de prazo exibido na timeline do chamado em `/dashboard/ticket/[id]`, utilizando `ticketHistoryFormat.js` para padronizar datas no formato `dd/MM/yyyy` sem deslocamento de fuso horário.
+Corrige a formatação de datas no histórico de alterações de prazo exibido na timeline do chamado em `/ticket/[id]`, utilizando `ticketHistoryFormat.js` para padronizar datas no formato `dd/MM/yyyy` sem deslocamento de fuso horário.
 
 ## Tipo de Mudança
 
@@ -494,7 +516,7 @@ Corrige a formatação de datas no histórico de alterações de prazo exibido n
 
 ### Fixes
 
-- Formata datas de prazo na timeline de `/dashboard/ticket/[id]` no padrão brasileiro
+- Formata datas de prazo na timeline de `/ticket/[id]` no padrão brasileiro
 - Corrige parsing de strings ISO em `src/lib/ticketHistoryFormat.js`
 
 ### Tests
@@ -505,7 +527,7 @@ Corrige a formatação de datas no histórico de alterações de prazo exibido n
 
 1. Rode `npm run dev`.
 2. Acesse `/login` com a conta Agente Demo (`agent.demo@helpflow.com` / `Demo@123456`) e abra `/dashboard`.
-3. Abra os detalhes de um chamado em `/dashboard/ticket/[id]`, altere o prazo e confira o evento na timeline.
+3. Abra os detalhes de um chamado em `/ticket/[id]`, altere o prazo e confira o evento na timeline.
 
 ## Checklist
 
@@ -518,7 +540,7 @@ Corrige a formatação de datas no histórico de alterações de prazo exibido n
 
 ---
 
-> **Versão 2.2** · Fonte única de verdade para agentes de IA · Mantido por Tharcio Santos
+> **Versão 2.3** · Fonte única de verdade para agentes de IA · Mantido por Tharcio Santos
 >
 > | Versão | Data     | Mudanças                                                                                                                                             |
 > | ------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -526,3 +548,4 @@ Corrige a formatação de datas no histórico de alterações de prazo exibido n
 > | 2.0    | Out/2026 | Manual operacional completo para agentes de IA                                                                                                       |
 > | 2.1    | Out/2026 | Refina padrão de Pull Request com template limpo sem emojis, inclusão de verificação de formatação/tipos no checklist e exemplo Gold Standard        |
 > | 2.2    | Out/2026 | Higieniza a documentação contra o código: `db.js` → `prisma.js`, testes descritos como funções puras (sem Testing Library/jsdom) + specs Cypress, isolamento multi-tenant/RBAC documentado como aplicacional (sem Supabase RLS), env de e-mail corrigido para `EMAIL_USER`/`EMAIL_PASS`, credenciais demo, modelos `Company`/`TicketComment`/`TicketHistory`/`Notification`, rotas e estrutura de pastas sincronizadas |
+> | 2.3    | Nov/2026 | Corrige rotas de detalhe/edição, contagem de migrations e nota sobre contas demo; adiciona Documentos vivos, runtime Node, nota de KPIs e vínculo com `docs/AUDITORIA.md` |
