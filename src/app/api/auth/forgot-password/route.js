@@ -23,7 +23,7 @@ export async function POST(req) {
         // Limite por IP + por e-mail (evita spam direcionado a um alvo sem expor enumeração)
         const [byIp, byEmail] = await Promise.all([
             checkRateLimit(`forgot-password:${ip}`),
-            checkRateLimit(`forgot-password:email:${email.toLowerCase()}`, { maxRequests: 3 }),
+            checkRateLimit(`forgot-password:email:${email}`, { maxRequests: 3 }),
         ]);
         const limited = byIp.isLimited ? byIp : byEmail;
 
@@ -34,7 +34,10 @@ export async function POST(req) {
             );
         }
 
-        const user = await prisma.user.findUnique({ where: { email } });
+        const user = await prisma.user.findFirst({
+            // mode: insensitive cobre contas legadas gravadas com maiúsculas.
+            where: { email: { equals: email, mode: 'insensitive' } },
+        });
 
         // Mensagem genérica por segurança (enumerations)
         if (!user) {

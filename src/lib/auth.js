@@ -25,12 +25,17 @@ export const authOptions = {
           throw new Error("Invalid credentials");
         }
 
-        const { isLimited } = await checkRateLimit(`login:${credentials.email}`);
+        // E-mails são armazenados normalizados; normalizamos a entrada para
+        // que "  Joao@Empresa.com " encontre joao@empresa.com.
+        const email = credentials.email.trim().toLowerCase();
+
+        const { isLimited } = await checkRateLimit(`login:${email}`);
         if (isLimited) {
           throw new Error('Muitas tentativas de login. Tente novamente em 15 minutos.');
         }
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+        const user = await prisma.user.findFirst({
+          // mode: insensitive cobre contas legadas gravadas com maiúsculas.
+          where: { email: { equals: email, mode: 'insensitive' } },
           include: {
             company: {
               select: {
