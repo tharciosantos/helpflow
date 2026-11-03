@@ -84,6 +84,7 @@ export async function POST(req, { params }) {
       where: { id },
       select: {
         id: true,
+        title: true,
         authorId: true,
         agentId: true,
         companyId: true,
@@ -165,7 +166,7 @@ export async function POST(req, { params }) {
               ticketId: id,
               type: 'COMMENT',
               message: buildNotificationMessage({
-                event: 'COMMENT', actorName: session.user.name, ticketTitle: null,
+                event: 'COMMENT', actorName: session.user.name, ticketTitle: ticket.title,
               }),
             })),
           });
