@@ -76,7 +76,7 @@ export default function EditTicketPage() {
             <div className="max-w-2xl mx-auto space-y-6">
                 <div>
                     <Link
-                        href={`/dashboard/ticket/${id}`}
+                        href={`/ticket/${id}`}
                         className={`inline-flex items-center gap-2 text-sm font-medium transition ${
                             theme === 'light'
                                 ? 'text-slate-500 hover:text-teal-600'
