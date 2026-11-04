@@ -1,6 +1,6 @@
 # AGENTS.md — HelpFlow
 
-> Manual Operacional para Agentes de IA · v2.5
+> Manual Operacional para Agentes de IA · v2.6
 
 Este documento é a **fonte única de verdade** para agentes que trabalham no repositório **HelpFlow**.
 
@@ -58,7 +58,7 @@ Regra: toda correção de um item `AUD-xx` deve atualizar o status, o commit e a
 | **Rate Limiting** | @upstash/ratelimit + @upstash/redis | Sliding window / fallback em memória |
 | **Animações** | Anime.js | 4.5.x |
 | **E-mail** | Nodemailer | Recuperação de senhas (`EMAIL_USER` / `EMAIL_PASS`) |
-| **Testes Unitários** | Vitest | 178 testes de **funções puras** em `src/lib/` (ambiente `node`, sem jsdom, sem Testing Library) |
+| **Testes Unitários** | Vitest | 180 testes de **funções puras** em `src/lib/` (ambiente `node`, sem jsdom, sem Testing Library) |
 | **Testes E2E** | Cypress | 15.x — 4 specs / 21 cenários em `cypress/e2e/` |
 | **Linter** | ESLint (flat config) + eslint-config-next | 9.x |
 
@@ -109,13 +109,11 @@ helpflow/
 │   │   │   ├── DashboardShell.jsx  # Shell do dashboard (sidebar + main)
 │   │   │   ├── ThemeProvider.jsx   # Gestão de tema claro/escuro
 │   │   │   └── ThemeToggle.jsx     # Botão seletor de tema
-│   │   ├── hooks/
-│   │   │   └── useScrollReveal.js  # Intersection Observer (sem uso atual — AUD-14)
 │   │   ├── page.js            # Landing Page institucional com simulador
 │   │   ├── layout.js          # RootLayout com ThemeProvider e AuthProvider
 │   │   └── globals.css        # Tailwind v4 directives e estilos base
 │   └── lib/                   # ← Regra de negócio (funções puras) + integrações
-│       ├── __tests__/         # 178 testes Vitest (15 arquivos)
+│       ├── __tests__/         # 180 testes Vitest (15 arquivos)
 │       ├── auth.js            # Configuração do NextAuth, callbacks, authorize e tokenVersion
 │       ├── prisma.js          # Instância singleton do PrismaClient
 │       ├── email.js           # Envio de e-mails via Nodemailer (EMAIL_USER/EMAIL_PASS)
@@ -289,7 +287,7 @@ CYPRESS_TEST_SECRET="seu-segredo-cypress"
 
 ## 10. Testes e Validação
 
-- **Suíte Vitest — 178 testes em 15 arquivos**: cobrem **funções puras** de `src/lib/` (ambiente `node`, **sem Testing Library e sem jsdom**). Não há testes de componentes ou de Route Handlers.
+- **Suíte Vitest — 180 testes em 15 arquivos**: cobrem **funções puras** de `src/lib/` (ambiente `node`, **sem Testing Library e sem jsdom**). Não há testes de componentes ou de Route Handlers.
   - Validações de Schemas Zod (`schemas.test.js`)
   - Utilitários de Tickets e Formatação (`ticketUtils.test.js`)
   - Autorização, RBAC e isolamento multiempresa (`ticketAuthorization.test.js`)
@@ -543,7 +541,7 @@ Corrige a formatação de datas no histórico de alterações de prazo exibido n
 
 ---
 
-> **Versão 2.5** · Fonte única de verdade para agentes de IA · Mantido por Tharcio Santos
+> **Versão 2.6** · Fonte única de verdade para agentes de IA · Mantido por Tharcio Santos
 >
 > | Versão | Data     | Mudanças                                                                                                                                             |
 > | ------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -554,3 +552,4 @@ Corrige a formatação de datas no histórico de alterações de prazo exibido n
 > | 2.3    | Nov/2026 | Corrige rotas de detalhe/edição, contagem de migrations e nota sobre contas demo; adiciona Documentos vivos, runtime Node, nota de KPIs e vínculo com `docs/AUDITORIA.md` |
 > | 2.4    | Nov/2026 | Sincroniza contagem de testes (178 em 15 arquivos), cenários Cypress (21) e adiciona `cronAuth.test.js` à lista da suíte |
 > | 2.5    | Nov/2026 | Documenta `prisma/seed.js` e `npm run db:seed`, atualiza a nota das contas demo e corrige o escopo do middleware |
+> | 2.6    | Nov/2026 | Remove `src/app/hooks/` (código morto) da estrutura |

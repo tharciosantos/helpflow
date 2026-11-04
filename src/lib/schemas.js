@@ -16,11 +16,14 @@ export const createTicketSchema = z.object({
     priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).optional(),
 }).strict();
 
+// PATCH mínimo (só status): estrito para não mascarar campos com erro de
+// digitação. Payloads com conteúdo vão por updateTicketSchema, que é tolerante
+// porque carrega vários campos opcionais.
 export const updateTicketStatusSchema = z.object({
     status: z.enum(['OPEN', 'IN_PROGRESS', 'CLOSED'], {
         error: 'Status inválido.',
     }),
-});
+}).strict();
 
 export const updateTicketSchema = z.object({
     title: z
