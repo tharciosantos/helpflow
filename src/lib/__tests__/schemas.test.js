@@ -126,6 +126,18 @@ describe('updateTicketStatusSchema', () => {
         const messages = result.error.flatten().fieldErrors.status;
         expect(messages).toContain('Status inválido.');
     });
+
+    it('deve rejeitar campos desconhecidos (schema estrito)', () => {
+        const result = updateTicketStatusSchema.safeParse({ status: 'OPEN', statuss: 'CLOSED' });
+        expect(result.success).toBe(false);
+    });
+
+    it('deve rejeitar campos de triagem no PATCH mínimo de status', () => {
+        // Antes do .strict() o dueAt era descartado em silêncio; agora o erro
+        // aparece em vez de a rota seguir com um payload suspeito.
+        const result = updateTicketStatusSchema.safeParse({ status: 'CLOSED', dueAt: null });
+        expect(result.success).toBe(false);
+    });
 });
 
 // ─────────────────────────────────────────────

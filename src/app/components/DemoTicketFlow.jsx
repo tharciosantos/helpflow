@@ -24,6 +24,7 @@ const statuses = DEMO_TICKET_STATUS_SEQUENCE.map((status) => ({
 export default function DemoTicketFlow({ theme = "dark" }) {
     const [currentStep, setCurrentStep] = useState(0);
     const [isPaused, setIsPaused] = useState(false);
+    const [isReducedMotion, setIsReducedMotion] = useState(false);
     const rootRef = useRef(null);
     const timelineRef = useRef(null);
     
@@ -33,7 +34,23 @@ export default function DemoTicketFlow({ theme = "dark" }) {
         badgeClasses: getStatusBadgeClasses(status.code, theme)
     }));
 
+    // Sem animação o card não é interativo: não há timeline para pausar/retomar.
+    const canAnimate = !isReducedMotion;
+
     useEffect(() => {
+        // Acessibilidade: com "prefers-reduced-motion" ativo o simulador abre
+        // direto no estado final (chamado fechado) e não cria a timeline em
+        // loop. Os passos ficam visíveis porque utils.set() não é executado.
+        const prefersReducedMotion = window.matchMedia(
+            "(prefers-reduced-motion: reduce)"
+        ).matches;
+
+        if (prefersReducedMotion) {
+            setIsReducedMotion(true);
+            setCurrentStep(getDemoInitialStep(true));
+            return;
+        }
+
         const scope = createScope({ root: rootRef }).add(() => {
             const steps = rootRef.current?.querySelectorAll("[data-flow-step]");
             if (!steps || steps.length === 0) return;
@@ -145,17 +162,25 @@ export default function DemoTicketFlow({ theme = "dark" }) {
 
             <div
                 data-ticket-card
-                onClick={toggleAnimation}
-                onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        toggleAnimation();
+                {...(canAnimate
+                    ? {
+                        onClick: toggleAnimation,
+                        onKeyDown: (e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                toggleAnimation();
+                            }
+                        },
+                        role: "button",
+                        tabIndex: 0,
+                        "aria-label": isPaused
+                            ? "Clique para retomar animação"
+                            : "Clique para pausar animação",
                     }
-                }}
-                role="button"
-                tabIndex={0}
-                aria-label={isPaused ? "Clique para retomar animação" : "Clique para pausar animação"}
-                className={`relative cursor-pointer overflow-hidden rounded-2xl border p-4 sm:p-5 shadow-xl transition-shadow ${
+                    : {})}
+                className={`relative overflow-hidden rounded-2xl border p-4 sm:p-5 shadow-xl transition-shadow ${
+                    canAnimate ? "cursor-pointer" : ""
+                } ${
                     theme === "light"
                         ? "border-slate-200 bg-white shadow-slate-200/50 hover:shadow-md"
                         : "border-slate-800 bg-slate-900/95 shadow-black/30 hover:shadow-md"
@@ -268,46 +293,48 @@ export default function DemoTicketFlow({ theme = "dark" }) {
                 </div>
             </div>
 
-            {/* Controle de Animação */}
-            <button
-                onClick={(e) => {
-                    e.stopPropagation();
-                    toggleAnimation();
-                }}
-                className={`relative z-10 mx-auto mt-3 flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all focus:outline-none focus:ring-2 focus:ring-emerald-400/30 ${
-                    theme === "light"
-                        ? "border-slate-300 bg-white text-slate-700 hover:border-emerald-400 hover:text-emerald-600"
-                        : "border-slate-700 bg-slate-800/80 text-slate-300 hover:border-slate-500 hover:bg-slate-800 hover:text-slate-100"
-                }`}
-                aria-label={isPaused ? "Retomar animação" : "Pausar animação"}
-                aria-pressed={isPaused}
-            >
-                {isPaused ? (
-                    <>
-                        <svg
-                            className="h-4 w-4"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                            aria-hidden="true"
-                        >
-                            <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-                        </svg>
-                        <span>Retomar</span>
-                    </>
-                ) : (
-                    <>
-                        <svg
-                            className="h-4 w-4"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                            aria-hidden="true"
-                        >
-                            <path d="M5.75 3a.75.75 0 00-.75.75v12.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75V3.75A.75.75 0 007.25 3h-1.5zM12.75 3a.75.75 0 00-.75.75v12.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75V3.75a.75.75 0 00-.75-.75h-1.5z" />
-                        </svg>
-                        <span>Pausar</span>
-                    </>
-                )}
-            </button>
+            {/* Controle de Animação (oculto quando o movimento é reduzido) */}
+            {canAnimate && (
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        toggleAnimation();
+                    }}
+                    className={`relative z-10 mx-auto mt-3 flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all focus:outline-none focus:ring-2 focus:ring-emerald-400/30 ${
+                        theme === "light"
+                            ? "border-slate-300 bg-white text-slate-700 hover:border-emerald-400 hover:text-emerald-600"
+                            : "border-slate-700 bg-slate-800/80 text-slate-300 hover:border-slate-500 hover:bg-slate-800 hover:text-slate-100"
+                    }`}
+                    aria-label={isPaused ? "Retomar animação" : "Pausar animação"}
+                    aria-pressed={isPaused}
+                >
+                    {isPaused ? (
+                        <>
+                            <svg
+                                className="h-4 w-4"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                                aria-hidden="true"
+                            >
+                                <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                            </svg>
+                            <span>Retomar</span>
+                        </>
+                    ) : (
+                        <>
+                            <svg
+                                className="h-4 w-4"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                                aria-hidden="true"
+                            >
+                                <path d="M5.75 3a.75.75 0 00-.75.75v12.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75V3.75A.75.75 0 007.25 3h-1.5zM12.75 3a.75.75 0 00-.75.75v12.5c0 .414.336.75.75.75h1.5a.75.75 0 00.75-.75V3.75a.75.75 0 00-.75-.75h-1.5z" />
+                            </svg>
+                            <span>Pausar</span>
+                        </>
+                    )}
+                </button>
+            )}
         </section>
     );
 }
