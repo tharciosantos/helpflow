@@ -21,10 +21,20 @@ export async function PATCH(req, { params }) {
     });
 
     if (result.count === 0) {
-      return NextResponse.json(
-        { message: "Notificação não encontrada ou já lida" },
-        { status: 404 }
-      );
+      // Idempotência: notificação já lida continua retornando 200.
+      const existing = await prisma.notification.findFirst({
+        where: { id, userId: session.user.id },
+        select: { id: true },
+      });
+
+      if (!existing) {
+        return NextResponse.json(
+          { message: "Notificação não encontrada" },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({ ok: true, alreadyRead: true }, { status: 200 });
     }
 
     return NextResponse.json({ ok: true }, { status: 200 });

@@ -81,7 +81,17 @@ export async function PATCH(req, { params }) {
   const { id } = await params;
 
   try {
-    const body = await req.json();
+    let body;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ message: 'Corpo da requisição inválido.' }, { status: 400 });
+    }
+
+    // JSON `null`, arrays e primitivos não representam um PATCH válido.
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      return NextResponse.json({ message: 'Corpo da requisição inválido.' }, { status: 400 });
+    }
 
     const ticket = await prisma.ticket.findUnique({
       where: { id },
@@ -101,7 +111,7 @@ export async function PATCH(req, { params }) {
     const forbiddenFields = getForbiddenTicketFields(session.user, body);
     if (forbiddenFields.length > 0) {
       return NextResponse.json(
-        { message: 'Apenas agentes podem alterar status, prioridade ou responsável.' },
+        { message: 'Apenas agentes podem alterar status, prioridade, responsável ou prazo.' },
         { status: 403 }
       );
     }
