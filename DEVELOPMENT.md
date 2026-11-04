@@ -4,7 +4,7 @@ Guia prático para configurar e rodar o HelpFlow localmente com `Next.js`, `Pris
 
 ## Pré-requisitos
 
-- `Node.js 20+`
+- `Node.js >= 22.23.4`
 - `npm`
 - `Git`
 - Conta no [GitHub](https://github.com/)
@@ -33,15 +33,36 @@ Crie um `.env` na raiz com base em `.env.example`:
 cp .env.example .env
 ```
 
-Exemplo:
+Modelo completo (mesmas 12 chaves de `.env.example`):
 
 ```env
+# GitHub OAuth (opcional)
 AUTH_GITHUB_ID=
 AUTH_GITHUB_SECRET=
+
+# NextAuth
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=gere-uma-chave-segura
+
+# Banco de dados (Supabase)
+# DATABASE_URL: URL do pooler/transação (porta 6543)
+# DIRECT_URL:   conexão direta (porta 5432) — necessária para migrations
 DATABASE_URL=postgresql://USER:PASSWORD@HOST:6543/postgres
 DIRECT_URL=postgresql://USER:PASSWORD@HOST:5432/postgres
+
+# Vercel Cron — autenticação de /api/cron/keep-alive
+CRON_SECRET=gere-um-segredo
+
+# Cypress — permite criar usuários AGENT nos testes E2E
+CYPRESS_TEST_SECRET=segredo-cypress
+
+# E-mail (Nodemailer) — recuperação de senha
+EMAIL_USER=seu-email@gmail.com
+EMAIL_PASS=sua-app-password
+
+# Upstash Redis — rate limiting distribuído (opcional em dev; sem ele usa memória)
+UPSTASH_REDIS_REST_URL=
+UPSTASH_REDIS_REST_TOKEN=
 ```
 
 ## Banco de dados
