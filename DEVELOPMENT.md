@@ -86,6 +86,16 @@ Se quiser inspecionar os dados:
 npx prisma studio
 ```
 
+### Dados de demonstração
+
+Para criar a empresa `DEMO-2026`, as contas `agent.demo@helpflow.com` e `client.demo@helpflow.com` (senha `Demo@123456`) e alguns chamados de exemplo:
+
+```bash
+npm run db:seed
+```
+
+O seed é idempotente: pode ser reexecutado sem duplicar registros e não sobrescreve a senha de contas já existentes.
+
 ## Autenticação
 
 ### Email e senha
@@ -128,6 +138,7 @@ Acesse [http://localhost:3000](http://localhost:3000).
 ## Comandos úteis
 
 - `npm run lint` verifica problemas de lint
+- `npm run db:seed` popula empresa, contas e chamados de demonstração
 - `npx prisma db push` sincroniza o schema sem gerar migration
 - `npx prisma generate` recria o Prisma Client
 - `npx prisma studio` abre o painel visual do banco

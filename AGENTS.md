@@ -1,6 +1,6 @@
 # AGENTS.md — HelpFlow
 
-> Manual Operacional para Agentes de IA · v2.3
+> Manual Operacional para Agentes de IA · v2.5
 
 Este documento é a **fonte única de verdade** para agentes que trabalham no repositório **HelpFlow**.
 
@@ -71,9 +71,10 @@ helpflow/
 ├── prisma/
 │   ├── schema.prisma          # Modelos: Company, User, Ticket, TicketComment, TicketHistory,
 │   │                          #   Notification, Account, Session, PasswordReset
+│   ├── seed.js                # Seed idempotente: empresa DEMO-2026, contas demo e chamados
 │   └── migrations/            # Histórico de migrations PostgreSQL (11 migrations)
 ├── src/
-│   ├── middleware.js          # withAuth — protege /dashboard/:path*; /ticket/[id] via layout
+│   ├── middleware.js          # withAuth — protege /dashboard/:path* e /ticket/:path*
 │   ├── app/
 │   │   ├── (auth)/            # Rotas de autenticação
 │   │   │   ├── login/         # Página de login com credenciais de demonstração
@@ -159,6 +160,7 @@ npm run build            # prisma migrate deploy && next build
 npx prisma generate      # Gera o client do Prisma
 npx prisma migrate dev   # Aplica migrations em ambiente local
 npx prisma db push       # Sincroniza schema sem criar migration
+npm run db:seed          # Cria empresa DEMO-2026, contas demo e chamados de exemplo
 
 # Testes E2E (Cypress)
 npm run cypress:open     # Abre a interface gráfica do Cypress
@@ -223,7 +225,7 @@ CYPRESS_TEST_SECRET="seu-segredo-cypress"
 - Contas de demonstração (definidas em `src/app/(auth)/login/page.jsx`):
   - **Agente Demo**: `agent.demo@helpflow.com` / `Demo@123456`
   - **Cliente Demo**: `client.demo@helpflow.com` / `Demo@123456`
-  - **Atenção:** não existe `prisma/seed.js` no repositório; essas contas precisam existir no banco (ver `AUD-07` em `docs/AUDITORIA.md`).
+  - Criadas por `npm run db:seed` (`prisma/seed.js`), junto da empresa `DEMO-2026` e de chamados de exemplo. O seed é idempotente e não sobrescreve a senha de contas já existentes.
 
 ---
 
@@ -541,7 +543,7 @@ Corrige a formatação de datas no histórico de alterações de prazo exibido n
 
 ---
 
-> **Versão 2.4** · Fonte única de verdade para agentes de IA · Mantido por Tharcio Santos
+> **Versão 2.5** · Fonte única de verdade para agentes de IA · Mantido por Tharcio Santos
 >
 > | Versão | Data     | Mudanças                                                                                                                                             |
 > | ------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -551,3 +553,4 @@ Corrige a formatação de datas no histórico de alterações de prazo exibido n
 > | 2.2    | Out/2026 | Higieniza a documentação contra o código: `db.js` → `prisma.js`, testes descritos como funções puras (sem Testing Library/jsdom) + specs Cypress, isolamento multi-tenant/RBAC documentado como aplicacional (sem Supabase RLS), env de e-mail corrigido para `EMAIL_USER`/`EMAIL_PASS`, credenciais demo, modelos `Company`/`TicketComment`/`TicketHistory`/`Notification`, rotas e estrutura de pastas sincronizadas |
 > | 2.3    | Nov/2026 | Corrige rotas de detalhe/edição, contagem de migrations e nota sobre contas demo; adiciona Documentos vivos, runtime Node, nota de KPIs e vínculo com `docs/AUDITORIA.md` |
 > | 2.4    | Nov/2026 | Sincroniza contagem de testes (178 em 15 arquivos), cenários Cypress (21) e adiciona `cronAuth.test.js` à lista da suíte |
+> | 2.5    | Nov/2026 | Documenta `prisma/seed.js` e `npm run db:seed`, atualiza a nota das contas demo e corrige o escopo do middleware |

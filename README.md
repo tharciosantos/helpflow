@@ -43,6 +43,8 @@ A aplicação conta com **Acesso de Demonstração (1-Clique)** diretamente na t
 - **Empresa / TI Demo (`AGENT`):** `agent.demo@helpflow.com` (Senha: `Demo@123456`) - Fila geral corporativa, métricas de atendimento, triagem rápida e consulta de membros para atribuição.
 - **Funcionário Demo (`CLIENT`):** `client.demo@helpflow.com` (Senha: `Demo@123456`) - Abertura e histórico privado de chamados do colaborador.
 
+As duas contas, a empresa `DEMO-2026` e alguns chamados de exemplo são criados pelo seed `prisma/seed.js` (`npm run db:seed`), que pode ser reexecutado sem duplicar registros.
+
 Além disso, qualquer visitante pode cadastrar sua própria **Empresa** ou se registrar como **Funcionário** utilizando o código da organização.
 
 ---
@@ -380,7 +382,13 @@ npx prisma generate
 
 > O `npm run build` executa `prisma migrate deploy` antes do `next build`.
 
-### 5. Iniciar o servidor local
+### 5. Popular os dados de demonstração (opcional, recomendado)
+```bash
+npm run db:seed
+```
+Cria a empresa `DEMO-2026`, as contas `agent.demo@helpflow.com` e `client.demo@helpflow.com` (senha `Demo@123456`) e alguns chamados de exemplo. O seed é idempotente: rodar novamente não duplica registros e não sobrescreve a senha de contas já existentes.
+
+### 6. Iniciar o servidor local
 ```bash
 npm run dev
 ```
@@ -405,6 +413,9 @@ npm run lint
 
 # Build de produção (aplica migrations pendentes)
 npm run build
+
+# Popular empresa, contas e chamados de demonstração
+npm run db:seed
 
 # Executar os 21 cenários E2E com Cypress
 npm run cypress:run
