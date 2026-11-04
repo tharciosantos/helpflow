@@ -99,6 +99,8 @@ describe('autorização de tickets com isolamento multi-empresa', () => {
     expect(getForbiddenTicketFields(owner, { status: 'CLOSED' })).toEqual(['status']);
     expect(getForbiddenTicketFields(owner, { priority: 'URGENT', agentId: 'agent-1' }))
       .toEqual(['priority', 'agentId']);
+    // Corpo nulo não deve lançar: a rota responde 400 antes de qualquer escrita.
+    expect(getForbiddenTicketFields(owner, null)).toEqual([]);
   });
 
   describe('mensagem de recusa de edição', () => {

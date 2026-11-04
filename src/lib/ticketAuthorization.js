@@ -31,7 +31,8 @@ export function canDeleteTicket(user, ticket) {
 
 export function getForbiddenTicketFields(user, body = {}) {
   if (user?.role === 'AGENT') return [];
-  return AGENT_ONLY_FIELDS.filter((field) => body[field] !== undefined);
+  const payload = body ?? {};
+  return AGENT_ONLY_FIELDS.filter((field) => payload[field] !== undefined);
 }
 
 export function canEditTicketContent(user, ticket) {
