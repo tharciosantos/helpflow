@@ -1,6 +1,6 @@
 # HelpFlow · Service Desk Corporativo Multi-Empresa
 
-Sistema de Service Desk e gestão de chamados corporativos desenvolvido com **Next.js 15 (App Router)**, **PostgreSQL** e **Prisma ORM**. O HelpFlow foi arquitetado para atender fluxos reais de TI e Suporte Interno em modelo **Multi-Empresa (Multi-Tenant)**, garantindo **isolamento total entre organizações** e **privacidade estrita de chamados entre colaboradores**.
+Sistema de Service Desk e gestão de chamados corporativos desenvolvido com **Next.js 15 (App Router)**, **PostgreSQL** e **Prisma ORM**. O HelpFlow foi arquitetado para atender fluxos reais de TI e Suporte Interno em modelo **Multi-Empresa (Multi-Tenant)**, com **isolamento entre organizações garantido na camada de aplicação** e **privacidade estrita de chamados entre colaboradores**.
 
 ---
 
@@ -40,7 +40,7 @@ O HelpFlow replica a dinâmica operacional de um departamento de TI ou suporte c
 
 A aplicação conta com **Acesso de Demonstração (1-Clique)** diretamente na tela de login, permitindo explorar as duas visões corporativas da empresa fictícia **HelpFlow Corporativo (Demo)** (`DEMO-2026`):
 
-- **Empresa / TI Demo (`AGENT`):** `agent.demo@helpflow.com` (Senha: `Demo@123456`) - Fila geral corporativa, métricas de atendimento, triagem rápida e gestão de membros.
+- **Empresa / TI Demo (`AGENT`):** `agent.demo@helpflow.com` (Senha: `Demo@123456`) - Fila geral corporativa, métricas de atendimento, triagem rápida e consulta de membros para atribuição.
 - **Funcionário Demo (`CLIENT`):** `client.demo@helpflow.com` (Senha: `Demo@123456`) - Abertura e histórico privado de chamados do colaborador.
 
 Além disso, qualquer visitante pode cadastrar sua própria **Empresa** ou se registrar como **Funcionário** utilizando o código da organização.
@@ -295,8 +295,8 @@ model PasswordReset {
 - **ORM:** Prisma ORM 6
 
 ### Qualidade & Testes
-- **Testes Unitários:** Vitest — 169 testes unitários (14 suítes), cobrindo schemas, RBAC/multiempresa, SLA, métricas, notificações, histórico, sessões e rate limiter.
-- **Testes E2E:** Cypress 15 — 15 fluxos E2E cobrindo autenticação, permissões, tickets e comentários.
+- **Testes Unitários:** Vitest — 178 testes unitários (15 suítes), cobrindo schemas, RBAC/multiempresa, SLA, métricas, notificações, histórico, sessões, cron e rate limiter.
+- **Testes E2E:** Cypress 15 — 4 specs com 21 cenários cobrindo autenticação, permissões, tickets e comentários.
 - **Linter:** ESLint 9
 
 ---
@@ -311,7 +311,7 @@ src/
 │   ├── api/                 # Endpoints REST (auth, register, tickets, agents, health, cron)
 │   └── components/          # Componentes de interface (TicketList, EditTicketForm, ThemeToggle, etc.)
 ├── lib/
-│   ├── __tests__/           # Suíte de 169 testes unitários do Vitest
+│   ├── __tests__/           # Suíte de 178 testes unitários do Vitest
 │   ├── auth.js              # NextAuth, callbacks de sessão e tokenVersion
 │   ├── prisma.js            # Instância singleton do PrismaClient
 │   ├── rateLimiter.js       # Rate limit Upstash + fallback em memória
@@ -338,7 +338,7 @@ cd helpflow
 ```
 
 ### 2. Instalar dependências
-Requisito: **Node.js 20+**.
+Requisito: **Node.js >= 22.23.4**.
 
 ```bash
 npm install
@@ -391,7 +391,7 @@ Acesse [http://localhost:3000](http://localhost:3000) no seu navegador.
 ## Testes e Validação
 
 ```bash
-# Executar os 169 testes unitários (14 suítes) com Vitest
+# Executar os 178 testes unitários (15 suítes) com Vitest
 npm run test:run
 
 # Executar testes em modo watch
@@ -406,7 +406,7 @@ npm run lint
 # Build de produção (aplica migrations pendentes)
 npm run build
 
-# Executar os 15 fluxos E2E com Cypress
+# Executar os 21 cenários E2E com Cypress
 npm run cypress:run
 ```
 
