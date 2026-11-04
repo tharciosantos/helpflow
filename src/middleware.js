@@ -1,7 +1,7 @@
 import { withAuth } from 'next-auth/middleware';
 
-// Protege todo o dashboard no servidor (evita flash de conteúdo sem sessão).
-// O layout do dashboard mantém getServerSession como segunda camada.
+// Protege as áreas autenticadas no servidor (evita flash de conteúdo sem sessão).
+// O layout do grupo (dashboard) mantém getServerSession como segunda camada.
 export default withAuth({
   pages: {
     signIn: '/login',
@@ -9,5 +9,6 @@ export default withAuth({
 });
 
 export const config = {
-  matcher: ['/dashboard/:path*'],
+  // /ticket/[id] fica fora do prefixo /dashboard, então precisa do próprio matcher.
+  matcher: ['/dashboard/:path*', '/ticket/:path*'],
 };

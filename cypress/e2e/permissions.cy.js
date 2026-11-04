@@ -115,6 +115,11 @@ describe('Testes de Permissão', () => {
       cy.visit('/dashboard');
       cy.url().should('not.include', '/dashboard');
     });
+
+    it('deve redirecionar para login ao visitar detalhe do chamado sem sessão', () => {
+      cy.visit('/ticket/00000000-0000-0000-0000-000000000000');
+      cy.location('pathname').should('eq', '/login');
+    });
   });
 
   // ─────────────────────────────────────────────
