@@ -503,7 +503,7 @@ export default function DashboardPage() {
               </span>
             </div>
             <p className={`mb-4 text-xs ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
-              Status consolidados de acordo com os filtros selecionados.
+              Visão geral independente dos filtros; busca e filtros afetam apenas a lista e o card Filtrados.
             </p>
 
             <div className="grid grid-cols-2 min-w-0 gap-2 sm:gap-2.5">
