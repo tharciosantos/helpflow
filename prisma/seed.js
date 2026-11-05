@@ -31,8 +31,8 @@ const DEMO_COMPANY = {
 const DEMO_PASSWORD = 'Demo@123456';
 
 const DEMO_USERS = [
-  { email: 'agent.demo@helpflow.com', name: 'Ana Ribeiro', role: 'AGENT' },
-  { email: 'client.demo@helpflow.com', name: 'Bruno Carvalho', role: 'CLIENT' },
+  { email: 'agent.demo@helpflow.com', name: 'Agente Demo', role: 'AGENT' },
+  { email: 'client.demo@helpflow.com', name: 'Cliente Demo', role: 'CLIENT' },
 ];
 
 const HOUR_MS = 60 * 60 * 1000;
@@ -147,7 +147,7 @@ async function main() {
       authorId: agent.id,
       visibility: 'PUBLIC',
       content:
-        'Bom dia, Bruno! Já estou verificando o driver de rede da máquina. Pode testar o cabo e me confirmar se a conexão segue estável?',
+        'Bom dia! Já estou verificando o driver de rede da máquina. Pode testar o cabo e me confirmar se a conexão segue estável?',
       createdAt: hoursAgo(9),
     },
     {
@@ -172,7 +172,8 @@ async function main() {
   for (const comment of comments) {
     await prisma.ticketComment.upsert({
       where: { id: comment.id },
-      update: {},
+      // Refresca o texto para que re-runs apliquem ajustes de copy do seed.
+      update: { content: comment.content },
       create: comment,
     });
   }
