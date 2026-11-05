@@ -1,6 +1,6 @@
 # AGENTS.md — HelpFlow
 
-> Manual Operacional para Agentes de IA · v2.6
+> Manual Operacional para Agentes de IA · v2.7
 
 Este documento é a **fonte única de verdade** para agentes que trabalham no repositório **HelpFlow**.
 
@@ -249,6 +249,7 @@ CYPRESS_TEST_SECRET="seu-segredo-cypress"
   - `OPEN` → Ticket recém-aberto aguardando triagem.
   - `IN_PROGRESS` → Ticket em atendimento por um agente atribuído.
   - `CLOSED` → Ticket finalizado e resolvido (grava `resolvedAt`; reabrir limpa o campo).
+- **Terminologia**: UI, mensagens de API e documentação usam **"chamado"**; `Ticket` permanece apenas em identificadores de código (componentes, rotas, modelo Prisma).
 - **Controle de Autorização** (`src/lib/ticketAuthorization.js`, fail-closed):
   - `CLIENT` só visualiza/edita/exclui o **próprio** ticket, e edição/exclusão apenas enquanto estiver `OPEN`.
   - `AGENT` atua em qualquer ticket **da própria empresa**: status, prioridade, responsável e prazo.
@@ -541,7 +542,7 @@ Corrige a formatação de datas no histórico de alterações de prazo exibido n
 
 ---
 
-> **Versão 2.6** · Fonte única de verdade para agentes de IA · Mantido por Tharcio Santos
+> **Versão 2.7** · Fonte única de verdade para agentes de IA · Mantido por Tharcio Santos
 >
 > | Versão | Data     | Mudanças                                                                                                                                             |
 > | ------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -553,3 +554,4 @@ Corrige a formatação de datas no histórico de alterações de prazo exibido n
 > | 2.4    | Nov/2026 | Sincroniza contagem de testes (178 em 15 arquivos), cenários Cypress (21) e adiciona `cronAuth.test.js` à lista da suíte |
 > | 2.5    | Nov/2026 | Documenta `prisma/seed.js` e `npm run db:seed`, atualiza a nota das contas demo e corrige o escopo do middleware |
 > | 2.6    | Nov/2026 | Remove `src/app/hooks/` (código morto) da estrutura |
+> | 2.7    | Nov/2026 | Define a terminologia oficial "chamado" (UI/API/docs) em §8 |

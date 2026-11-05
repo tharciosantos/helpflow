@@ -28,7 +28,7 @@ export async function GET(req, { params }) {
     });
 
     if (!ticket) {
-      return NextResponse.json({ message: 'Ticket não encontrado' }, { status: 404 });
+      return NextResponse.json({ message: 'Chamado não encontrado' }, { status: 404 });
     }
 
     if (!canViewTicket(session.user, ticket)) {
@@ -94,7 +94,7 @@ export async function POST(req, { params }) {
     });
 
     if (!ticket) {
-      return NextResponse.json({ message: 'Ticket não encontrado' }, { status: 404 });
+      return NextResponse.json({ message: 'Chamado não encontrado' }, { status: 404 });
     }
 
     if (!canCommentOnTicket(session.user, ticket)) {

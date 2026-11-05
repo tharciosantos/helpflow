@@ -49,7 +49,7 @@ export async function GET(req, { params }) {
 
     if (!ticket) {
       console.warn(`[ticket GET] Ticket not found for id=${id}`);
-      return NextResponse.json({ message: 'Ticket não encontrado' }, { status: 404 });
+      return NextResponse.json({ message: 'Chamado não encontrado' }, { status: 404 });
     }
 
     if (!canViewTicket(session.user, ticket)) {
@@ -98,7 +98,7 @@ export async function PATCH(req, { params }) {
     });
 
     if (!ticket) {
-      return NextResponse.json({ message: 'Ticket não encontrado' }, { status: 404 });
+      return NextResponse.json({ message: 'Chamado não encontrado' }, { status: 404 });
     }
 
     if (!canEditTicketContent(session.user, ticket)) {
@@ -274,7 +274,7 @@ export async function PATCH(req, { params }) {
 
   } catch (error) {
     if (error.code === 'P2025') {
-      return NextResponse.json({ message: 'Ticket não encontrado' }, { status: 404 });
+      return NextResponse.json({ message: 'Chamado não encontrado' }, { status: 404 });
     }
     console.error('Erro ao atualizar o ticket:', error);
     return NextResponse.json({ message: 'Erro interno do servidor' }, { status: 500 });
@@ -304,11 +304,11 @@ export async function DELETE(req, { params }) {
     });
 
     if (!ticket) {
-      return NextResponse.json({ message: 'Ticket não encontrado' }, { status: 404 });
+      return NextResponse.json({ message: 'Chamado não encontrado' }, { status: 404 });
     }
 
     if (!canDeleteTicket(session.user, ticket)) {
-      return NextResponse.json({ message: 'Não autorizado a excluir este ticket' }, { status: 403 });
+      return NextResponse.json({ message: 'Não autorizado a excluir este chamado' }, { status: 403 });
     }
 
     await prisma.ticket.delete({
@@ -320,7 +320,7 @@ export async function DELETE(req, { params }) {
   } catch (error) {
     console.error("Erro ao deletar o ticket:", error);
     if (error.code === 'P2025') {
-      return NextResponse.json({ message: 'Ticket não encontrado para exclusão' }, { status: 404 });
+      return NextResponse.json({ message: 'Chamado não encontrado para exclusão' }, { status: 404 });
     }
     return NextResponse.json({ message: 'Erro interno do servidor' }, { status: 500 });
   }

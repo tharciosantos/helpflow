@@ -15,7 +15,7 @@ describe("Tickets", () => {
             cy.get('[data-cy="ticket-create-description"]').type("Descrição teste");
             cy.get('[data-cy="ticket-create-submit"]').click();
 
-            cy.contains("Ticket criado com sucesso").should("be.visible");
+            cy.contains("Chamado criado com sucesso").should("be.visible");
             cy.contains(title).should("be.visible");
         });
     });
@@ -26,8 +26,8 @@ describe("Tickets", () => {
 
             cy.contains("HelpFlow").should("be.visible");
             cy.contains("Dashboard").should("be.visible");
-            cy.contains("Novo Ticket").should("be.visible");
-            cy.contains("Meus tickets").should("be.visible");
+            cy.contains("Novo Chamado").should("be.visible");
+            cy.contains("Resumo Geral").should("be.visible");
         });
     });
 
@@ -45,7 +45,7 @@ describe("Tickets", () => {
             cy.get('[data-cy="ticket-create-description"]').type("Teste status");
             cy.get('[data-cy="ticket-create-submit"]').click();
 
-            cy.contains("Ticket criado com sucesso").should("be.visible");
+            cy.contains("Chamado criado com sucesso").should("be.visible");
 
             cy.intercept("PATCH", "/api/tickets/*").as("updateTicketStatus");
 
@@ -76,7 +76,7 @@ describe("Tickets", () => {
             cy.get('[data-cy="ticket-create-description"]').type("Teste exclusão");
             cy.get('[data-cy="ticket-create-submit"]').click();
 
-            cy.contains("Ticket criado com sucesso").should("be.visible");
+            cy.contains("Chamado criado com sucesso").should("be.visible");
             cy.contains(title).should("be.visible");
 
             cy.on("window:confirm", () => true);

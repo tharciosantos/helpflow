@@ -55,7 +55,7 @@ export default function DashboardPage() {
       if (sort === 'dueDate') params.set('sort', 'dueDate');
 
       const res = await fetch(`/api/tickets?${params.toString()}`, { signal: controller.signal });
-      if (!res.ok) throw new Error('Falha ao carregar tickets.');
+      if (!res.ok) throw new Error('Falha ao carregar chamados.');
 
       const data = await res.json();
       setTickets(data.tickets);
@@ -186,7 +186,7 @@ export default function DashboardPage() {
           <p className={`mt-1 text-sm ${
             theme === 'light' ? 'text-slate-600' : 'text-slate-400'
           }`}>
-            Organize e acompanhe os tickets do seu suporte em um só lugar.
+            Organize e acompanhe os chamados do seu suporte em um só lugar.
           </p>
         </div>
 
@@ -196,7 +196,7 @@ export default function DashboardPage() {
           className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 px-4 py-2.5 text-sm font-semibold shadow-xs transition active:scale-[0.98]"
         >
           <LuPlus size={18} />
-          Novo ticket
+          Novo chamado
         </Link>
       </header>
 
@@ -288,7 +288,7 @@ export default function DashboardPage() {
         <label className={`flex min-w-0 flex-col gap-1 text-xs font-semibold uppercase tracking-wider min-[420px]:col-span-2 lg:col-span-1 ${
           theme === 'light' ? 'text-slate-600' : 'text-slate-400'
         }`}>
-          Buscar tickets
+          Buscar chamados
           <div className="relative min-w-0">
             <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
               <LuSearch size={16} />
@@ -499,7 +499,7 @@ export default function DashboardPage() {
                 Resumo Geral
               </h2>
               <span className="font-mono text-xs text-slate-500">
-                {totalCount} {totalCount === 1 ? 'ticket' : 'tickets'}
+                {totalCount} {totalCount === 1 ? 'chamado' : 'chamados'}
               </span>
             </div>
             <p className={`mb-4 text-xs ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>

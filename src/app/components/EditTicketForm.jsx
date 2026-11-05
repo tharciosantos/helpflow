@@ -108,7 +108,7 @@ export default function EditTicketForm({ ticket, onTicketUpdated, isAgent = fals
 
             if (!res.ok) {
                 const data = await res.json();
-                throw new Error(data.message || 'Falha ao atualizar o ticket.');
+                throw new Error(data.message || 'Falha ao atualizar o chamado.');
             }
 
             if (onTicketUpdated) {
