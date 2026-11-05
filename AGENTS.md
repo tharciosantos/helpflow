@@ -58,7 +58,7 @@ Regra: toda correção de um item `AUD-xx` deve atualizar o status, o commit e a
 | **Rate Limiting** | @upstash/ratelimit + @upstash/redis | Sliding window / fallback em memória |
 | **Animações** | Anime.js | 4.5.x |
 | **E-mail** | Nodemailer | Recuperação de senhas (`EMAIL_USER` / `EMAIL_PASS`) |
-| **Testes Unitários** | Vitest | 180 testes de **funções puras** em `src/lib/` (ambiente `node`, sem jsdom, sem Testing Library) |
+| **Testes Unitários** | Vitest | 182 testes de **funções puras** em `src/lib/` (ambiente `node`, sem jsdom, sem Testing Library) |
 | **Testes E2E** | Cypress | 15.x — 4 specs / 21 cenários em `cypress/e2e/` |
 | **Linter** | ESLint (flat config) + eslint-config-next | 9.x |
 
@@ -113,7 +113,7 @@ helpflow/
 │   │   ├── layout.js          # RootLayout com ThemeProvider e AuthProvider
 │   │   └── globals.css        # Tailwind v4 directives e estilos base
 │   └── lib/                   # ← Regra de negócio (funções puras) + integrações
-│       ├── __tests__/         # 180 testes Vitest (15 arquivos)
+│       ├── __tests__/         # 182 testes Vitest (15 arquivos)
 │       ├── auth.js            # Configuração do NextAuth, callbacks, authorize e tokenVersion
 │       ├── prisma.js          # Instância singleton do PrismaClient
 │       ├── email.js           # Envio de e-mails via Nodemailer (EMAIL_USER/EMAIL_PASS)
@@ -254,6 +254,7 @@ CYPRESS_TEST_SECRET="seu-segredo-cypress"
   - `CLIENT` só visualiza/edita/exclui o **próprio** ticket, e edição/exclusão apenas enquanto estiver `OPEN`.
   - `AGENT` atua em qualquer ticket **da própria empresa**: status, prioridade, responsável e prazo.
   - Campos de triagem (`status`, `priority`, `agentId`, `dueAt`, `recalcDue`) são bloqueados para `CLIENT` no `PATCH`.
+  - **Chamado `CLOSED` não aceita comentário de `CLIENT`** (403 com mensagem específica — follow-up deve virar novo chamado). O `AGENT` continua podendo comentar em chamado fechado.
   - Contas/tickets **sem empresa** operam em escopo pessoal; ticket com empresa só aceita responsável da mesma empresa.
 - **SLA**: `dueAt` é **derivado da prioridade** na criação — `LOW` 168h, `MEDIUM` 72h, `HIGH` 24h, `URGENT` 4h (`src/lib/sla.js`). O `AGENT` pode sobrescrever o prazo ou pedir recálculo (`recalcDue`). Atrasado é **calculado on-read** (`isOverdue`), não armazenado.
 - **Notificações in-app**: geradas para atribuição, comentário público e mudança de status; a regra de ouro é **nunca notificar quem praticou a ação** (`src/lib/notifications.js`). Notas internas (`INTERNAL`) não geram notificação.
@@ -288,7 +289,7 @@ CYPRESS_TEST_SECRET="seu-segredo-cypress"
 
 ## 10. Testes e Validação
 
-- **Suíte Vitest — 180 testes em 15 arquivos**: cobrem **funções puras** de `src/lib/` (ambiente `node`, **sem Testing Library e sem jsdom**). Não há testes de componentes ou de Route Handlers.
+- **Suíte Vitest — 182 testes em 15 arquivos**: cobrem **funções puras** de `src/lib/` (ambiente `node`, **sem Testing Library e sem jsdom**). Não há testes de componentes ou de Route Handlers.
   - Validações de Schemas Zod (`schemas.test.js`)
   - Utilitários de Tickets e Formatação (`ticketUtils.test.js`)
   - Autorização, RBAC e isolamento multiempresa (`ticketAuthorization.test.js`)
