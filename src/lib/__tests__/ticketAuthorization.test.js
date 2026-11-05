@@ -143,6 +143,15 @@ describe('autorização de tickets com isolamento multi-empresa', () => {
       expect(canCommentOnTicket(otherCompanyClient, ticket)).toBe(false);
     });
 
+    it('bloqueia CLIENT de comentar em chamado CLOSED', () => {
+      expect(canCommentOnTicket(owner, closedTicket)).toBe(false);
+      expect(canCommentOnTicket(otherClientSameCompany, closedTicket)).toBe(false);
+    });
+
+    it('permite AGENT comentar em chamado CLOSED', () => {
+      expect(canCommentOnTicket(agentSameCompany, closedTicket)).toBe(true);
+    });
+
     it('permite ao autor excluir seu próprio comentário', () => {
       expect(canDeleteComment(owner, ownComment, ticket)).toBe(true);
     });

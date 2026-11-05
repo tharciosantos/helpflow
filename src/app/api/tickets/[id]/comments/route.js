@@ -98,7 +98,11 @@ export async function POST(req, { params }) {
     }
 
     if (!canCommentOnTicket(session.user, ticket)) {
-      return NextResponse.json({ message: 'Você não tem permissão para comentar neste chamado.' }, { status: 403 });
+      const message =
+        ticket.status === 'CLOSED' && session.user.role !== 'AGENT'
+          ? 'Chamado fechado não aceita novos comentários. Abra um novo chamado.'
+          : 'Você não tem permissão para comentar neste chamado.';
+      return NextResponse.json({ message }, { status: 403 });
     }
 
     const body = await req.json();
