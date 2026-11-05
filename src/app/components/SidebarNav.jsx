@@ -39,7 +39,7 @@ export default function SidebarNav({ dataCyPrefix = 'sidebar', showNotifications
         className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${getLinkClasses('/dashboard/tickets/new')}`}
       >
         <LuTicketPlus size={20} />
-        <span>Novo Ticket</span>
+        <span>Novo Chamado</span>
       </Link>
       {showNotifications && <NotificationBell />}
     </nav>

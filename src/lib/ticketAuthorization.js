@@ -24,7 +24,7 @@ export function canViewTicket(user, ticket) {
 export function canDeleteTicket(user, ticket) {
   if (!canViewTicket(user, ticket)) return false;
   // P0: CLIENT só exclui o próprio ticket ainda em OPEN.
-  // AGENT pode excluir qualquer ticket da empresa (soft-delete na API).
+  // AGENT pode excluir qualquer ticket da empresa (hard delete na API).
   if (user?.role === 'AGENT') return true;
   return ticket.authorId === user?.id && ticket.status === 'OPEN';
 }
@@ -44,7 +44,11 @@ export function canEditTicketContent(user, ticket) {
 }
 
 export function canCommentOnTicket(user, ticket) {
-  return canViewTicket(user, ticket);
+  if (!canViewTicket(user, ticket)) return false;
+  // Chamado fechado é encerrado para o CLIENT: follow-up deve virar novo
+  // chamado. O AGENT mantém o direito de comentar (ex.: nota de encerramento).
+  if (user?.role === 'AGENT') return true;
+  return ticket.status !== 'CLOSED';
 }
 
 // Explica a recusa de edição sem revelar dados de chamados de terceiros:

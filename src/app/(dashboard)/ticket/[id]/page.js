@@ -56,9 +56,9 @@ export default function TicketDetailsPage() {
         try {
             const res = await fetch(`/api/tickets/${id}`);
             if (!res.ok) {
-                if (res.status === 404) throw new Error('Ticket não encontrado');
+                if (res.status === 404) throw new Error('Chamado não encontrado');
                 if (res.status === 401 || res.status === 403) throw new Error('Não autorizado');
-                throw new Error('Falha ao buscar o ticket');
+                throw new Error('Falha ao buscar o chamado');
             }
             const data = await res.json();
             setTicket(data);
@@ -68,8 +68,8 @@ export default function TicketDetailsPage() {
             setNewPriority(data.priority ?? 'MEDIUM');
             setNewAgentId(data.agentId ?? '');
         } catch (err) {
-            console.error('Erro ao buscar ticket:', err);
-            setError(err.message || 'Erro ao buscar o ticket');
+            console.error('Erro ao buscar chamado:', err);
+            setError(err.message || 'Erro ao buscar o chamado');
         } finally {
             setLoading(false);
         }
@@ -111,7 +111,7 @@ export default function TicketDetailsPage() {
             });
             if (!res.ok) {
                 const body = await res.json();
-                throw new Error(body.message || 'Falha ao atualizar o ticket.');
+                throw new Error(body.message || 'Falha ao atualizar o chamado.');
             }
             const updated = await res.json();
             setTicket(prev => ({ ...prev, ...updated }));
@@ -121,8 +121,8 @@ export default function TicketDetailsPage() {
             setSuccess('Alterações salvas com sucesso!');
             setTimeout(() => setSuccess(''), 4000);
         } catch (err) {
-            console.error('Erro ao atualizar ticket:', err);
-            setError(err.message || 'Erro ao atualizar o ticket.');
+            console.error('Erro ao atualizar chamado:', err);
+            setError(err.message || 'Erro ao atualizar o chamado.');
         } finally {
             setIsUpdating(false);
         }
@@ -140,14 +140,14 @@ export default function TicketDetailsPage() {
 
             if (!res.ok) {
                 const body = await res.json();
-                throw new Error(body.message || 'Falha ao deletar o ticket');
+                throw new Error(body.message || 'Falha ao excluir o chamado');
             }
 
             router.push('/dashboard');
             router.refresh();
         } catch (err) {
-            console.error('Erro ao deletar ticket:', err);
-            setError(err.message || 'Erro ao deletar o ticket');
+            console.error('Erro ao excluir chamado:', err);
+            setError(err.message || 'Erro ao excluir o chamado');
             setIsDeleting(false);
             setConfirmDeleteTicket(false);
         }
@@ -226,7 +226,7 @@ export default function TicketDetailsPage() {
     }
 
     if (!ticket) {
-        return <div className={`p-8 text-center ${theme === 'light' ? 'text-slate-500' : 'text-gray-400'}`}>Ticket não encontrado.</div>;
+        return <div className={`p-8 text-center ${theme === 'light' ? 'text-slate-500' : 'text-gray-400'}`}>Chamado não encontrado.</div>;
     }
 
     const canManageTicket = session?.user?.role === 'AGENT' || session?.user?.id === ticket.authorId;
@@ -578,8 +578,8 @@ export default function TicketDetailsPage() {
 
             <ConfirmDialog
                 open={confirmDeleteTicket}
-                title="Excluir ticket"
-                description="Tem certeza que deseja excluir este ticket? Essa ação não pode ser desfeita."
+                title="Excluir chamado"
+                description="Tem certeza que deseja excluir este chamado? Essa ação não pode ser desfeita."
                 confirmLabel="Excluir"
                 confirming={isDeleting}
                 onCancel={() => !isDeleting && setConfirmDeleteTicket(false)}

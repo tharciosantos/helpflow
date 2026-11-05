@@ -26,7 +26,7 @@ export default function CreateTicketForm({ onTicketCreated }) {
       });
 
       if (res.ok) {
-        setStatusMessage('Ticket criado com sucesso!');
+        setStatusMessage('Chamado criado com sucesso!');
         setTitle('');
         setDescription('');
         if (onTicketCreated) {
@@ -34,7 +34,7 @@ export default function CreateTicketForm({ onTicketCreated }) {
         }
       } else {
         const error = await res.json();
-        setStatusMessage(`Erro: ${error.message || 'Não foi possível criar o ticket.'}`);
+        setStatusMessage(`Erro: ${error.message || 'Não foi possível criar o chamado.'}`);
       }
     } catch (err) {
       // Erro de rede, timeout, servidor offline, etc.
@@ -153,7 +153,7 @@ export default function CreateTicketForm({ onTicketCreated }) {
           className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 text-sm font-semibold shadow-xs transition active:scale-[0.99] disabled:opacity-50"
         >
           <LuSend size={15} />
-          {loading ? 'Criando ticket...' : 'Criar Ticket'}
+          {loading ? 'Criando chamado...' : 'Criar Chamado'}
         </button>
       </div>
 

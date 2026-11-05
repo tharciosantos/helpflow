@@ -26,7 +26,7 @@ export default function EditTicketPage() {
                     setLoading(true);
                     const res = await fetch(`/api/tickets/${id}`);
                     if (!res.ok) {
-                        throw new Error('Falha ao buscar o ticket.');
+                        throw new Error('Falha ao buscar o chamado.');
                     }
                     const data = await res.json();
                     setTicket(data);
@@ -61,7 +61,7 @@ export default function EditTicketPage() {
     };
 
     if (loading || sessionStatus === 'loading') {
-        return <p className={`text-center mt-12 ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>Carregando ticket...</p>;
+        return <p className={`text-center mt-12 ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>Carregando chamado...</p>;
     }
 
     if (error) {

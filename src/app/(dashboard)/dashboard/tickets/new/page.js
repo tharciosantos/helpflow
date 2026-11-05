@@ -46,7 +46,7 @@ export default function NewTicketPage() {
           <h1 className={`text-xl sm:text-2xl font-bold tracking-tight break-words ${
             theme === 'light' ? 'text-slate-900' : 'text-white'
           }`}>
-            Abrir Novo Ticket
+            Abrir Novo Chamado
           </h1>
           <p className={`text-sm ${
             theme === 'light' ? 'text-slate-500' : 'text-slate-400'

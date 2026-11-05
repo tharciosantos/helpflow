@@ -25,7 +25,7 @@ export async function DELETE(req, { params }) {
     });
 
     if (!ticket) {
-      return NextResponse.json({ message: 'Ticket não encontrado' }, { status: 404 });
+      return NextResponse.json({ message: 'Chamado não encontrado' }, { status: 404 });
     }
 
     const comment = await prisma.ticketComment.findUnique({

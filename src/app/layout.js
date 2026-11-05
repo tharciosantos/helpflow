@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "HelpFlow - Sistema de HelpDesk",
+  title: "HelpFlow - Sistema de Service Desk",
   description: "Gerencie seus chamados de suporte de forma eficiente.",
 };
 

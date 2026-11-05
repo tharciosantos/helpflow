@@ -39,13 +39,13 @@ export default function TicketList({
       const res = await fetch(`/api/tickets/${ticketId}`, { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.message || "Falha ao excluir o ticket.");
+        throw new Error(data.message || "Falha ao excluir o chamado.");
       }
       const deletedTicket = tickets.find(t => t.id === ticketId);
       onTicketDeleted?.(ticketId, deletedTicket?.status);
-      showFeedback(setSuccessMessage, 'Ticket excluído com sucesso.');
+      showFeedback(setSuccessMessage, 'Chamado excluído com sucesso.');
     } catch (err) {
-      showFeedback(setErrorMessage, err.message || 'Erro ao excluir o ticket.');
+      showFeedback(setErrorMessage, err.message || 'Erro ao excluir o chamado.');
     } finally {
       setDeletingId(null);
       setPendingDeleteId(null);
@@ -83,11 +83,11 @@ export default function TicketList({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ agentId: agentId || null }),
       });
-      if (!res.ok) throw new Error('Falha ao atribuir o ticket.');
+      if (!res.ok) throw new Error('Falha ao atribuir o chamado.');
       onTicketUpdated?.(await res.json());
       setSuccessMessage('Responsável atualizado com sucesso.');
     } catch (err) {
-      setErrorMessage(err.message || 'Erro ao atribuir o ticket.');
+      setErrorMessage(err.message || 'Erro ao atribuir o chamado.');
     } finally {
       setUpdatingId(null);
     }
@@ -95,7 +95,7 @@ export default function TicketList({
 
   if (loading) {
     return (
-      <div aria-label="Carregando tickets" aria-busy="true" className="mt-4 space-y-4">
+      <div aria-label="Carregando chamados" aria-busy="true" className="mt-4 space-y-4">
         {[1, 2, 3].map((item) => (
           <div key={item} className={"animate-pulse rounded-xl border p-5 " + (theme === "light" ? "bg-slate-50 border-slate-200" : "bg-slate-800/40 border-slate-800")}>
             <div className={"h-5 w-2/3 rounded " + (theme === "light" ? "bg-slate-200" : "bg-slate-700")} />
@@ -111,7 +111,7 @@ export default function TicketList({
     return (
       <div role="alert" className={"mt-4 rounded-xl border p-6 text-center " + (theme === "light" ? "bg-red-50 border-red-200 text-red-600" : "bg-red-500/10 border-red-500/50 text-red-400")}>
         <LuCircleAlert size={28} className="mx-auto mb-2 text-red-500" />
-        <p className="font-semibold">Erro ao carregar tickets</p>
+        <p className="font-semibold">Erro ao carregar chamados</p>
         <p className="mt-1 text-sm opacity-90">{error}</p>
       </div>
     );
@@ -139,12 +139,12 @@ export default function TicketList({
               <LuInbox size={24} />
             </div>
             <p className={`font-medium text-sm ${theme === "light" ? "text-slate-600" : "text-slate-300"}`}>
-              {hasActiveFilters ? "Nenhum ticket encontrado para os filtros selecionados." : "Você ainda não possui tickets abertos."}
+              {hasActiveFilters ? "Nenhum chamado encontrado para os filtros selecionados." : "Você ainda não possui chamados abertos."}
             </p>
             {!hasActiveFilters && (
               <Link href="/dashboard/tickets/new" className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-600 underline hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 transition">
                 <LuTicket size={16} />
-                Criar meu primeiro ticket →
+                Criar meu primeiro chamado →
               </Link>
             )}
           </div>
@@ -325,8 +325,8 @@ export default function TicketList({
       </div>
       <ConfirmDialog
         open={Boolean(pendingDeleteId)}
-        title="Excluir ticket"
-        description="Tem certeza que deseja excluir este ticket? Essa ação não pode ser desfeita."
+        title="Excluir chamado"
+        description="Tem certeza que deseja excluir este chamado? Essa ação não pode ser desfeita."
         confirmLabel="Excluir"
         confirming={Boolean(pendingDeleteId && deletingId === pendingDeleteId)}
         onCancel={() => setPendingDeleteId(null)}

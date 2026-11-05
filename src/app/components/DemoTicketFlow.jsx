@@ -191,7 +191,7 @@ export default function DemoTicketFlow({ theme = "dark" }) {
                         <p className={`text-xs font-mono font-semibold ${
                             theme === "light" ? "text-slate-500" : "text-slate-400"
                         }`}>
-                            Ticket #1042
+                            Chamado #1042
                         </p>
 
                         <h2

@@ -28,7 +28,7 @@ export async function GET(req, { params }) {
     });
 
     if (!ticket) {
-      return NextResponse.json({ message: 'Ticket não encontrado' }, { status: 404 });
+      return NextResponse.json({ message: 'Chamado não encontrado' }, { status: 404 });
     }
 
     if (!canViewTicket(session.user, ticket)) {
@@ -94,11 +94,15 @@ export async function POST(req, { params }) {
     });
 
     if (!ticket) {
-      return NextResponse.json({ message: 'Ticket não encontrado' }, { status: 404 });
+      return NextResponse.json({ message: 'Chamado não encontrado' }, { status: 404 });
     }
 
     if (!canCommentOnTicket(session.user, ticket)) {
-      return NextResponse.json({ message: 'Você não tem permissão para comentar neste chamado.' }, { status: 403 });
+      const message =
+        ticket.status === 'CLOSED' && session.user.role !== 'AGENT'
+          ? 'Chamado fechado não aceita novos comentários. Abra um novo chamado.'
+          : 'Você não tem permissão para comentar neste chamado.';
+      return NextResponse.json({ message }, { status: 403 });
     }
 
     const body = await req.json();
