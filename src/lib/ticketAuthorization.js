@@ -65,8 +65,10 @@ export function getEditDenialMessage(user, ticket) {
 export function canDeleteComment(user, comment, ticket) {
   if (!user?.id || !comment || !ticket) return false;
   if (!canViewTicket(user, ticket)) return false;
-  if (comment.authorId === user.id) return true;
   if (user.role === 'AGENT') return true;
-  return false;
+  // Paridade com canCommentOnTicket: se o CLIENT não pode criar comentário em
+  // chamado fechado, também não pode remover o que já existe.
+  if (ticket.status === 'CLOSED') return false;
+  return comment.authorId === user.id;
 }
 
