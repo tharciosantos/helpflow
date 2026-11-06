@@ -255,6 +255,7 @@ CYPRESS_TEST_SECRET="seu-segredo-cypress"
   - `AGENT` atua em qualquer ticket **da própria empresa**: status, prioridade, responsável e prazo.
   - Campos de triagem (`status`, `priority`, `agentId`, `dueAt`, `recalcDue`) são bloqueados para `CLIENT` no `PATCH`.
   - **Chamado `CLOSED` não aceita comentário de `CLIENT`** (403 com mensagem específica — follow-up deve virar novo chamado). O `AGENT` continua podendo comentar em chamado fechado.
+  - **Atribuição de responsável aceita qualquer membro da empresa**, inclusive `CLIENT` (delegação a colaborador). `GET /api/agents` lista todos os membros do tenant, o `PATCH` valida apenas o vínculo com a empresa e o `EditTicketForm` rotula cada opção como `(TI / Suporte)` ou `(Funcionário)`. O `CLIENT` designado passa a ver o chamado (`canViewTicket`), mas não ganha poder de triagem.
   - Contas/tickets **sem empresa** operam em escopo pessoal; ticket com empresa só aceita responsável da mesma empresa.
 - **SLA**: `dueAt` é **derivado da prioridade** na criação — `LOW` 168h, `MEDIUM` 72h, `HIGH` 24h, `URGENT` 4h (`src/lib/sla.js`). O `AGENT` pode sobrescrever o prazo ou pedir recálculo (`recalcDue`). Atrasado é **calculado on-read** (`isOverdue`), não armazenado.
 - **Notificações in-app**: geradas para atribuição, comentário público e mudança de status; a regra de ouro é **nunca notificar quem praticou a ação** (`src/lib/notifications.js`). Notas internas (`INTERNAL`) não geram notificação.

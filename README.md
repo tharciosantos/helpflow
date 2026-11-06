@@ -60,7 +60,7 @@ O HelpFlow guia a organização desde a criação do espaço até a resolução 
 | **5. Visão do Colaborador**<br>Histórico estritamente privado dos chamados do funcionário.<br>![Dashboard do Funcionário](docs/screenshots/05-dashboard-funcionario-privado.png) | **6. Abertura de Novo Chamado**<br>Solicitação de suporte com categorização por severidade.<br>![Abertura de Chamado](docs/screenshots/06-abertura-novo-chamado.png) |
 
 ### 7. Triagem Ágil e Acompanhamento de Detalhes
-Painel de triagem completa na página de detalhes, permitindo alterar status, prioridade e atribuir qualquer membro da empresa.
+Painel de triagem completa na página de detalhes, permitindo alterar status, prioridade e atribuir como responsável qualquer membro da empresa, seja técnico (TI / Suporte) ou colaborador (Funcionário).
 
 ![Triagem e Detalhes do Chamado](docs/screenshots/07-triagem-e-detalhes-ticket.png)
 
