@@ -58,7 +58,7 @@ Regra: toda correção de um item `AUD-xx` deve atualizar o status, o commit e a
 | **Rate Limiting** | @upstash/ratelimit + @upstash/redis | Sliding window / fallback em memória |
 | **Animações** | Anime.js | 4.5.x |
 | **E-mail** | Nodemailer | Recuperação de senhas (`EMAIL_USER` / `EMAIL_PASS`) |
-| **Testes Unitários** | Vitest | 182 testes de **funções puras** em `src/lib/` (ambiente `node`, sem jsdom, sem Testing Library) |
+| **Testes Unitários** | Vitest | 184 testes de **funções puras** em `src/lib/` (ambiente `node`, sem jsdom, sem Testing Library) |
 | **Testes E2E** | Cypress | 15.x — 4 specs / 21 cenários em `cypress/e2e/` |
 | **Linter** | ESLint (flat config) + eslint-config-next | 9.x |
 
@@ -113,7 +113,7 @@ helpflow/
 │   │   ├── layout.js          # RootLayout com ThemeProvider e AuthProvider
 │   │   └── globals.css        # Tailwind v4 directives e estilos base
 │   └── lib/                   # ← Regra de negócio (funções puras) + integrações
-│       ├── __tests__/         # 182 testes Vitest (15 arquivos)
+│       ├── __tests__/         # 184 testes Vitest (15 arquivos)
 │       ├── auth.js            # Configuração do NextAuth, callbacks, authorize e tokenVersion
 │       ├── prisma.js          # Instância singleton do PrismaClient
 │       ├── email.js           # Envio de e-mails via Nodemailer (EMAIL_USER/EMAIL_PASS)
@@ -254,7 +254,8 @@ CYPRESS_TEST_SECRET="seu-segredo-cypress"
   - `CLIENT` só visualiza/edita/exclui o **próprio** ticket, e edição/exclusão apenas enquanto estiver `OPEN`.
   - `AGENT` atua em qualquer ticket **da própria empresa**: status, prioridade, responsável e prazo.
   - Campos de triagem (`status`, `priority`, `agentId`, `dueAt`, `recalcDue`) são bloqueados para `CLIENT` no `PATCH`.
-  - **Chamado `CLOSED` não aceita comentário de `CLIENT`** (403 com mensagem específica — follow-up deve virar novo chamado). O `AGENT` continua podendo comentar em chamado fechado.
+  - **Chamado `CLOSED` não aceita comentário de `CLIENT`** (403 com mensagem específica — follow-up deve virar novo chamado), nem exclusão de comentário próprio. O `AGENT` continua podendo comentar e moderar em chamado fechado.
+  - **Atribuição de responsável aceita qualquer membro da empresa**, inclusive `CLIENT` (delegação a colaborador). `GET /api/agents` lista todos os membros do tenant, o `PATCH` valida apenas o vínculo com a empresa e o `EditTicketForm` rotula cada opção como `(TI / Suporte)` ou `(Funcionário)`. O `CLIENT` designado passa a ver o chamado (`canViewTicket`), mas não ganha poder de triagem.
   - Contas/tickets **sem empresa** operam em escopo pessoal; ticket com empresa só aceita responsável da mesma empresa.
 - **SLA**: `dueAt` é **derivado da prioridade** na criação — `LOW` 168h, `MEDIUM` 72h, `HIGH` 24h, `URGENT` 4h (`src/lib/sla.js`). O `AGENT` pode sobrescrever o prazo ou pedir recálculo (`recalcDue`). Atrasado é **calculado on-read** (`isOverdue`), não armazenado.
 - **Notificações in-app**: geradas para atribuição, comentário público e mudança de status; a regra de ouro é **nunca notificar quem praticou a ação** (`src/lib/notifications.js`). Notas internas (`INTERNAL`) não geram notificação.
@@ -277,7 +278,7 @@ CYPRESS_TEST_SECRET="seu-segredo-cypress"
 - `DELETE /api/tickets/[id]` — Exclui ticket (autor `CLIENT` só se `OPEN`; `AGENT` da empresa).
 - `GET /api/tickets/[id]/comments` — Lista comentários (CLIENT recebe apenas `PUBLIC`).
 - `POST /api/tickets/[id]/comments` — Cria comentário (`PUBLIC` ou `INTERNAL`, esta só para `AGENT`).
-- `DELETE /api/tickets/[id]/comments/[commentId]` — Remove comentário (autor ou `AGENT`).
+- `DELETE /api/tickets/[id]/comments/[commentId]` — Remove comentário (autor ou `AGENT`; `CLIENT` bloqueado em chamado `CLOSED`).
 - `GET /api/notifications` — Lista notificações do usuário (não lidas primeiro, limite de 30) + `unreadCount`.
 - `PATCH /api/notifications` — Marca **todas** as notificações do usuário como lidas.
 - `PATCH /api/notifications/[id]` — Marca uma notificação específica como lida (só do próprio usuário).
@@ -289,7 +290,7 @@ CYPRESS_TEST_SECRET="seu-segredo-cypress"
 
 ## 10. Testes e Validação
 
-- **Suíte Vitest — 182 testes em 15 arquivos**: cobrem **funções puras** de `src/lib/` (ambiente `node`, **sem Testing Library e sem jsdom**). Não há testes de componentes ou de Route Handlers.
+- **Suíte Vitest — 184 testes em 15 arquivos**: cobrem **funções puras** de `src/lib/` (ambiente `node`, **sem Testing Library e sem jsdom**). Não há testes de componentes ou de Route Handlers.
   - Validações de Schemas Zod (`schemas.test.js`)
   - Utilitários de Tickets e Formatação (`ticketUtils.test.js`)
   - Autorização, RBAC e isolamento multiempresa (`ticketAuthorization.test.js`)

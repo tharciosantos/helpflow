@@ -89,7 +89,7 @@ describe('autorização de tickets com isolamento multi-empresa', () => {
   it('bloqueia CLIENT de editar/excluir ticket que saiu de OPEN', () => {
     expect(canEditTicketContent(owner, closedTicket)).toBe(false);
     expect(canDeleteTicket(owner, closedTicket)).toBe(false);
-    // AGENT mantém triagem/exclusão (soft-delete na API)
+    // AGENT mantém triagem/exclusão (hard delete na API)
     expect(canEditTicketContent(agentSameCompany, closedTicket)).toBe(true);
     expect(canDeleteTicket(agentSameCompany, closedTicket)).toBe(true);
   });
@@ -163,6 +163,14 @@ describe('autorização de tickets com isolamento multi-empresa', () => {
     it('bloqueia colaborador de excluir comentários de outros usuários', () => {
       expect(canDeleteComment(owner, agentComment, ticket)).toBe(false);
       expect(canDeleteComment(otherClientSameCompany, ownComment, ticket)).toBe(false);
+    });
+
+    it('bloqueia CLIENT de excluir comentário em chamado CLOSED', () => {
+      expect(canDeleteComment(owner, ownComment, closedTicket)).toBe(false);
+    });
+
+    it('permite AGENT excluir comentário em chamado CLOSED', () => {
+      expect(canDeleteComment(agentSameCompany, ownComment, closedTicket)).toBe(true);
     });
   });
 });
