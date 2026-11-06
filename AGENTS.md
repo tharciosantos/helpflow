@@ -58,7 +58,7 @@ Regra: toda correção de um item `AUD-xx` deve atualizar o status, o commit e a
 | **Rate Limiting** | @upstash/ratelimit + @upstash/redis | Sliding window / fallback em memória |
 | **Animações** | Anime.js | 4.5.x |
 | **E-mail** | Nodemailer | Recuperação de senhas (`EMAIL_USER` / `EMAIL_PASS`) |
-| **Testes Unitários** | Vitest | 184 testes de **funções puras** em `src/lib/` (ambiente `node`, sem jsdom, sem Testing Library) |
+| **Testes Unitários** | Vitest | 189 testes de **funções puras** em `src/lib/` (ambiente `node`, sem jsdom, sem Testing Library) |
 | **Testes E2E** | Cypress | 15.x — 4 specs / 21 cenários em `cypress/e2e/` |
 | **Linter** | ESLint (flat config) + eslint-config-next | 9.x |
 
@@ -113,7 +113,7 @@ helpflow/
 │   │   ├── layout.js          # RootLayout com ThemeProvider e AuthProvider
 │   │   └── globals.css        # Tailwind v4 directives e estilos base
 │   └── lib/                   # ← Regra de negócio (funções puras) + integrações
-│       ├── __tests__/         # 184 testes Vitest (15 arquivos)
+│       ├── __tests__/         # 189 testes Vitest (16 arquivos)
 │       ├── auth.js            # Configuração do NextAuth, callbacks, authorize e tokenVersion
 │       ├── prisma.js          # Instância singleton do PrismaClient
 │       ├── email.js           # Envio de e-mails via Nodemailer (EMAIL_USER/EMAIL_PASS)
@@ -290,7 +290,7 @@ CYPRESS_TEST_SECRET="seu-segredo-cypress"
 
 ## 10. Testes e Validação
 
-- **Suíte Vitest — 184 testes em 15 arquivos**: cobrem **funções puras** de `src/lib/` (ambiente `node`, **sem Testing Library e sem jsdom**). Não há testes de componentes ou de Route Handlers.
+- **Suíte Vitest — 189 testes em 16 arquivos**: cobrem **funções puras** de `src/lib/` (ambiente `node`, **sem Testing Library e sem jsdom**). Não há testes de componentes ou de Route Handlers.
   - Validações de Schemas Zod (`schemas.test.js`)
   - Utilitários de Tickets e Formatação (`ticketUtils.test.js`)
   - Autorização, RBAC e isolamento multiempresa (`ticketAuthorization.test.js`)
@@ -304,6 +304,7 @@ CYPRESS_TEST_SECRET="seu-segredo-cypress"
   - Versão de token / revogação de JWT (`sessionVersion.test.js`)
   - Autorização do cron / `CRON_SECRET` (`cronAuth.test.js`)
   - Fluxo do Simulador Interativo (`demoTicketFlow.test.js`)
+  - Consistência das contagens documentadas (`docsConsistency.test.js` — falha se `AGENTS.md` ou `README.md` divergirem da suíte real)
 - **E2E Cypress — 4 specs / 21 cenários em `cypress/e2e/`**: `auth.cy.js`, `tickets.cy.js`, `permissions.cy.js`, `comments.cy.js`. Rodam contra servidor e banco reais; `cy.createTestUser` cria usuários via `/api/register` com `x-test-secret`.
 
 ### 10.1 Validação Obrigatória (Antes do Commit / Push / PR)
