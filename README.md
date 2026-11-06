@@ -79,12 +79,14 @@ O sistema adota regras rigorosas de autorização no servidor (RBAC + Multi-tena
 |---|---|---|---|---|---|
 | **Criar chamado** | Sim | Sim | Sim | Sim | Sim (na sua empresa) |
 | **Visualizar chamado** | Sim | Bloqueado | Sim | Sim (todos da empresa) | Bloqueado |
-| **Comentar no chamado** | Sim | Bloqueado | Sim | Sim | Bloqueado |
-| **Excluir comentário** | Sim (próprio) | Bloqueado | Sim (próprio) | Sim (qualquer da empresa) | Bloqueado |
+| **Comentar no chamado** | Sim (exceto `Fechado`) | Bloqueado | Sim (exceto `Fechado`) | Sim | Bloqueado |
+| **Excluir comentário** | Sim (próprio, exceto `Fechado`) | Bloqueado | Sim (próprio, exceto `Fechado`) | Sim (qualquer da empresa) | Bloqueado |
 | **Editar título/descrição** | Sim (se Aberto) | Bloqueado | Bloqueado | Sim | Bloqueado |
 | **Alterar status/prioridade** | Bloqueado | Bloqueado | Bloqueado | Sim | Bloqueado |
 | **Atribuir responsável** | Bloqueado | Bloqueado | Bloqueado | Sim | Bloqueado |
 | **Excluir chamado** | Sim (próprio, se Aberto) | Bloqueado | Bloqueado | Sim | Bloqueado |
+
+> Chamado com status **Fechado** é encerrado para o `CLIENT`: ele não cria nem exclui comentários, e o follow-up deve virar um novo chamado. O `AGENT` continua podendo comentar e excluir comentários em chamados fechados.
 
 ---
 
@@ -297,7 +299,7 @@ model PasswordReset {
 - **ORM:** Prisma ORM 6
 
 ### Qualidade & Testes
-- **Testes Unitários:** Vitest — 180 testes unitários (15 suítes), cobrindo schemas, RBAC/multiempresa, SLA, métricas, notificações, histórico, sessões, cron e rate limiter.
+- **Testes Unitários:** Vitest — 182 testes unitários (15 suítes), cobrindo schemas, RBAC/multiempresa, SLA, métricas, notificações, histórico, sessões, cron e rate limiter.
 - **Testes E2E:** Cypress 15 — 4 specs com 21 cenários cobrindo autenticação, permissões, tickets e comentários.
 - **Linter:** ESLint 9
 
@@ -313,7 +315,7 @@ src/
 │   ├── api/                 # Endpoints REST (auth, register, tickets, agents, health, cron)
 │   └── components/          # Componentes de interface (TicketList, EditTicketForm, ThemeToggle, etc.)
 ├── lib/
-│   ├── __tests__/           # Suíte de 180 testes unitários do Vitest
+│   ├── __tests__/           # Suíte de 182 testes unitários do Vitest
 │   ├── auth.js              # NextAuth, callbacks de sessão e tokenVersion
 │   ├── prisma.js            # Instância singleton do PrismaClient
 │   ├── rateLimiter.js       # Rate limit Upstash + fallback em memória
@@ -399,7 +401,7 @@ Acesse [http://localhost:3000](http://localhost:3000) no seu navegador.
 ## Testes e Validação
 
 ```bash
-# Executar os 180 testes unitários (15 suítes) com Vitest
+# Executar os 182 testes unitários (15 suítes) com Vitest
 npm run test:run
 
 # Executar testes em modo watch
