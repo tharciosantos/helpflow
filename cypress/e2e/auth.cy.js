@@ -4,6 +4,8 @@ describe("Autenticação", () => {
 
         cy.visit("/register");
 
+        // O modo padrão do cadastro é COMPANY, que exige o nome da empresa.
+        cy.get("[data-cy='register-company-name']").type(`Empresa Teste ${Date.now()}`);
         cy.get("[data-cy='register-name']").type("Usuário Teste");
         cy.get("[data-cy='register-email']").type(email);
         cy.get("[data-cy='register-password']").type("Senha@123");
