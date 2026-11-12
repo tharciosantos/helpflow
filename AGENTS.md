@@ -59,7 +59,7 @@ Regra: toda correção de um item `AUD-xx` deve atualizar o status, o commit e a
 | **Animações** | Anime.js | 4.5.x |
 | **E-mail** | Nodemailer | Recuperação de senhas (`EMAIL_USER` / `EMAIL_PASS`) |
 | **Testes Unitários** | Vitest | 204 testes de **funções puras** em `src/lib/` (ambiente `node`, sem jsdom, sem Testing Library) |
-| **Testes E2E** | Cypress | 15.x — 5 specs / 25 cenários em `cypress/e2e/` |
+| **Testes E2E** | Cypress | 15.x — 6 specs / 27 cenários em `cypress/e2e/` |
 | **Linter** | ESLint (flat config) + eslint-config-next | 9.x |
 
 ---
@@ -133,7 +133,7 @@ helpflow/
 │       ├── ticketConcurrency.js # Update otimista do PATCH (expectedUpdatedAt, 409)
 │       └── demoTicketFlow.js  # Sequência de estados do simulador
 ├── cypress/
-│   ├── e2e/                   # auth · tickets · permissions · comments · concurrency (5 specs)
+│   ├── e2e/                   # auth · tickets · permissions · comments · concurrency · detail-race (6 specs)
 │   └── support/               # commands.js (createTestUser, login)
 └── docs/                      # Screenshots, notas de incidentes, plano de rate limit
                                #   e AUDITORIA.md (backlog de correções)
@@ -307,7 +307,7 @@ CYPRESS_TEST_SECRET="seu-segredo-cypress"
   - Autorização do cron / `CRON_SECRET` (`cronAuth.test.js`)
   - Fluxo do Simulador Interativo (`demoTicketFlow.test.js`)
   - Consistência das contagens documentadas (`docsConsistency.test.js` — falha se `AGENTS.md` ou `README.md` divergirem da suíte real)
-- **E2E Cypress — 5 specs / 25 cenários em `cypress/e2e/`**: `auth.cy.js`, `tickets.cy.js`, `permissions.cy.js`, `comments.cy.js`, `concurrency.cy.js`. Rodam contra servidor e banco reais; `cy.createTestUser` cria usuários via `/api/register` com `x-test-secret`.
+- **E2E Cypress — 6 specs / 27 cenários em `cypress/e2e/`**: `auth.cy.js`, `tickets.cy.js`, `permissions.cy.js`, `comments.cy.js`, `concurrency.cy.js`, `detail-race.cy.js`. Rodam contra servidor e banco reais; `cy.createTestUser` cria usuários via `/api/register` com `x-test-secret`.
 
 ### 10.1 Validação Obrigatória (Antes do Commit / Push / PR)
 
