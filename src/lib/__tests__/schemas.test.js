@@ -138,6 +138,16 @@ describe('updateTicketStatusSchema', () => {
         const result = updateTicketStatusSchema.safeParse({ status: 'CLOSED', dueAt: null });
         expect(result.success).toBe(false);
     });
+
+    it('deve aceitar expectedUpdatedAt (controle de concorrência)', () => {
+        // Metadado do update otimista: acompanha o PATCH de status sem ser
+        // conteúdo do chamado.
+        const result = updateTicketStatusSchema.safeParse({
+            status: 'IN_PROGRESS',
+            expectedUpdatedAt: '2026-11-12T10:00:00.000Z',
+        });
+        expect(result.success).toBe(true);
+    });
 });
 
 // ─────────────────────────────────────────────
