@@ -11,11 +11,15 @@ describe("Tickets", () => {
 
             cy.visit("/dashboard/tickets/new");
 
+            // Espera o React montar: sem hidratação o submit cai no form
+            // nativo, a pagina recarrega e a mensagem de sucesso nunca aparece.
+            cy.get('[data-cy="ticket-create-submit"]').should("not.be.disabled");
+
             cy.get('[data-cy="ticket-create-title"]').type(title);
             cy.get('[data-cy="ticket-create-description"]').type("Descrição teste");
             cy.get('[data-cy="ticket-create-submit"]').click();
 
-            cy.contains("Chamado criado com sucesso").should("be.visible");
+            cy.contains("Chamado criado com sucesso", { timeout: 10000 }).should("be.visible");
             cy.contains(title).scrollIntoView().should("be.visible");
         });
     });
@@ -43,11 +47,12 @@ describe("Tickets", () => {
                 cy.login(agent.email, agent.password);
 
                 cy.visit("/dashboard/tickets/new");
+                cy.get('[data-cy="ticket-create-submit"]').should("not.be.disabled");
                 cy.get('[data-cy="ticket-create-title"]').type(title);
                 cy.get('[data-cy="ticket-create-description"]').type("Teste status");
                 cy.get('[data-cy="ticket-create-submit"]').click();
 
-                cy.contains("Chamado criado com sucesso").should("be.visible");
+                cy.contains("Chamado criado com sucesso", { timeout: 10000 }).should("be.visible");
 
                 // A troca de status acontece no detalhe do chamado (AGENT).
                 cy.contains(title).scrollIntoView().click();
@@ -73,11 +78,12 @@ describe("Tickets", () => {
 
             cy.visit("/dashboard/tickets/new");
 
+            cy.get('[data-cy="ticket-create-submit"]').should("not.be.disabled");
             cy.get('[data-cy="ticket-create-title"]').type(title);
             cy.get('[data-cy="ticket-create-description"]').type("Teste exclusão");
             cy.get('[data-cy="ticket-create-submit"]').click();
 
-            cy.contains("Chamado criado com sucesso").should("be.visible");
+            cy.contains("Chamado criado com sucesso", { timeout: 10000 }).should("be.visible");
             cy.contains(title).scrollIntoView().should("be.visible");
 
             // A exclusão fica no detalhe do chamado, confirmada por modal.

@@ -9,6 +9,8 @@ describe("Comentários do chamado", () => {
         cy.intercept("POST", "/api/tickets").as("createTicket");
         cy.visit("/dashboard/tickets/new");
 
+        // Espera o React montar: sem hidratação o submit cai no form nativo.
+        cy.get('[data-cy="ticket-create-submit"]').should("not.be.disabled");
         cy.get('[data-cy="ticket-create-title"]').type(title);
         cy.get('[data-cy="ticket-create-description"]').type("Descrição para teste de comentários");
         cy.get('[data-cy="ticket-create-submit"]').click();
