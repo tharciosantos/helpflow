@@ -13,6 +13,11 @@
 # testing
 /coverage
 
+# cypress — artefatos gerados ao rodar a suíte localmente
+/cypress/screenshots
+/cypress/videos
+/cypress/downloads
+
 # next.js
 /.next/
 /out/

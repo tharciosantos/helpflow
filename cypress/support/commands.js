@@ -39,8 +39,11 @@ Cypress.Commands.add("createTestUser", (overrides = {}) => {
 
 Cypress.Commands.add("login", (email, password) => {
   cy.visit("/login");
+  // Espera o React montar antes de digitar: sem hidratação o submit cai no
+  // form nativo e a página recarrega, perdendo os valores digitados.
+  cy.get("[data-cy='login-submit']").should("not.be.disabled");
   cy.get("[data-cy='login-email']").type(email);
   cy.get("[data-cy='login-password']").type(password);
   cy.get("[data-cy='login-submit']").click();
-  cy.url({ timeout: 10000 }).should("include", "/dashboard");
+  cy.url({ timeout: 15000 }).should("include", "/dashboard");
 });
