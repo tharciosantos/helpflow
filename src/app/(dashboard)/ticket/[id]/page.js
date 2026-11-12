@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
@@ -49,18 +49,30 @@ export default function TicketDetailsPage() {
     const [commentError, setCommentError] = useState('');
     const [deletingCommentId, setDeletingCommentId] = useState(null);
 
+    // Cancela a requisição anterior ao trocar de chamado. Sem isso, a resposta
+    // do ticket anterior podia chegar depois e sobrescrever a tela com dados de
+    // outro chamado (ou, se o anterior desse 404, exibir erro num chamado válido).
+    const abortRef = useRef(null);
+
     const fetchTicket = useCallback(async () => {
+        abortRef.current?.abort();
+        const controller = new AbortController();
+        abortRef.current = controller;
+
         setLoading(true);
         setError('');
         setSuccess('');
         try {
-            const res = await fetch(`/api/tickets/${id}`);
+            const res = await fetch(`/api/tickets/${id}`, { signal: controller.signal });
             if (!res.ok) {
                 if (res.status === 404) throw new Error('Chamado não encontrado');
                 if (res.status === 401 || res.status === 403) throw new Error('Não autorizado');
                 throw new Error('Falha ao buscar o chamado');
             }
             const data = await res.json();
+            // Só aplica se esta ainda for a requisição corrente: ao trocar de
+            // chamado, uma resposta atrasada não pode repintar a tela.
+            if (abortRef.current !== controller) return;
             setTicket(data);
             setComments(data.comments || []);
             setHistories(data.histories || []);
@@ -68,16 +80,28 @@ export default function TicketDetailsPage() {
             setNewPriority(data.priority ?? 'MEDIUM');
             setNewAgentId(data.agentId ?? '');
         } catch (err) {
+            if (err?.name === 'AbortError') return;
+            if (abortRef.current !== controller) return;
             console.error('Erro ao buscar chamado:', err);
             setError(err.message || 'Erro ao buscar o chamado');
         } finally {
-            setLoading(false);
+            if (abortRef.current === controller) setLoading(false);
         }
     }, [id]);
 
     useEffect(() => {
-        if (id) fetchTicket();
+        if (!id) return;
+
+        // Troca de chamado: descarta o anterior antes de buscar o novo, para a
+        // tela não exibir os dados do ticket antigo enquanto o fetch acontece.
+        setTicket(null);
+        setComments([]);
+        setHistories([]);
+        fetchTicket();
     }, [id, fetchTicket]);
+
+    // Aborta a requisição em andamento ao desmontar (ex.: voltar ao dashboard).
+    useEffect(() => () => abortRef.current?.abort(), []);
 
     useEffect(() => {
         if (session?.user?.role === 'AGENT') {
@@ -237,6 +261,19 @@ export default function TicketDetailsPage() {
 
     if (error && !ticket && !isDeleting) {
         return <div className={`p-8 text-center ${theme === 'light' ? 'text-red-600' : 'text-red-400'}`}>{error}</div>;
+    }
+
+    // `loading` vem antes de `!ticket`: ao trocar de chamado o estado é limpo e
+    // a tela mostraria "não encontrado" por um instante antes da resposta.
+    if (loading && !ticket) {
+        return (
+            <div
+                data-cy="ticket-detail-loading"
+                className={`p-8 text-center ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}
+            >
+                Carregando chamado...
+            </div>
+        );
     }
 
     if (!ticket) {
