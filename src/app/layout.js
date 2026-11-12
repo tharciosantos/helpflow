@@ -39,11 +39,12 @@ export default async function RootLayout({ children }) {
     // suppressHydrationWarning é mantido como salvaguarda caso o script
     // de fallback (ThemeInitScript) precise ajustar a classe no primeiro acesso.
     <html lang="pt-BR" className={htmlClassName} suppressHydrationWarning>
-      <head>
-        {/* Script de fallback para primeira visita (sem cookie salvo),
-            detectando o matchMedia do SO antes da primeira pintura. */}
-        <ThemeInitScript />
-      </head>
+      {/* Script de fallback para primeira visita (sem cookie salvo), detectando
+          o matchMedia do SO antes da primeira pintura.
+          Fica como filho direto do <html>, sem um <head> explícito: o Next.js
+          gerencia o <head> e declarar outro lá dentro causa hydration mismatch
+          (React error #418) no primeiro render. */}
+      <ThemeInitScript />
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         // suppressHydrationWarning também no <body>: algumas extensões de
