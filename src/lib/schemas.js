@@ -19,10 +19,14 @@ export const createTicketSchema = z.object({
 // PATCH mínimo (só status): estrito para não mascarar campos com erro de
 // digitação. Payloads com conteúdo vão por updateTicketSchema, que é tolerante
 // porque carrega vários campos opcionais.
+//
+// `expectedUpdatedAt` é metadado de controle de concorrência (update otimista),
+// não conteúdo do chamado: é aceito aqui e validado na rota.
 export const updateTicketStatusSchema = z.object({
     status: z.enum(['OPEN', 'IN_PROGRESS', 'CLOSED'], {
         error: 'Status inválido.',
     }),
+    expectedUpdatedAt: z.string().optional(),
 }).strict();
 
 export const updateTicketSchema = z.object({

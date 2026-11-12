@@ -14,6 +14,11 @@ import {
   getEditDenialMessage,
   getForbiddenTicketFields,
 } from '@/lib/ticketAuthorization';
+import {
+  buildOptimisticWhere,
+  isUpdatedAtCurrent,
+  CONFLICT_MESSAGE,
+} from '@/lib/ticketConcurrency';
 
 // FUNÇÃO GET
 export async function GET(req, { params }) {
@@ -213,15 +218,41 @@ export async function PATCH(req, { params }) {
     }
 
 
+    // Update otimista: se o cliente enviou o `updatedAt` que carregou, a
+    // escrita só acontece se ninguém alterou o chamado no meio do caminho.
+    // Sem o campo, mantém o comportamento anterior (clientes antigos).
+    const expectedUpdatedAt = body.expectedUpdatedAt;
+    if (!isUpdatedAtCurrent(expectedUpdatedAt, ticket.updatedAt)) {
+      return NextResponse.json(
+        { message: CONFLICT_MESSAGE, current: ticket },
+        { status: 409 }
+      );
+    }
+
     const updatedTicket = await prisma.$transaction(async (tx) => {
-      const updated = await tx.ticket.update({
-        where: { id },
-        data,
-        include: {
-          author: { select: { id: true, name: true, email: true, image: true } },
-          agent: { select: { id: true, name: true, email: true, image: true } },
-        },
-      });
+      let updated;
+      try {
+        updated = await tx.ticket.update({
+          // Com `expectedUpdatedAt`, o Prisma levanta P2025 quando o registro
+          // já não corresponde — a corrida é detectada no próprio banco.
+          where: buildOptimisticWhere(id, expectedUpdatedAt),
+          data,
+          include: {
+            author: { select: { id: true, name: true, email: true, image: true } },
+            agent: { select: { id: true, name: true, email: true, image: true } },
+          },
+        });
+      } catch (error) {
+        // P2025: registro não encontrado para o `where` — aqui significa que o
+        // `updatedAt` mudou entre a leitura e a escrita.
+        if (error?.code === 'P2025' && expectedUpdatedAt) {
+          const current = await tx.ticket.findUnique({ where: { id } });
+          const conflict = new Error('CONFLICT');
+          conflict.current = current;
+          throw conflict;
+        }
+        throw error;
+      }
 
       // Auditoria: registra diffs reais na mesma transação (atomicidade).
       const entries = buildHistoryEntries({ ticket, data, actorId: session.user.id });
@@ -273,6 +304,13 @@ export async function PATCH(req, { params }) {
     return NextResponse.json(updatedTicket, { status: 200 });
 
   } catch (error) {
+    // Conflito detectado no update otimista: outra escrita venceu a corrida.
+    if (error?.message === 'CONFLICT') {
+      return NextResponse.json(
+        { message: CONFLICT_MESSAGE, current: error.current ?? null },
+        { status: 409 }
+      );
+    }
     if (error.code === 'P2025') {
       return NextResponse.json({ message: 'Chamado não encontrado' }, { status: 404 });
     }

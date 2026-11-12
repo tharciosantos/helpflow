@@ -72,6 +72,8 @@ export default function EditTicketForm({ ticket, onTicketUpdated, isAgent = fals
     })();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    // Conflito otimista: alguém salvou o chamado depois que este formulário abriu.
+    const [conflict, setConflict] = useState(null);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -103,8 +105,16 @@ export default function EditTicketForm({ ticket, onTicketUpdated, isAgent = fals
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(isAgentPayload),
+                // Update otimista: envia o updatedAt carregado. Se outra pessoa
+                // salvou antes, o servidor responde 409 em vez de sobrescrever.
+                body: JSON.stringify({ ...isAgentPayload, expectedUpdatedAt: ticket.updatedAt }),
             });
+
+            if (res.status === 409) {
+                const data = await res.json();
+                setConflict({ message: data.message, current: data.current });
+                return;
+            }
 
             if (!res.ok) {
                 const data = await res.json();
@@ -124,6 +134,28 @@ export default function EditTicketForm({ ticket, onTicketUpdated, isAgent = fals
 
     return (
         <form onSubmit={handleSubmit} className="min-w-0 space-y-5">
+            {conflict && (
+                <div
+                    role="alert"
+                    data-cy="ticket-edit-conflict"
+                    className={`rounded-xl border p-3 text-sm ${
+                        theme === 'light'
+                            ? 'bg-amber-50 border-amber-200 text-amber-800'
+                            : 'bg-amber-950/40 border-amber-900/60 text-amber-300'
+                    }`}
+                >
+                    <p className="font-semibold">{conflict.message}</p>
+                    <button
+                        type="button"
+                        data-cy="ticket-edit-conflict-reload"
+                        onClick={() => window.location.reload()}
+                        className="mt-2 rounded-lg border border-amber-400/60 px-3 py-1.5 text-xs font-semibold transition hover:bg-amber-100/60 dark:hover:bg-amber-900/40"
+                    >
+                        Recarregar chamado
+                    </button>
+                </div>
+            )}
+
             {error && (
                 <div role="alert" className={`rounded-xl border p-3 text-sm ${
                     theme === 'light' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-red-950/40 border-red-900/60 text-red-300'

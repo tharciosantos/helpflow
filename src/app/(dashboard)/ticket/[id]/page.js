@@ -107,8 +107,22 @@ export default function TicketDetailsPage() {
                     status: newStatus,
                     priority: newPriority,
                     agentId: newAgentId || null,
+                    // Update otimista: 409 se outra pessoa salvou neste meio-tempo.
+                    expectedUpdatedAt: ticket.updatedAt,
                 }),
             });
+            if (res.status === 409) {
+                const body = await res.json();
+                // Recarrega a versão atual: manter os valores antigos na tela
+                // faria o usuário salvar de novo por cima da alteração alheia.
+                if (body.current) {
+                    setTicket(prev => ({ ...prev, ...body.current }));
+                    setNewStatus(body.current.status ?? newStatus);
+                    setNewPriority(body.current.priority ?? newPriority);
+                    setNewAgentId(body.current.agentId || '');
+                }
+                throw new Error(body.message || 'O chamado foi alterado por outra pessoa.');
+            }
             if (!res.ok) {
                 const body = await res.json();
                 throw new Error(body.message || 'Falha ao atualizar o chamado.');
