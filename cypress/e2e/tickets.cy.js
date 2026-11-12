@@ -11,23 +11,22 @@ describe("Tickets", () => {
 
             cy.visit("/dashboard/tickets/new");
 
-            // Espera o React montar: sem hidratação o submit cai no form
-            // nativo, a pagina recarrega e a mensagem de sucesso nunca aparece.
+            // Espera o React montar: sem hidratação o submit cai no form nativo.
             cy.get('[data-cy="ticket-create-submit"]').should("not.be.disabled");
 
-            // Diagnóstico: captura falhas de rede da criação no log do CI.
-            cy.intercept("POST", "/api/tickets").as("createTicketDiag");
+            cy.intercept("POST", "/api/tickets").as("createTicket");
 
             cy.get('[data-cy="ticket-create-title"]').type(title);
             cy.get('[data-cy="ticket-create-description"]').type("Descrição teste");
             cy.get('[data-cy="ticket-create-submit"]').click();
 
-            cy.wait("@createTicketDiag", { timeout: 15000 }).then((i) => {
-                cy.task("log", `POST /api/tickets -> ${i.response?.statusCode} ${JSON.stringify(i.response?.body)}`, { log: false });
-            });
+            cy.wait("@createTicket").its("response.statusCode").should("eq", 201);
 
-            cy.contains("Chamado criado com sucesso", { timeout: 10000 }).should("be.visible");
-            cy.contains(title).scrollIntoView().should("be.visible");
+            // O formulário redireciona para o dashboard logo após criar, então
+            // a mensagem de sucesso é efêmera: o resultado estável é o ticket
+            // aparecendo na listagem.
+            cy.url({ timeout: 15000 }).should("include", "/dashboard");
+            cy.contains(title, { timeout: 15000 }).scrollIntoView().should("be.visible");
         });
     });
 
@@ -59,10 +58,11 @@ describe("Tickets", () => {
                 cy.get('[data-cy="ticket-create-description"]').type("Teste status");
                 cy.get('[data-cy="ticket-create-submit"]').click();
 
-                cy.contains("Chamado criado com sucesso", { timeout: 10000 }).should("be.visible");
+                // O formulário redireciona para o dashboard após criar.
+                cy.url({ timeout: 15000 }).should("include", "/dashboard");
 
                 // A troca de status acontece no detalhe do chamado (AGENT).
-                cy.contains(title).scrollIntoView().click();
+                cy.contains(title, { timeout: 15000 }).scrollIntoView().click();
                 cy.url().should("include", "/ticket/");
 
                 cy.intercept("PATCH", "/api/tickets/*").as("updateTicketStatus");
@@ -90,8 +90,9 @@ describe("Tickets", () => {
             cy.get('[data-cy="ticket-create-description"]').type("Teste exclusão");
             cy.get('[data-cy="ticket-create-submit"]').click();
 
-            cy.contains("Chamado criado com sucesso", { timeout: 10000 }).should("be.visible");
-            cy.contains(title).scrollIntoView().should("be.visible");
+            // O formulário redireciona para o dashboard após criar.
+            cy.url({ timeout: 15000 }).should("include", "/dashboard");
+            cy.contains(title, { timeout: 15000 }).scrollIntoView().should("be.visible");
 
             // A exclusão fica no detalhe do chamado, confirmada por modal.
             cy.contains(title).scrollIntoView().click();

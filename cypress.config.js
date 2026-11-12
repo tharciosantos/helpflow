@@ -13,16 +13,6 @@ module.exports = defineConfig({
     e2e: {
         baseUrl: "http://localhost:3000",
         supportFile: "cypress/support/e2e.js",
-        setupNodeEvents(on) {
-            // Log no terminal (e nos logs do CI) para diagnosticar falhas de
-            // rede durante os testes.
-            on("task", {
-                log(message) {
-                    console.log(message);
-                    return null;
-                },
-            });
-        },
     },
     // Cypress.env() é usado em commands.js para passar o testSecret como header de API.
     // allowCypressEnv: true é necessário no Cypress 15+ para usar Cypress.env() no browser.
