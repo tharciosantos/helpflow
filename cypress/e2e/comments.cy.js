@@ -26,7 +26,9 @@ describe("Comentários do chamado", () => {
 
         createTicketAndOpen(title);
 
-        cy.contains("Mensagens e Histórico de Atendimento").should("be.visible");
+        // A seção fica abaixo da dobra; o scroll garante que o elemento entre na
+        // viewport antes da asserção de visibilidade.
+        cy.contains("Mensagens e Histórico de Atendimento").scrollIntoView().should("be.visible");
 
         cy.intercept("POST", "/api/tickets/*/comments").as("createComment");
 
@@ -34,10 +36,10 @@ describe("Comentários do chamado", () => {
         cy.get('[data-cy="ticket-comment-submit"]').click();
 
         cy.wait("@createComment").its("response.statusCode").should("eq", 201);
-        cy.contains(message).should("be.visible");
+        cy.contains(message).scrollIntoView().should("be.visible");
 
         cy.reload();
-        cy.contains(message).should("be.visible");
+        cy.contains(message).scrollIntoView().should("be.visible");
     });
 
     it("deve bloquear envio de comentário vazio", () => {
@@ -59,9 +61,8 @@ describe("Comentários do chamado", () => {
         cy.get('[data-cy="ticket-comment-input"]').type(message);
         cy.get('[data-cy="ticket-comment-submit"]').click();
         cy.wait("@createComment").its("response.statusCode").should("eq", 201);
-        cy.contains(message).should("be.visible");
+        cy.contains(message).scrollIntoView().should("be.visible");
 
-        cy.on("window:confirm", () => true);
         cy.intercept("DELETE", "/api/tickets/*/comments/*").as("deleteComment");
 
         cy.contains(message)
@@ -69,6 +70,9 @@ describe("Comentários do chamado", () => {
             .within(() => {
                 cy.get('[data-cy="ticket-comment-delete"]').click();
             });
+
+        // A exclusão é confirmada num modal (ConfirmDialog), não em window.confirm.
+        cy.contains("button", "Excluir").click();
 
         cy.wait("@deleteComment").its("response.statusCode").should("eq", 200);
         cy.contains(message).should("not.exist");
