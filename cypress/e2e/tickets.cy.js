@@ -15,9 +15,16 @@ describe("Tickets", () => {
             // nativo, a pagina recarrega e a mensagem de sucesso nunca aparece.
             cy.get('[data-cy="ticket-create-submit"]').should("not.be.disabled");
 
+            // Diagnóstico: captura falhas de rede da criação no log do CI.
+            cy.intercept("POST", "/api/tickets").as("createTicketDiag");
+
             cy.get('[data-cy="ticket-create-title"]').type(title);
             cy.get('[data-cy="ticket-create-description"]').type("Descrição teste");
             cy.get('[data-cy="ticket-create-submit"]').click();
+
+            cy.wait("@createTicketDiag", { timeout: 15000 }).then((i) => {
+                cy.task("log", `POST /api/tickets -> ${i.response?.statusCode} ${JSON.stringify(i.response?.body)}`, { log: false });
+            });
 
             cy.contains("Chamado criado com sucesso", { timeout: 10000 }).should("be.visible");
             cy.contains(title).scrollIntoView().should("be.visible");
