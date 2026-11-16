@@ -4,8 +4,15 @@ import { useState, useEffect, useCallback, useId, useRef } from 'react';
 import Link from 'next/link';
 import { createPortal } from 'react-dom';
 import { useSession } from 'next-auth/react';
-import { LuBell, LuCheck, LuCheckCheck, LuX } from 'react-icons/lu';
+import { LuBell, LuCheck, LuCheckCheck, LuCircleAlert, LuX } from 'react-icons/lu';
 import { computeNotificationPanelStyle } from '@/lib/notificationPanel';
+import {
+  classifyLoadResult,
+  getConnectionNotice,
+  getUnreadSummary,
+  nextPollDelay,
+  POLL_INTERVAL_MS,
+} from '@/lib/notificationConnection';
 import { useTheme } from './ThemeProvider';
 
 const TYPE_LABEL = {
@@ -60,9 +67,17 @@ export default function NotificationBell({ variant = 'nav' }) {
   const [open, setOpen] = useState(false);
   const [markingAll, setMarkingAll] = useState(false);
   const [mounted, setMounted] = useState(false);
+  // Falhas consecutivas de carregamento: alimenta o aviso e o backoff.
+  const [failures, setFailures] = useState(0);
+  const failuresRef = useRef(0);
   const containerRef = useRef(null);
   const buttonRef = useRef(null);
   const panelRef = useRef(null);
+
+  // O laço de polling lê o valor mais recente sem reiniciar o efeito.
+  useEffect(() => {
+    failuresRef.current = failures;
+  }, [failures]);
 
   useEffect(() => {
     setMounted(true);
@@ -103,27 +118,53 @@ export default function NotificationBell({ variant = 'nav' }) {
     if (!session?.user) return;
     try {
       const res = await fetch('/api/notifications');
-      if (!res.ok) return;
+      const kind = classifyLoadResult({ ok: res.ok, status: res.status });
+      if (kind !== 'success') {
+        setFailures((n) => n + 1);
+        return;
+      }
       const data = await res.json();
       setNotifications(sortNotifications(data.notifications || []));
       setUnreadCount(data.unreadCount || 0);
+      // Sucesso zera o histórico: o próximo poll volta ao intervalo normal.
+      setFailures(0);
     } catch {
-      // silencioso: falha de rede nao deve quebrar a experiencia
+      // Rede caiu: o aviso no painel é a diferença entre "sem novidades" e
+      // "não sabemos", por isso a falha passa a ser visível.
+      setFailures((n) => n + 1);
     }
   }, [session?.user]);
 
   useEffect(() => {
     if (!session?.user) return;
+
+    let cancelled = false;
+    let timer = null;
+
+    // Backoff por ref: o timer se reagenda sozinho sem reiniciar o efeito a
+    // cada falha (reiniciar duplicaria o polling).
+    const tick = async () => {
+      if (cancelled) return;
+      await load();
+      if (cancelled) return;
+      timer = setTimeout(tick, nextPollDelay(failuresRef.current));
+    };
+
     load();
+    timer = setTimeout(tick, POLL_INTERVAL_MS);
+
+    // Foco/visibilidade forçam uma atualização imediata (e bem-vinda quando a
+    // aba volta; se tinha falhado, aqui é a chance de recuperar).
     const onFocus = () => load();
     const onVisibility = () => {
       if (document.visibilityState === 'visible') load();
     };
     window.addEventListener('focus', onFocus);
     document.addEventListener('visibilitychange', onVisibility);
-    const interval = setInterval(load, 30000);
+
     return () => {
-      clearInterval(interval);
+      cancelled = true;
+      if (timer) clearTimeout(timer);
       window.removeEventListener('focus', onFocus);
       document.removeEventListener('visibilitychange', onVisibility);
     };
@@ -154,6 +195,9 @@ export default function NotificationBell({ variant = 'nav' }) {
       const res = await fetch(`/api/notifications/${id}`, { method: 'PATCH' });
       // 404 = já estava lida; recarrega para alinhar o badge ao servidor.
       if (!res.ok) {
+        if (classifyLoadResult({ ok: false, status: res.status }) === 'failure') {
+          setFailures((n) => n + 1);
+        }
         load();
         return;
       }
@@ -161,8 +205,10 @@ export default function NotificationBell({ variant = 'nav' }) {
         sortNotifications(prev.map((n) => (n.id === id ? { ...n, readAt: new Date().toISOString() } : n)))
       );
       setUnreadCount((c) => Math.max(0, c - 1));
+      setFailures(0);
     } catch {
-      // noop: falha de rede não deve quebrar a experiência
+      // Rede caiu ao marcar como lida: o badge não pode mentir para o usuário.
+      setFailures((n) => n + 1);
     }
   };
 
@@ -176,9 +222,13 @@ export default function NotificationBell({ variant = 'nav' }) {
       const now = new Date().toISOString();
       setNotifications((prev) => sortNotifications(prev.map((n) => ({ ...n, readAt: n.readAt || now }))));
       setUnreadCount(0);
+      setFailures(0);
     } catch {
-      // se falhar, recarrega para refletir o estado real
+      // Se falhar, zera o estado local e recarrega para refletir o real.
+      setMarkingAll(false);
+      setFailures((n) => n + 1);
       load();
+      return;
     } finally {
       setMarkingAll(false);
     }
@@ -260,9 +310,7 @@ export default function NotificationBell({ variant = 'nav' }) {
                 <div className="min-w-0">
                   <p className="truncate text-sm font-bold leading-tight">Notificações</p>
                   <p className="truncate text-[11px] leading-tight text-slate-500 dark:text-slate-400">
-                    {unreadCount > 0
-                      ? `${unreadCount} não lida${unreadCount > 1 ? 's' : ''}`
-                      : 'Tudo em dia'}
+                    {getUnreadSummary({ unreadCount, failures })}
                   </p>
                 </div>
               </div>
@@ -291,6 +339,36 @@ export default function NotificationBell({ variant = 'nav' }) {
               </div>
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+              {(() => {
+                const notice = getConnectionNotice({ failures, kind: failures > 0 ? 'failure' : 'success' });
+                if (!notice) return null;
+                return (
+                  <div
+                    data-cy="notification-connection-warning"
+                    role="status"
+                    className={`flex items-start gap-2 border-b px-4 py-2.5 text-xs ${
+                      isLight
+                        ? 'border-amber-200 bg-amber-50 text-amber-800'
+                        : 'border-amber-900/60 bg-amber-950/40 text-amber-300'
+                    }`}
+                  >
+                    <LuCircleAlert size={14} className="mt-0.5 shrink-0" />
+                    <div className="min-w-0">
+                      <p className="font-semibold leading-tight">{notice.title}</p>
+                      <p className="mt-0.5 leading-relaxed opacity-90">{notice.description}</p>
+                      <button
+                        type="button"
+                        data-cy="notification-retry"
+                        onClick={() => load()}
+                        className="mt-1.5 rounded-md border border-amber-400/60 px-2 py-1 text-[11px] font-semibold transition hover:bg-amber-100/60 dark:hover:bg-amber-900/40"
+                      >
+                        Tentar novamente
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
+
               {notifications.length === 0 ? (
                 <div className="flex flex-col items-center gap-2.5 px-6 py-10 text-center">
                   <span className={`flex h-12 w-12 items-center justify-center rounded-full ${
