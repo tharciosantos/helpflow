@@ -61,6 +61,10 @@ export default function TicketList({
   // otimista do formulário de edição: enviam o `updatedAt` carregado e, se
   // outra pessoa alterou o chamado nesse meio-tempo, o servidor responde 409
   // em vez de a escrita sobrescrever a alteração dela em silêncio.
+  //
+  // O aviso é gravado AQUI, antes do `onTicketUpdated`, e não depois do retorno:
+  // o pai pode atualizar a lista e remontar o TicketList, e uma mensagem
+  // escrita depois disso se perdia junto com o estado do componente antigo.
   const patchTicket = async (ticket, payload, fallbackMessage) => {
     const res = await fetch(`/api/tickets/${ticket.id}`, {
       method: 'PATCH',
@@ -70,15 +74,14 @@ export default function TicketList({
 
     if (res.status === 409) {
       const data = await res.json().catch(() => ({}));
+      // A escrita não foi aplicada: o select volta para o valor que veio do
+      // servidor junto com o conflito, não para o que o usuário escolheu.
+      showFeedback(setInfoMessage, CONFLICT_NOTICE);
       if (data.current?.id) {
         // O `current` do 409 é o registro do banco, sem as relações que a
         // lista renderiza (author/agent): preserva as que já estavam na tela.
         onTicketUpdated?.({ ...ticket, ...data.current });
       }
-      // A escrita não foi aplicada: o select volta para o valor que veio do
-      // servidor junto com o conflito, não para o que o usuário escolheu.
-      // Quem avisa é o chamador — ele sabe que a mensagem de sucesso não pode
-      // ser escrita depois desta chamada.
       return 'conflict';
     }
 
@@ -93,14 +96,10 @@ export default function TicketList({
   const handleStatusChange = async (ticket, newStatus) => {
     setErrorMessage('');
     setSuccessMessage('');
-    setInfoMessage('');
     setUpdatingId(ticket.id);
     try {
       const result = await patchTicket(ticket, { status: newStatus }, 'Falha ao atualizar o status.');
-      if (result === 'conflict') {
-        showFeedback(setInfoMessage, CONFLICT_NOTICE);
-        return;
-      }
+      if (result === 'conflict') return;
       setSuccessMessage('Status atualizado com sucesso.');
     } catch (err) {
       setErrorMessage(err.message || 'Erro ao atualizar o status.');
@@ -112,14 +111,10 @@ export default function TicketList({
   const handleAgentChange = async (ticket, agentId) => {
     setErrorMessage('');
     setSuccessMessage('');
-    setInfoMessage('');
     setUpdatingId(ticket.id);
     try {
       const result = await patchTicket(ticket, { agentId: agentId || null }, 'Falha ao atribuir o chamado.');
-      if (result === 'conflict') {
-        showFeedback(setInfoMessage, CONFLICT_NOTICE);
-        return;
-      }
+      if (result === 'conflict') return;
       setSuccessMessage('Responsável atualizado com sucesso.');
     } catch (err) {
       setErrorMessage(err.message || 'Erro ao atribuir o chamado.');

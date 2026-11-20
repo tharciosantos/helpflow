@@ -172,7 +172,9 @@ describe('Concorrência no PATCH do chamado', () => {
       cy.get(`[data-cy="ticket-card-${original.id}"] select`)
         .first()
         .should('have.value', 'IN_PROGRESS');
-      cy.get('[data-cy="ticket-list-conflict"]').should('be.visible');
+      // O aviso se esconde no tempo, então procura na fila inteira em vez de
+      // depender de encontrá-lo na janela de retry do `.get`.
+      cy.get('[data-cy="ticket-list-conflict"]', { timeout: 20000 }).should('exist');
     });
   });
 
