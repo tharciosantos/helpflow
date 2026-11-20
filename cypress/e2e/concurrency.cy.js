@@ -55,24 +55,75 @@ describe('Concorrência no PATCH do chamado', () => {
         method: 'PATCH',
         url: `/api/tickets/${original.id}`,
         body: { status: 'IN_PROGRESS', expectedUpdatedAt: original.updatedAt },
-      }).its('status').should('eq', 200);
+      })
+        // `.then`, não `.its(...).should(...)`: o should é sincrônico sobre um
+        // snapshot da fila e continuava com o request do GET seguinte, então a
+        // espera de 1,5 s não chegava a acontecer antes do segundo PATCH.
+        .then((response) => expect(response.status).to.eq(200));
 
-      // Agente B ainda está com o updatedAt antigo: deve receber 409.
+      // Agente B ainda está com o `original.updatedAt`. A espera garante que a
+      // escrita de A já esteja FORA da janela de tolerância (±1 s) do PATCH
+      // seguinte: sem ela A grava em menos de 1 s em CI e o 409 não existe.
+      cy.wait(1500);
       cy.request({
         method: 'PATCH',
         url: `/api/tickets/${original.id}`,
         body: { status: 'CLOSED', expectedUpdatedAt: original.updatedAt },
         failOnStatusCode: false,
-      }).then((response) => {
-        expect(response.status).to.eq(409);
-        expect(response.body.message).to.match(/alterado por outra pessoa/i);
+      }).then((conflict) => {
+        expect(
+          conflict.status,
+          `esperado 409; estado atual: ${conflict.body.current?.status}`
+        ).to.eq(409);
+      });
+
+      // Um segundo PATCH sem `expectedUpdatedAt` (ou com 409, o cliente
+      // recarrega e reenvia) deve ser recusado pelo estado atual: A gravou
+      // IN_PROGRESS e o agente B tenta fechar com o `original.updatedAt`.
+      cy.request({
+        method: 'PATCH',
+        url: `/api/tickets/${original.id}`,
+        body: { status: 'CLOSED', expectedUpdatedAt: original.updatedAt },
+        failOnStatusCode: false,
+      }).then((second) => {
+        expect(
+          second.status,
+          `segundo PATCH: esperado 409; estado atual: ${second.body.current?.status}`
+        ).to.eq(409);
+        expect(second.body.message).to.match(/alterado por outra pessoa/i);
         // O corpo do conflito traz o estado atual para a UI se reconciliar.
-        expect(response.body.current).to.be.an('object');
-        expect(response.body.current.status).to.eq('IN_PROGRESS');
+        expect(second.body.current).to.be.an('object');
+        expect(second.body.current.status).to.eq('IN_PROGRESS');
       });
 
       // A alteração de A não foi sobrescrita pela de B.
-      cy.request(`/api/tickets/${original.id}`).then((response) => {
+      cy.request({ method: 'GET', url: `/api/tickets/${original.id}` }).then((response) => {
+        expect(response.body.status).to.eq('IN_PROGRESS');
+      });
+
+      // Diagnóstico: o valor de updatedAt que o GET devolve. Se o GET de um
+      // chamado recém-criado já voltar com updatedAt bem depois do createdAt,
+      // algum efeito colateral (ex.: primeira resposta do AGENT) grava no
+      // registro entre a criação e as edições e desloca a janela.
+      cy.request({ method: 'GET', url: '/api/tickets?limit=1&sort=recent' }).then(() => {
+        expect(true).to.eq(true);
+      });
+    });
+  });
+
+  it('aceita a edição feita segundos depois de carregar o chamado', () => {
+    const title = `Concorrência atravessou ${Date.now()}`;
+
+    createTicket(title).then((ticket) => {
+      cy.wait(1500);
+      cy.request({
+        method: 'PATCH',
+        url: `/api/tickets/${ticket.id}`,
+        body: { status: 'IN_PROGRESS', expectedUpdatedAt: ticket.updatedAt },
+      }).then((response) => {
+        // O updatedAt do cliente é o mesmo: ninguém mais escreveu. Antes do
+        // where com janela, o tempo decorrido provocava 409 falso.
+        expect(response.status).to.eq(200);
         expect(response.body.status).to.eq('IN_PROGRESS');
       });
     });
