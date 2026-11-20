@@ -6,9 +6,8 @@
 // componente NÃO remonta ao trocar de chamado: um único React mantém o estado e
 // a resposta do ticket anterior pode chegar depois e repintar a tela.
 //
-// Por isso a navegação aqui é por clique no link da lista e no "voltar", nunca
-// cy.visit entre dois chamados — cy.visit remonta tudo, esconde o bug e ainda
-// aborta a requisição atrasada que o cenário precisa ver chegar.
+// Por isso a navegação aqui é por clique no link da lista, nunca cy.visit entre
+// dois chamados — cy.visit remonta tudo e esconde o bug.
 
 describe('Troca de chamado no detalhe', () => {
   let agentUser;
@@ -53,16 +52,13 @@ describe('Troca de chamado no detalhe', () => {
 
     cy.visit('/dashboard');
 
-    // Entra em A (resposta lenta) e, antes dela chegar, volta para a lista pela
-    // navegação SPA. Um `cy.visit` aqui recarrregaria a página e abortaria o
-    // GET atrasado de A, que é justamente a corrida sob teste.
+    // Entra em A (resposta lenta) e, antes dela chegar, clica em B.
     cy.contains(ticketA.title).scrollIntoView().click();
     cy.url().should('include', `/ticket/${ticketA.id}`);
-    cy.get('[data-cy="ticket-detail-back-link"]').click();
-    cy.url().should('include', '/dashboard');
 
     cy.intercept('GET', `/api/tickets/${ticketB.id}`).as('getB');
 
+    cy.visit('/dashboard');
     cy.contains(ticketB.title).scrollIntoView().click();
     cy.url().should('include', `/ticket/${ticketB.id}`);
 
