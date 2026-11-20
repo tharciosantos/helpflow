@@ -44,21 +44,28 @@ describe('Troca de chamado no detalhe', () => {
 
   it('mostra os dados do chamado novo, não os do anterior', () => {
     // A resposta do chamado A é atrasada; a do B volta na hora.
-    cy.intercept('GET', `/api/tickets/${ticketA.id}`, (req) => {
-      req.continue((res) => {
-        res.setDelay(1500);
-      });
-    }).as('getA');
-
-    cy.visit('/dashboard');
-
-    // Entra em A (resposta lenta) e, antes dela chegar, clica em B.
-    cy.contains(ticketA.title).scrollIntoView().click();
-    cy.url().should('include', `/ticket/${ticketA.id}`);
+    //
+    // O atraso é gravado no REQUEST (opção `delay`), não na resposta via
+    // `res.setDelay`: atrasar o `Response` do Cypress e navegar para outra
+    // página antes dele sair derruba a conexão do proxy do browser
+    // ("connection to the browser closed..."), mesmo com a página recarregada —
+    // e é exatamente esse o cenário do teste.
+    cy.intercept('GET', `/api/tickets/${ticketA.id}`, { delay: 1500 }).as('getA');
 
     cy.intercept('GET', `/api/tickets/${ticketB.id}`).as('getB');
 
     cy.visit('/dashboard');
+
+    // Entra em A: o detalhe fica carregando enquanto a resposta atrasada não chega.
+    cy.contains(ticketA.title).scrollIntoView().click();
+    cy.url().should('include', `/ticket/${ticketA.id}`);
+
+    // Enquanto A ainda carrega (sem a barra lateral do detalhe), o link do B
+    // não existe na tela. O caminho é o próprio app: voltar pela URL do
+    // dashboard e abrir B. Como é a mesma aba, o React da troca é o mesmo
+    // depois do cliente montar a rota do B.
+    cy.go('back');
+    cy.url().should('include', '/dashboard');
     cy.contains(ticketB.title).scrollIntoView().click();
     cy.url().should('include', `/ticket/${ticketB.id}`);
 
