@@ -44,18 +44,22 @@ describe('isUpdatedAtCurrent', () => {
         expect(isUpdatedAtCurrent('2026-11-12T10:00:00Z', ISO)).toBe(true);
     });
 
-    it('tolera diferença de até 1 segundo (precisão de relógio)', () => {
-        expect(isUpdatedAtCurrent(ISO, '2026-11-12T10:00:00.900Z')).toBe(true);
+    it('tolera arredondamento para baixo de até 1 segundo', () => {
+        // O ISO perde frações na ida e volta: o banco pode devolver um valor
+        // até 1 s anterior ao que o cliente carregou.
+        expect(isUpdatedAtCurrent(ISO, '2026-11-12T09:59:59.100Z')).toBe(true);
+        expect(isUpdatedAtCurrent(ISO, '2026-11-12T09:59:59.000Z')).toBe(true);
     });
 
-    it('aceita quando o registro avançou dentro da tolerância', () => {
-        // Edição feita pelo próprio usuário segundos depois de carregar o
-        // chamado: o ISO perde frações e o update é o mesmo da tela.
-        expect(isUpdatedAtCurrent(ISO, '2026-11-12T10:00:00.950Z')).toBe(true);
-    });
-
-    it('rejeita quando o registro mudou além da tolerância', () => {
+    it('rejeita qualquer escrita mais recente que o esperado', () => {
+        // Qualquer `updatedAt` posterior é escrita de outra pessoa — mesmo
+        // 1 ms depois (foi exatamente o caso do E2E no CI).
+        expect(isUpdatedAtCurrent(ISO, '2026-11-12T10:00:00.001Z')).toBe(false);
+        expect(isUpdatedAtCurrent(ISO, '2026-11-12T10:00:00.900Z')).toBe(false);
         expect(isUpdatedAtCurrent(ISO, '2026-11-12T10:00:02.000Z')).toBe(false);
+    });
+
+    it('rejeita quando o registro é bem mais antigo que a tolerância', () => {
         expect(isUpdatedAtCurrent(ISO, '2026-11-12T09:59:58.000Z')).toBe(false);
     });
 
@@ -71,10 +75,10 @@ describe('isUpdatedAtCurrent', () => {
 });
 
 describe('getUpdatedAtWindow', () => {
-    it('abre uma janela de ±1s em volta do valor esperado', () => {
+    it('abre uma janela assimétrica: 1s para trás, nada para frente', () => {
         const window = getUpdatedAtWindow(ISO);
         expect(window.gte.toISOString()).toBe('2026-11-12T09:59:59.000Z');
-        expect(window.lte.toISOString()).toBe('2026-11-12T10:00:01.000Z');
+        expect(window.lte.toISOString()).toBe(ISO);
     });
 
     it('devolve null para valor ausente ou inválido', () => {
@@ -95,7 +99,7 @@ describe('buildOptimisticWhere', () => {
         expect(where.updatedAt.gte).toBeInstanceOf(Date);
         expect(where.updatedAt.gte.toISOString()).toBe('2026-11-12T09:59:59.000Z');
         expect(where.updatedAt.lte).toBeInstanceOf(Date);
-        expect(where.updatedAt.lte.toISOString()).toBe('2026-11-12T10:00:01.000Z');
+        expect(where.updatedAt.lte.toISOString()).toBe(ISO);
     });
 
     it('não usa igualdade exata (evita 409 falso por frações de segundo)', () => {
