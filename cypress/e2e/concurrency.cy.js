@@ -141,24 +141,30 @@ describe('Concorrência no PATCH do chamado', () => {
     const title = `Concorrência lista ${Date.now()}`;
 
     createTicket(title).then((original) => {
-      // Outra pessoa altera o chamado e o dashboard ainda tem a versão antiga.
+      // O dashboard carrega a versão do chamado AGORA e a mantém na tela...
+      cy.visit('/dashboard');
+      cy.contains(title, { timeout: 15000 }).scrollIntoView();
+
+      // ...enquanto isso, outra pessoa altera o chamado: a lista fica com o
+      // `updatedAt` antigo, exatamente o cenário do conflito.
       cy.request({
         method: 'PATCH',
         url: `/api/tickets/${original.id}`,
         body: { status: 'IN_PROGRESS', expectedUpdatedAt: original.updatedAt },
       }).then((response) => expect(response.status).to.eq(200));
 
-      cy.visit('/dashboard');
-      cy.contains(title, { timeout: 15000 }).scrollIntoView();
-
       cy.intercept('PATCH', `/api/tickets/${original.id}`).as('listPatch');
 
       cy.get(`[data-cy="ticket-card-${original.id}"] select`).first().select('CLOSED');
 
       cy.wait('@listPatch').then(({ request, response }) => {
-        // A lista passou a mandar o updatedAt que carregou...
-        expect(request.body.expectedUpdatedAt).to.eq(original.updatedAt);
-        // ...e a escrita foi recusada em vez de sobrescrever a alteração.
+        // A lista manda o updatedAt que carregou (o de antes da alteração
+        // alheia, somado ao arredondamento de precisão do Postgres)...
+        const expected = Date.parse(original.updatedAt);
+        const sent = Date.parse(request.body.expectedUpdatedAt);
+        expect(sent).to.be.at.least(expected - 1000);
+        expect(sent).to.be.at.most(expected);
+        // ...e a escrita é recusada em vez de sobrescrever a alteração.
         expect(response.statusCode).to.eq(409);
       });
 
