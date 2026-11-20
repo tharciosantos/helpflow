@@ -251,9 +251,15 @@ export default function TicketDetailsPage() {
         }
     };
 
+    // Um único estado de carregamento: sessão carregando ou chamado em busca.
+    // `loading` vem antes de `!ticket`: ao trocar de chamado o estado é limpo e
+    // a tela mostraria "não encontrado" por um instante antes da resposta.
     if (sessionStatus === 'loading' || (loading && !ticket)) {
         return (
-            <div className="flex h-64 items-center justify-center">
+            <div
+                data-cy="ticket-detail-loading"
+                className="flex h-64 items-center justify-center"
+            >
                 <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent"></div>
             </div>
         );
@@ -261,19 +267,6 @@ export default function TicketDetailsPage() {
 
     if (error && !ticket && !isDeleting) {
         return <div className={`p-8 text-center ${theme === 'light' ? 'text-red-600' : 'text-red-400'}`}>{error}</div>;
-    }
-
-    // `loading` vem antes de `!ticket`: ao trocar de chamado o estado é limpo e
-    // a tela mostraria "não encontrado" por um instante antes da resposta.
-    if (loading && !ticket) {
-        return (
-            <div
-                data-cy="ticket-detail-loading"
-                className={`p-8 text-center ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}
-            >
-                Carregando chamado...
-            </div>
-        );
     }
 
     if (!ticket) {

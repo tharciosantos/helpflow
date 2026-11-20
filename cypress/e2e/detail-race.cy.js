@@ -59,6 +59,7 @@ describe('Troca de chamado no detalhe', () => {
     // Entra em A: o detalhe fica carregando enquanto a resposta atrasada não chega.
     cy.contains(ticketA.title).scrollIntoView().click();
     cy.url().should('include', `/ticket/${ticketA.id}`);
+    cy.get('[data-cy="ticket-detail-loading"]').should('be.visible');
 
     // Enquanto A ainda carrega (sem a barra lateral do detalhe), o link do B
     // não existe na tela. O caminho é o próprio app: voltar pela URL do
