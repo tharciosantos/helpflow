@@ -38,12 +38,20 @@ Cypress.Commands.add("createTestUser", (overrides = {}) => {
 });
 
 Cypress.Commands.add("login", (email, password) => {
-  cy.visit("/login");
-  // Espera o React montar antes de digitar: sem hidratação o submit cai no
-  // form nativo e a página recarrega, perdendo os valores digitados.
-  cy.get("[data-cy='login-submit']").should("not.be.disabled");
-  cy.get("[data-cy='login-email']").type(email);
-  cy.get("[data-cy='login-password']").type(password);
-  cy.get("[data-cy='login-submit']").click();
-  cy.url({ timeout: 15000 }).should("include", "/dashboard");
+  cy.session(
+    // A origem entra na chave: os specs rodam contra o próprio app e um
+    // `cy.visit` de outro teste é o que faz o cache restaurar a sessão
+    // (sem origem, o Cypress aborta por "session id already in use").
+    [email, password, Cypress.config('baseUrl')],
+    () => {
+      cy.visit("/login");
+      // Espera o React montar antes de digitar: sem hidratação o submit cai no
+      // form nativo e a página recarrega, perdendo os valores digitados.
+      cy.get("[data-cy='login-submit']").should("not.be.disabled");
+      cy.get("[data-cy='login-email']").type(email);
+      cy.get("[data-cy='login-password']").type(password);
+      cy.get("[data-cy='login-submit']").click();
+      cy.url({ timeout: 15000 }).should("include", "/dashboard");
+    }
+  );
 });

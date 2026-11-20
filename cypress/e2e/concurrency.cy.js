@@ -61,9 +61,10 @@ describe('Concorrência no PATCH do chamado', () => {
         // espera de 1,5 s não chegava a acontecer antes do segundo PATCH.
         .then((response) => expect(response.status).to.eq(200));
 
-      // Agente B ainda está com o `original.updatedAt`. A espera garante que a
-      // escrita de A já esteja FORA da janela de tolerância (±1 s) do PATCH
-      // seguinte: sem ela A grava em menos de 1 s em CI e o 409 não existe.
+      // Agente B ainda está com o `original.updatedAt`. A espera garantiu o 409
+      // na época da janela simétrica (±1 s); hoje a janela é `[expected - 1s,
+      // expected]`, então a escrita de A já seria recusada mesmo no mesmo
+      // segundo. A espera permanece para cobrir a folga para trás.
       cy.wait(1500);
       cy.request({
         method: 'PATCH',
@@ -133,6 +134,47 @@ describe('Concorrência no PATCH do chamado', () => {
         // Clientes antigos continuam funcionando, sem proteção otimista.
         expect(response.status).to.eq(200);
       });
+    });
+  });
+
+  it('envia expectedUpdatedAt nas ações rápidas da lista e reconcilia no 409', () => {
+    const title = `Concorrência lista ${Date.now()}`;
+
+    createTicket(title).then((original) => {
+      // O dashboard carrega a versão do chamado AGORA e a mantém na tela...
+      cy.visit('/dashboard');
+      cy.contains(title, { timeout: 15000 }).scrollIntoView();
+
+      // ...enquanto isso, outra pessoa altera o chamado: a lista fica com o
+      // `updatedAt` antigo, exatamente o cenário do conflito.
+      cy.request({
+        method: 'PATCH',
+        url: `/api/tickets/${original.id}`,
+        body: { status: 'IN_PROGRESS', expectedUpdatedAt: original.updatedAt },
+      }).then((response) => expect(response.status).to.eq(200));
+
+      cy.intercept('PATCH', `/api/tickets/${original.id}`).as('listPatch');
+
+      cy.get(`[data-cy="ticket-card-${original.id}"] select`).first().select('CLOSED');
+
+      cy.wait('@listPatch').then(({ request, response }) => {
+        // A lista manda o updatedAt que carregou (o de antes da alteração
+        // alheia, somado ao arredondamento de precisão do Postgres)...
+        const expected = Date.parse(original.updatedAt);
+        const sent = Date.parse(request.body.expectedUpdatedAt);
+        expect(sent).to.be.at.least(expected - 1000);
+        expect(sent).to.be.at.most(expected);
+        // ...e a escrita é recusada em vez de sobrescrever a alteração.
+        expect(response.statusCode).to.eq(409);
+      });
+
+      // O card mostra a versão do servidor e o usuário é avisado.
+      cy.get(`[data-cy="ticket-card-${original.id}"] select`)
+        .first()
+        .should('have.value', 'IN_PROGRESS');
+      // O aviso se esconde no tempo, então procura na fila inteira em vez de
+      // depender de encontrá-lo na janela de retry do `.get`.
+      cy.get('[data-cy="ticket-list-conflict"]', { timeout: 20000 }).should('exist');
     });
   });
 

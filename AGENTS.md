@@ -59,7 +59,7 @@ Regra: toda correção de um item `AUD-xx` deve atualizar o status, o commit e a
 | **Animações** | Anime.js | 4.5.x |
 | **E-mail** | Nodemailer | Recuperação de senhas (`EMAIL_USER` / `EMAIL_PASS`) |
 | **Testes Unitários** | Vitest | 224 testes de **funções puras** em `src/lib/` (ambiente `node`, sem jsdom, sem Testing Library) |
-| **Testes E2E** | Cypress | 15.x — 7 specs / 30 cenários em `cypress/e2e/` |
+| **Testes E2E** | Cypress | 15.x — 7 specs / 31 cenários em `cypress/e2e/` |
 | **Linter** | ESLint (flat config) + eslint-config-next | 9.x |
 
 ---
@@ -308,7 +308,7 @@ CYPRESS_TEST_SECRET="seu-segredo-cypress"
   - Autorização do cron / `CRON_SECRET` (`cronAuth.test.js`)
   - Fluxo do Simulador Interativo (`demoTicketFlow.test.js`)
   - Consistência das contagens documentadas (`docsConsistency.test.js` — falha se `AGENTS.md` ou `README.md` divergirem da suíte real)
-- **E2E Cypress — 7 specs / 30 cenários em `cypress/e2e/`**: `auth.cy.js`, `tickets.cy.js`, `permissions.cy.js`, `comments.cy.js`, `concurrency.cy.js`, `detail-race.cy.js`, `notifications-states.cy.js`. Rodam contra servidor e banco reais; `cy.createTestUser` cria usuários via `/api/register` com `x-test-secret`.
+- **E2E Cypress — 7 specs / 31 cenários em `cypress/e2e/`**: `auth.cy.js`, `tickets.cy.js`, `permissions.cy.js`, `comments.cy.js`, `concurrency.cy.js`, `detail-race.cy.js`, `notifications-states.cy.js`. Rodam contra servidor e banco reais; `cy.createTestUser` cria usuários via `/api/register` com `x-test-secret`.
 
 ### 10.1 Validação Obrigatória (Antes do Commit / Push / PR)
 
