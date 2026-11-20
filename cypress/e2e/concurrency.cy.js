@@ -100,14 +100,6 @@ describe('Concorrência no PATCH do chamado', () => {
       cy.request({ method: 'GET', url: `/api/tickets/${original.id}` }).then((response) => {
         expect(response.body.status).to.eq('IN_PROGRESS');
       });
-
-      // Diagnóstico: o valor de updatedAt que o GET devolve. Se o GET de um
-      // chamado recém-criado já voltar com updatedAt bem depois do createdAt,
-      // algum efeito colateral (ex.: primeira resposta do AGENT) grava no
-      // registro entre a criação e as edições e desloca a janela.
-      cy.request({ method: 'GET', url: '/api/tickets?limit=1&sort=recent' }).then(() => {
-        expect(true).to.eq(true);
-      });
     });
   });
 
