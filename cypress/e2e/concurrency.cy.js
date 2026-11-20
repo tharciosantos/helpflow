@@ -57,26 +57,21 @@ describe('Concorrência no PATCH do chamado', () => {
         body: { status: 'IN_PROGRESS', expectedUpdatedAt: original.updatedAt },
       }).its('status').should('eq', 200);
 
-      // Agente B ainda está com o updatedAt antigo: deve receber 409.
+      // Agente B ainda está com o `original.updatedAt`. A espera garante que a
+      // escrita de A já esteja FORA da janela de tolerância (±1 s): sem ela o
+      // agente A em CI grava em menos de 1 s e o 409 não seria detectado.
+      cy.wait(1500);
       cy.request({
-        method: 'GET',
+        method: 'PATCH',
         url: `/api/tickets/${original.id}`,
-      }).then((read) => {
-        // O A gravou < 1 s antes, dentro da tolerância do update otimista: o
-        // expected precisa ser do A, senão o teste ficaria dependente do
-        // relógio e passaria a flutuar.
-        cy.request({
-          method: 'PATCH',
-          url: `/api/tickets/${original.id}`,
-          body: { status: 'CLOSED', expectedUpdatedAt: read.body.updatedAt },
-          failOnStatusCode: false,
-        }).then((response) => {
-          expect(response.status).to.eq(409);
-          expect(response.body.message).to.match(/alterado por outra pessoa/i);
-          // O corpo do conflito traz o estado atual para a UI se reconciliar.
-          expect(response.body.current).to.be.an('object');
-          expect(response.body.current.status).to.eq('IN_PROGRESS');
-        });
+        body: { status: 'CLOSED', expectedUpdatedAt: original.updatedAt },
+        failOnStatusCode: false,
+      }).then((response) => {
+        expect(response.status).to.eq(409);
+        expect(response.body.message).to.match(/alterado por outra pessoa/i);
+        // O corpo do conflito traz o estado atual para a UI se reconciliar.
+        expect(response.body.current).to.be.an('object');
+        expect(response.body.current.status).to.eq('IN_PROGRESS');
       });
 
       // A alteração de A não foi sobrescrita pela de B.
