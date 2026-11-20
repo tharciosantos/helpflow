@@ -59,20 +59,46 @@ describe('Concorrência no PATCH do chamado', () => {
 
       // Agente B ainda está com o updatedAt antigo: deve receber 409.
       cy.request({
-        method: 'PATCH',
+        method: 'GET',
         url: `/api/tickets/${original.id}`,
-        body: { status: 'CLOSED', expectedUpdatedAt: original.updatedAt },
-        failOnStatusCode: false,
-      }).then((response) => {
-        expect(response.status).to.eq(409);
-        expect(response.body.message).to.match(/alterado por outra pessoa/i);
-        // O corpo do conflito traz o estado atual para a UI se reconciliar.
-        expect(response.body.current).to.be.an('object');
-        expect(response.body.current.status).to.eq('IN_PROGRESS');
+      }).then((read) => {
+        // O A gravou < 1 s antes, dentro da tolerância do update otimista: o
+        // expected precisa ser do A, senão o teste ficaria dependente do
+        // relógio e passaria a flutuar.
+        cy.request({
+          method: 'PATCH',
+          url: `/api/tickets/${original.id}`,
+          body: { status: 'CLOSED', expectedUpdatedAt: read.body.updatedAt },
+          failOnStatusCode: false,
+        }).then((response) => {
+          expect(response.status).to.eq(409);
+          expect(response.body.message).to.match(/alterado por outra pessoa/i);
+          // O corpo do conflito traz o estado atual para a UI se reconciliar.
+          expect(response.body.current).to.be.an('object');
+          expect(response.body.current.status).to.eq('IN_PROGRESS');
+        });
       });
 
       // A alteração de A não foi sobrescrita pela de B.
       cy.request(`/api/tickets/${original.id}`).then((response) => {
+        expect(response.body.status).to.eq('IN_PROGRESS');
+      });
+    });
+  });
+
+  it('aceita a edição feita segundos depois de carregar o chamado', () => {
+    const title = `Concorrência atravessou ${Date.now()}`;
+
+    createTicket(title).then((ticket) => {
+      cy.wait(1500);
+      cy.request({
+        method: 'PATCH',
+        url: `/api/tickets/${ticket.id}`,
+        body: { status: 'IN_PROGRESS', expectedUpdatedAt: ticket.updatedAt },
+      }).then((response) => {
+        // O updatedAt do cliente é o mesmo: ninguém mais escreveu. Antes do
+        // where com janela, o tempo decorrido provocava 409 falso.
+        expect(response.status).to.eq(200);
         expect(response.body.status).to.eq('IN_PROGRESS');
       });
     });

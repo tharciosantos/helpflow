@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
     buildOptimisticWhere,
+    getUpdatedAtWindow,
     isUpdatedAtCurrent,
     parseExpectedUpdatedAt,
     CONFLICT_MESSAGE,
@@ -47,9 +48,15 @@ describe('isUpdatedAtCurrent', () => {
         expect(isUpdatedAtCurrent(ISO, '2026-11-12T10:00:00.900Z')).toBe(true);
     });
 
+    it('aceita quando o registro avançou dentro da tolerância', () => {
+        // Edição feita pelo próprio usuário segundos depois de carregar o
+        // chamado: o ISO perde frações e o update é o mesmo da tela.
+        expect(isUpdatedAtCurrent(ISO, '2026-11-12T10:00:00.950Z')).toBe(true);
+    });
+
     it('rejeita quando o registro mudou além da tolerância', () => {
-        expect(isUpdatedAtCurrent(ISO, '2026-11-12T10:00:05.000Z')).toBe(false);
-        expect(isUpdatedAtCurrent(ISO, '2026-11-12T09:59:00.000Z')).toBe(false);
+        expect(isUpdatedAtCurrent(ISO, '2026-11-12T10:00:02.000Z')).toBe(false);
+        expect(isUpdatedAtCurrent(ISO, '2026-11-12T09:59:58.000Z')).toBe(false);
     });
 
     it('pula a verificação quando não há valor esperado', () => {
@@ -63,17 +70,40 @@ describe('isUpdatedAtCurrent', () => {
     });
 });
 
+describe('getUpdatedAtWindow', () => {
+    it('abre uma janela de ±1s em volta do valor esperado', () => {
+        const window = getUpdatedAtWindow(ISO);
+        expect(window.gte.toISOString()).toBe('2026-11-12T09:59:59.000Z');
+        expect(window.lte.toISOString()).toBe('2026-11-12T10:00:01.000Z');
+    });
+
+    it('devolve null para valor ausente ou inválido', () => {
+        expect(getUpdatedAtWindow(undefined)).toBeNull();
+        expect(getUpdatedAtWindow('lixo')).toBeNull();
+    });
+});
+
 describe('buildOptimisticWhere', () => {
     it('sem valor esperado, filtra só pelo id (comportamento antigo)', () => {
         expect(buildOptimisticWhere('t1', undefined)).toEqual({ id: 't1' });
         expect(buildOptimisticWhere('t1', null)).toEqual({ id: 't1' });
     });
 
-    it('com valor esperado, condiciona a escrita ao updatedAt', () => {
+    it('com valor esperado, condiciona a escrita à janela do updatedAt', () => {
         const where = buildOptimisticWhere('t1', ISO);
         expect(where.id).toBe('t1');
-        expect(where.updatedAt).toBeInstanceOf(Date);
-        expect(where.updatedAt.toISOString()).toBe(ISO);
+        expect(where.updatedAt.gte).toBeInstanceOf(Date);
+        expect(where.updatedAt.gte.toISOString()).toBe('2026-11-12T09:59:59.000Z');
+        expect(where.updatedAt.lte).toBeInstanceOf(Date);
+        expect(where.updatedAt.lte.toISOString()).toBe('2026-11-12T10:00:01.000Z');
+    });
+
+    it('não usa igualdade exata (evita 409 falso por frações de segundo)', () => {
+        const { updatedAt } = buildOptimisticWhere('t1', ISO);
+        expect(updatedAt).toEqual({
+            gte: expect.any(Date),
+            lte: expect.any(Date),
+        });
     });
 
     it('ignora valor esperado inválido em vez de quebrar', () => {

@@ -101,13 +101,16 @@ export default function NotificationBell({ variant = 'nav' }) {
   const [panelStyle, setPanelStyle] = useState(null);
 
   useEffect(() => {
+    // A declaração vem ANTES dos addEventListener: `const`/`function` em bloco
+    // ficam em TDZ até a linha declarada, e lançar ReferenceError aqui impedia
+    // o panelStyle de ser aplicado (o aviso de conexão nunca aparecia).
+    function handleReposition() {
+      setPanelStyle(getPanelStyle());
+    }
     if (!open) return;
     setPanelStyle(getPanelStyle());
     window.addEventListener('resize', handleReposition);
     window.addEventListener('scroll', handleReposition, true);
-    function handleReposition() {
-      setPanelStyle(getPanelStyle());
-    }
     return () => {
       window.removeEventListener('resize', handleReposition);
       window.removeEventListener('scroll', handleReposition, true);
