@@ -7,6 +7,10 @@ import { isOverdue } from '@/lib/sla';
 import { useTheme } from "./ThemeProvider";
 import ConfirmDialog from "./ConfirmDialog";
 
+/** Aviso do 409 nas ações rápidas: a escrita não foi aplicada. */
+const CONFLICT_NOTICE =
+  'O chamado foi alterado por outra pessoa. A lista mostra a versão atual, revise e tente novamente.';
+
 export default function TicketList({
   tickets,
   loading,
@@ -23,6 +27,7 @@ export default function TicketList({
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [infoMessage, setInfoMessage] = useState('');
 
   const showFeedback = (setter, message) => {
     setter(message);
@@ -72,8 +77,9 @@ export default function TicketList({
       }
       // A escrita não foi aplicada: o select volta para o valor que veio do
       // servidor junto com o conflito, não para o que o usuário escolheu.
-      showFeedback(setSuccessMessage, 'O chamado foi alterado por outra pessoa. A lista mostra a versão atual, revise e tente novamente.');
-      return;
+      // Quem avisa é o chamador — ele sabe que a mensagem de sucesso não pode
+      // ser escrita depois desta chamada.
+      return 'conflict';
     }
 
     if (!res.ok) {
@@ -87,9 +93,14 @@ export default function TicketList({
   const handleStatusChange = async (ticket, newStatus) => {
     setErrorMessage('');
     setSuccessMessage('');
+    setInfoMessage('');
     setUpdatingId(ticket.id);
     try {
-      await patchTicket(ticket, { status: newStatus }, 'Falha ao atualizar o status.');
+      const result = await patchTicket(ticket, { status: newStatus }, 'Falha ao atualizar o status.');
+      if (result === 'conflict') {
+        showFeedback(setInfoMessage, CONFLICT_NOTICE);
+        return;
+      }
       setSuccessMessage('Status atualizado com sucesso.');
     } catch (err) {
       setErrorMessage(err.message || 'Erro ao atualizar o status.');
@@ -101,9 +112,14 @@ export default function TicketList({
   const handleAgentChange = async (ticket, agentId) => {
     setErrorMessage('');
     setSuccessMessage('');
+    setInfoMessage('');
     setUpdatingId(ticket.id);
     try {
-      await patchTicket(ticket, { agentId: agentId || null }, 'Falha ao atribuir o chamado.');
+      const result = await patchTicket(ticket, { agentId: agentId || null }, 'Falha ao atribuir o chamado.');
+      if (result === 'conflict') {
+        showFeedback(setInfoMessage, CONFLICT_NOTICE);
+        return;
+      }
       setSuccessMessage('Responsável atualizado com sucesso.');
     } catch (err) {
       setErrorMessage(err.message || 'Erro ao atribuir o chamado.');
@@ -147,6 +163,15 @@ export default function TicketList({
         {successMessage && (
           <div role="status" className={"rounded-md p-3 text-sm border " + (theme === "light" ? "bg-green-50 border-green-200 text-green-700" : "bg-green-500/20 border-green-500/50 text-green-200")}>
             {successMessage}
+          </div>
+        )}
+        {infoMessage && (
+          <div
+            role="status"
+            data-cy="ticket-list-conflict"
+            className={"rounded-md p-3 text-sm border " + (theme === "light" ? "bg-amber-50 border-amber-200 text-amber-800" : "bg-amber-500/20 border-amber-500/50 text-amber-200")}
+          >
+            {infoMessage}
           </div>
         )}
 

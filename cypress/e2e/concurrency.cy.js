@@ -172,7 +172,7 @@ describe('Concorrência no PATCH do chamado', () => {
       cy.get(`[data-cy="ticket-card-${original.id}"] select`)
         .first()
         .should('have.value', 'IN_PROGRESS');
-      cy.contains('alterado por outra pessoa').should('be.visible');
+      cy.get('[data-cy="ticket-list-conflict"]').should('be.visible');
     });
   });
 
