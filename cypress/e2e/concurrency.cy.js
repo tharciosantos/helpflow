@@ -55,7 +55,11 @@ describe('Concorrência no PATCH do chamado', () => {
         method: 'PATCH',
         url: `/api/tickets/${original.id}`,
         body: { status: 'IN_PROGRESS', expectedUpdatedAt: original.updatedAt },
-      }).its('status').should('eq', 200);
+      })
+        // `.then`, não `.its(...).should(...)`: o should é sincrônico sobre um
+        // snapshot da fila e continuava com o request do GET seguinte, então a
+        // espera de 1,5 s não chegava a acontecer antes do segundo PATCH.
+        .then((response) => expect(response.status).to.eq(200));
 
       // Agente B ainda está com o `original.updatedAt`. A espera garante que a
       // escrita de A já esteja FORA da janela de tolerância (±1 s): sem ela o
