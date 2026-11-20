@@ -61,9 +61,10 @@ describe('Concorrência no PATCH do chamado', () => {
         // espera de 1,5 s não chegava a acontecer antes do segundo PATCH.
         .then((response) => expect(response.status).to.eq(200));
 
-      // Agente B ainda está com o `original.updatedAt`. A espera garante que a
-      // escrita de A já esteja FORA da janela de tolerância (±1 s) do PATCH
-      // seguinte: sem ela A grava em menos de 1 s em CI e o 409 não existe.
+      // Agente B ainda está com o `original.updatedAt`. A espera garantiu o 409
+      // na época da janela simétrica (±1 s); hoje a janela é `[expected - 1s,
+      // expected]`, então a escrita de A já seria recusada mesmo no mesmo
+      // segundo. A espera permanece para cobrir a folga para trás.
       cy.wait(1500);
       cy.request({
         method: 'PATCH',
@@ -133,6 +134,39 @@ describe('Concorrência no PATCH do chamado', () => {
         // Clientes antigos continuam funcionando, sem proteção otimista.
         expect(response.status).to.eq(200);
       });
+    });
+  });
+
+  it('envia expectedUpdatedAt nas ações rápidas da lista e reconcilia no 409', () => {
+    const title = `Concorrência lista ${Date.now()}`;
+
+    createTicket(title).then((original) => {
+      // Outra pessoa altera o chamado e o dashboard ainda tem a versão antiga.
+      cy.request({
+        method: 'PATCH',
+        url: `/api/tickets/${original.id}`,
+        body: { status: 'IN_PROGRESS', expectedUpdatedAt: original.updatedAt },
+      }).then((response) => expect(response.status).to.eq(200));
+
+      cy.visit('/dashboard');
+      cy.contains(title, { timeout: 15000 }).scrollIntoView();
+
+      cy.intercept('PATCH', `/api/tickets/${original.id}`).as('listPatch');
+
+      cy.get(`[data-cy="ticket-card-${original.id}"] select`).first().select('CLOSED');
+
+      cy.wait('@listPatch').then(({ request, response }) => {
+        // A lista passou a mandar o updatedAt que carregou...
+        expect(request.body.expectedUpdatedAt).to.eq(original.updatedAt);
+        // ...e a escrita foi recusada em vez de sobrescrever a alteração.
+        expect(response.statusCode).to.eq(409);
+      });
+
+      // O card mostra a versão do servidor e o usuário é avisado.
+      cy.get(`[data-cy="ticket-card-${original.id}"] select`)
+        .first()
+        .should('have.value', 'IN_PROGRESS');
+      cy.contains('alterado por outra pessoa').should('be.visible');
     });
   });
 

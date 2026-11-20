@@ -52,19 +52,44 @@ export default function TicketList({
     }
   };
 
-  const handleStatusChange = async (ticketId, newStatus) => {
+  // Ações rápidas da lista (status e responsável) usam o mesmo update
+  // otimista do formulário de edição: enviam o `updatedAt` carregado e, se
+  // outra pessoa alterou o chamado nesse meio-tempo, o servidor responde 409
+  // em vez de a escrita sobrescrever a alteração dela em silêncio.
+  const patchTicket = async (ticket, payload, fallbackMessage) => {
+    const res = await fetch(`/api/tickets/${ticket.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...payload, expectedUpdatedAt: ticket.updatedAt }),
+    });
+
+    if (res.status === 409) {
+      const data = await res.json().catch(() => ({}));
+      if (data.current?.id) {
+        // O `current` do 409 é o registro do banco, sem as relações que a
+        // lista renderiza (author/agent): preserva as que já estavam na tela.
+        onTicketUpdated?.({ ...ticket, ...data.current });
+      }
+      // A escrita não foi aplicada: o select volta para o valor que veio do
+      // servidor junto com o conflito, não para o que o usuário escolheu.
+      showFeedback(setSuccessMessage, 'O chamado foi alterado por outra pessoa. A lista mostra a versão atual, revise e tente novamente.');
+      return;
+    }
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.message || fallbackMessage);
+    }
+
+    onTicketUpdated?.(await res.json());
+  };
+
+  const handleStatusChange = async (ticket, newStatus) => {
     setErrorMessage('');
     setSuccessMessage('');
-    setUpdatingId(ticketId);
+    setUpdatingId(ticket.id);
     try {
-      const res = await fetch(`/api/tickets/${ticketId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
-      });
-      if (!res.ok) throw new Error("Falha ao atualizar o status.");
-      const updatedTicket = await res.json();
-      onTicketUpdated?.(updatedTicket);
+      await patchTicket(ticket, { status: newStatus }, 'Falha ao atualizar o status.');
       setSuccessMessage('Status atualizado com sucesso.');
     } catch (err) {
       setErrorMessage(err.message || 'Erro ao atualizar o status.');
@@ -73,18 +98,12 @@ export default function TicketList({
     }
   };
 
-  const handleAgentChange = async (ticketId, agentId) => {
+  const handleAgentChange = async (ticket, agentId) => {
     setErrorMessage('');
     setSuccessMessage('');
-    setUpdatingId(ticketId);
+    setUpdatingId(ticket.id);
     try {
-      const res = await fetch(`/api/tickets/${ticketId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ agentId: agentId || null }),
-      });
-      if (!res.ok) throw new Error('Falha ao atribuir o chamado.');
-      onTicketUpdated?.(await res.json());
+      await patchTicket(ticket, { agentId: agentId || null }, 'Falha ao atribuir o chamado.');
       setSuccessMessage('Responsável atualizado com sucesso.');
     } catch (err) {
       setErrorMessage(err.message || 'Erro ao atribuir o chamado.');
@@ -246,7 +265,7 @@ export default function TicketList({
                             <select
                               disabled={updatingId === ticket.id}
                               value={ticket.status}
-                              onChange={(e) => handleStatusChange(ticket.id, e.target.value)}
+                              onChange={(e) => handleStatusChange(ticket, e.target.value)}
                               className={`min-w-0 flex-1 truncate rounded-lg px-2 py-1.5 text-xs font-medium border focus:outline-none focus:ring-1 focus:ring-emerald-400 min-[560px]:flex-none ${
                                 theme === 'light'
                                   ? 'bg-slate-50 border-slate-300 text-slate-900'
@@ -268,7 +287,7 @@ export default function TicketList({
                             <select
                               disabled={updatingId === ticket.id}
                               value={ticket.agentId || ''}
-                              onChange={(e) => handleAgentChange(ticket.id, e.target.value)}
+                              onChange={(e) => handleAgentChange(ticket, e.target.value)}
                               className={`min-w-0 flex-1 truncate rounded-lg px-2 py-1.5 text-xs font-medium border focus:outline-none focus:ring-1 focus:ring-emerald-400 min-[420px]:max-w-[11rem] min-[560px]:max-w-[12rem] ${
                                 theme === 'light'
                                   ? 'bg-slate-50 border-slate-300 text-slate-900'

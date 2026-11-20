@@ -300,7 +300,7 @@ model PasswordReset {
 
 ### Qualidade & Testes
 - **Testes Unitários:** Vitest — 224 testes unitários (18 suítes), cobrindo schemas, RBAC/multiempresa, SLA, métricas, notificações, histórico, sessões, cron e rate limiter.
-- **Testes E2E:** Cypress 15 — 7 specs com 30 cenários cobrindo autenticação, permissões, tickets e comentários.
+- **Testes E2E:** Cypress 15 — 7 specs com 31 cenários cobrindo autenticação, permissões, tickets e comentários.
 - **Linter:** ESLint 9
 
 ---
@@ -419,7 +419,7 @@ npm run build
 # Popular empresa, contas e chamados de demonstração
 npm run db:seed
 
-# Executar os 30 cenários E2E com Cypress
+# Executar os 31 cenários E2E com Cypress
 npm run cypress:run
 ```
 
