@@ -161,3 +161,15 @@ Se aparecer `Can't reach database server`:
 - valide `DATABASE_URL` e `DIRECT_URL`
 - confira se o projeto Supabase está ativo
 - confirme usuário, senha, host e portas
+
+### Histórico de migrations inconsistente (junho/2026)
+
+Se o Prisma informar:
+
+```
+The following migration(s) are applied to the database but missing from the local migrations directory
+```
+
+Causa registrada na época: um registro órfão na tabela `_prisma_migrations` apontava para `20260620201500_migrate_auth_provider_to_enum`, cuja pasta já não existia no repositório.
+
+Solução aplicada: após confirmar que o schema atual não dependia daquela migration, removeu-se **apenas o registro órfão** de `_prisma_migrations` — nunca a pasta ou o registro de uma migration que ainda exista no repositório. Com isso, `npx prisma migrate dev` voltou a criar migrations normalmente (foi assim que `add-password-reset` foi criada).
