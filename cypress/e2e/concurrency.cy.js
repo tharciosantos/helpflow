@@ -46,6 +46,39 @@ describe('Concorrência no PATCH do chamado', () => {
     });
   });
 
+  it('não responde 409 quando o PATCH não altera nenhum campo (AUD-35)', () => {
+    const title = `Concorrência sem mudança ${Date.now()}`;
+
+    createTicket(title).then((original) => {
+      // A lista e o formulário reenviam valores idênticos; antes o update
+      // gravava mesmo assim, incrementando `updatedAt` e invalidando o
+      // `expectedUpdatedAt` de quem tinha a tela aberta.
+      cy.request({
+        method: 'PATCH',
+        url: `/api/tickets/${original.id}`,
+        body: {
+          title: original.title,
+          description: original.description,
+          status: original.status,
+          expectedUpdatedAt: original.updatedAt,
+        },
+      }).then((noop) => {
+        expect(noop.status, 'PATCH sem mudança não pode virar 409').to.eq(200);
+        expect(noop.body.updatedAt, 'updatedAt não deve ser incrementado').to.eq(original.updatedAt);
+      });
+
+      // Quem ainda carrega o `updatedAt` original continua podendo gravar.
+      cy.request({
+        method: 'PATCH',
+        url: `/api/tickets/${original.id}`,
+        body: { status: 'IN_PROGRESS', expectedUpdatedAt: original.updatedAt },
+      }).then((response) => {
+        expect(response.status).to.eq(200);
+        expect(response.body.status).to.eq('IN_PROGRESS');
+      });
+    });
+  });
+
   it('responde 409 e preserva a primeira alteração quando o chamado mudou', () => {
     const title = `Concorrência conflito ${Date.now()}`;
 

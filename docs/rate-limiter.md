@@ -1,8 +1,9 @@
 # Rate Limiter Distribuído com Upstash Redis
 
 > **Status: implementado.** Este documento descreve o comportamento atual de
-> `src/lib/rateLimiter.js`. O plano original (adaptador Upstash + fallback em
-> memória) foi entregue; mantemos aqui a arquitetura e os limites vigentes.
+> `src/lib/rateLimiter.js` — não um plano pendente. A arquitetura (adaptador
+> Upstash + fallback em memória) e os limites abaixo são os vigentes em
+> produção.
 
 ## Estado Atual
 
