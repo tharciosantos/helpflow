@@ -53,7 +53,7 @@ export async function POST(req) {
             );
         }
 
-        // Fluxo 1: Cadastro de Funcionário (CLIENT vinculado por código)
+        // Fluxo 1: Cadastro de Funcionário (CLIENT vinculado por código, PENDING)
         if (accountType === 'EMPLOYEE') {
             const cleanCode = validation.data.companyCode.trim().toUpperCase();
             const company = await prisma.company.findFirst({
@@ -70,6 +70,8 @@ export async function POST(req) {
                 );
             }
 
+            // AUD-37: conhecer o código não basta para entrar no tenant. A conta
+            // nasce PENDING e só autentica depois que um AGENT da empresa aprova.
             const newUser = await prisma.user.create({
                 data: {
                     name,
@@ -77,12 +79,21 @@ export async function POST(req) {
                     password_hash: hashedPassword,
                     auth_provider: 'credentials',
                     role: 'CLIENT',
+                    approvalStatus: 'PENDING',
                     companyId: company.id,
                 },
             });
 
             return NextResponse.json(
-                { id: newUser.id, name: newUser.name, email: newUser.email, role: 'CLIENT', companyName: company.name, companyCode: company.code },
+                {
+                    id: newUser.id,
+                    name: newUser.name,
+                    email: newUser.email,
+                    role: 'CLIENT',
+                    approvalStatus: newUser.approvalStatus,
+                    companyName: company.name,
+                    message: 'Conta criada. Aguarde a aprovação da TI/Suporte da sua empresa para entrar.',
+                },
                 { status: 201 }
             );
         }

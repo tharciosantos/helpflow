@@ -73,7 +73,7 @@ export default function LoginPage() {
             });
 
             if (res?.error) {
-                if (res.error.includes("Muitas tentativas")) {
+                if (res.error.includes("Muitas tentativas") || res.error.includes("aguarda aprovação") || res.error.includes("foi recusada")) {
                     setError(res.error);
                 } else {
                     setError("E-mail ou senha inválidos.");

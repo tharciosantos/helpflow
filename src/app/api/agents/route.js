@@ -24,8 +24,10 @@ export async function GET() {
       return NextResponse.json(self ? [self] : []);
     }
 
+    // Contas PENDING/REJECTED não são membros ainda (AUD-37): não aparecem no
+    // diretório nem na atribuição de responsável.
     const members = await prisma.user.findMany({
-      where: { companyId: session.user.companyId },
+      where: { companyId: session.user.companyId, approvalStatus: 'ACTIVE' },
       select: { id: true, name: true, email: true, role: true },
       orderBy: [{ role: 'asc' }, { name: 'asc' }, { email: 'asc' }],
     });

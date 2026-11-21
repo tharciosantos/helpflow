@@ -25,14 +25,24 @@ function RegisterForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const [error, setError] = useState("");
+  // Conta de funcionário criada aguardando aprovação (AUD-37): o formulário
+  // sai de cena no lugar do login automático.
+  const [pendingApproval, setPendingApproval] = useState("");
   const [loading, setLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
+
+  // O formulário só mostra as abas depois de sincronizar com o código da URL:
+  // antes disso um submit cai em COMPANY (sem companyName) e o servidor
+  // recusa. Só o código trocado na barra de endereço com a tela já montada é
+  // refletido nos campos.
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     if (queryCode) {
       setCompanyCode(queryCode);
       setAccountType("EMPLOYEE");
     }
+    setIsReady(true);
   }, [queryCode]);
 
   const fields = {
@@ -90,6 +100,18 @@ function RegisterForm() {
           (key) => errors[key]?.length
         );
         fields[firstInvalid]?.current?.focus();
+        return;
+      }
+
+      // Funcionário por código nasce PENDING: não há login automático nem
+      // redirecionamento para o dashboard antes da aprovação do AGENT.
+      if (accountType === "EMPLOYEE") {
+        const data = await res.json().catch(() => null);
+        setPendingApproval(
+          data?.message || "Conta criada. Aguarde a aprovação da TI/Suporte da sua empresa para entrar."
+        );
+        setPassword("");
+        setConfirmPassword("");
         return;
       }
 
@@ -211,7 +233,32 @@ function RegisterForm() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-3.5">
+        {pendingApproval && (
+          <div
+            data-cy="register-pending-approval"
+            role="status"
+            className={`mb-4 rounded-lg p-4 text-sm border ${
+              theme === "light"
+                ? "bg-amber-50 border-amber-200 text-amber-800"
+                : "bg-amber-500/15 border-amber-500/40 text-amber-200"
+            }`}
+          >
+            <p className="font-semibold">Cadastro enviado</p>
+            <p className="mt-1">{pendingApproval}</p>
+            <Link
+              href="/login"
+              className="mt-2 inline-block font-semibold underline underline-offset-2"
+            >
+              Ir para o login
+            </Link>
+          </div>
+        )}
+
+        <form
+          onSubmit={handleSubmit}
+          data-cy="register-form-ready"
+          className={`space-y-3.5 ${pendingApproval || !isReady ? "hidden" : ""}`}
+        >
           {/* Nome da Empresa (apenas se COMPANY) */}
           {accountType === "COMPANY" && (
             <div>

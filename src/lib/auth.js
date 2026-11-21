@@ -64,6 +64,16 @@ export const authOptions = {
           throw new Error("Invalid credentials");
         }
 
+        // AUD-37: só depois de validar a senha a existência da conta fica
+        // confirmada — por isso o recado de aprovação não enumera e-mails.
+        // Contas antigas (coluna ausente) contam como aprovadas.
+        if (user.approvalStatus === 'PENDING') {
+          throw new Error('Sua conta aguarda aprovação da TI/Suporte da sua empresa.');
+        }
+        if (user.approvalStatus === 'REJECTED') {
+          throw new Error('Sua solicitação de acesso foi recusada pela TI/Suporte da sua empresa.');
+        }
+
         return {
           id: user.id,
           name: user.name,
@@ -105,12 +115,21 @@ export const authOptions = {
           select: {
             tokenVersion: true,
             role: true,
+            approvalStatus: true,
             companyId: true,
             company: { select: { name: true, code: true } },
           },
         });
 
         if (!dbUser || !isTokenVersionCurrent(token.tokenVersion, dbUser.tokenVersion)) {
+          token.revoked = true;
+          return token;
+        }
+
+        // Conta recusada não mantém sessão (AUD-37). O cadastro por código
+        // impede o login enquanto PENDING; REJECTED é o caminho que pode
+        // acontecer com a sessão já emitida.
+        if (dbUser.approvalStatus === 'REJECTED') {
           token.revoked = true;
           return token;
         }

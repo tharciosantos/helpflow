@@ -95,7 +95,22 @@ function getLimiter(windowMs, maxRequests) {
     return limiters.get(key);
 }
 
+/**
+ * E2E: dev/testes com CYPRESS_TEST_SECRET definido rodam dezenas de cadastros
+ * no mesmo IP e caem no limite. A exceção só vale com o segredo configurado e
+ * para as chaves `register:*`/`login:*`; produção fica sempre limitada.
+ */
+function isTestBypass(identifier) {
+    if (process.env.NODE_ENV === 'production') return false;
+    if (!process.env.CYPRESS_TEST_SECRET) return false;
+    return identifier.startsWith('register:') || identifier.startsWith('login:');
+}
+
 export async function checkRateLimit(identifier, { windowMs = DEFAULT_WINDOW_MS, maxRequests = DEFAULT_MAX_REQUESTS } = {}) {
+    if (isTestBypass(identifier)) {
+        return { isLimited: false, remaining: maxRequests, resetTime: Date.now() + windowMs };
+    }
+
     const limiter = getRedis() ? getLimiter(windowMs, maxRequests) : null;
 
     if (!limiter) {

@@ -58,8 +58,8 @@ Regra: toda correção de um item `AUD-xx` deve atualizar o status, o commit e a
 | **Rate Limiting** | @upstash/ratelimit + @upstash/redis | Sliding window / fallback em memória |
 | **Animações** | Anime.js | 4.5.x |
 | **E-mail** | Nodemailer | Recuperação de senhas (`EMAIL_USER` / `EMAIL_PASS`) |
-| **Testes Unitários** | Vitest | 231 testes de **funções puras** em `src/lib/` (ambiente `node`, sem jsdom, sem Testing Library) |
-| **Testes E2E** | Cypress | 15.x — 7 specs / 33 cenários em `cypress/e2e/` |
+| **Testes Unitários** | Vitest | 248 testes de **funções puras** em `src/lib/` (ambiente `node`, sem jsdom, sem Testing Library) |
+| **Testes E2E** | Cypress | 15.x — 8 specs / 36 cenários em `cypress/e2e/` |
 | **Linter** | ESLint (flat config) + eslint-config-next | 9.x |
 
 ---
@@ -113,7 +113,7 @@ helpflow/
 │   │   ├── layout.js          # RootLayout com ThemeProvider e AuthProvider
 │   │   └── globals.css        # Tailwind v4 directives e estilos base
 │   └── lib/                   # ← Regra de negócio (funções puras) + integrações
-│       ├── __tests__/         # 231 testes Vitest (19 arquivos)
+│       ├── __tests__/         # 248 testes Vitest (20 arquivos)
 │       ├── auth.js            # Configuração do NextAuth, callbacks, authorize e tokenVersion
 │       ├── prisma.js          # Instância singleton do PrismaClient
 │       ├── email.js           # Envio de e-mails via Nodemailer (EMAIL_USER/EMAIL_PASS)
@@ -135,7 +135,7 @@ helpflow/
 │       ├── ticketChanges.js   # Detecta PATCH sem mudança real (evita 409 falso)
 │       └── demoTicketFlow.js  # Sequência de estados do simulador
 ├── cypress/
-│   ├── e2e/                   # auth · tickets · permissions · comments · concurrency · detail-race · notifications-states (7 specs)
+│   ├── e2e/                   # auth · tickets · permissions · comments · concurrency · detail-race · notifications-states · approvals (8 specs)
 │   └── support/               # commands.js (createTestUser, login)
 └── docs/                      # Screenshots, notas de incidentes, plano de rate limit
                                #   e AUDITORIA.md (backlog de correções)
@@ -294,7 +294,7 @@ CYPRESS_TEST_SECRET="seu-segredo-cypress"
 
 ## 10. Testes e Validação
 
-- **Suíte Vitest — 231 testes em 19 arquivos**: cobrem **funções puras** de `src/lib/` (ambiente `node`, **sem Testing Library e sem jsdom**). Não há testes de componentes ou de Route Handlers.
+- **Suíte Vitest — 248 testes em 20 arquivos**: cobrem **funções puras** de `src/lib/` (ambiente `node`, **sem Testing Library e sem jsdom**). Não há testes de componentes ou de Route Handlers.
   - Validações de Schemas Zod (`schemas.test.js`)
   - Utilitários de Tickets e Formatação (`ticketUtils.test.js`)
   - Autorização, RBAC e isolamento multiempresa (`ticketAuthorization.test.js`)
@@ -308,9 +308,10 @@ CYPRESS_TEST_SECRET="seu-segredo-cypress"
   - Versão de token / revogação de JWT (`sessionVersion.test.js`)
   - Autorização do cron / `CRON_SECRET` (`cronAuth.test.js`)
   - Concorrência no PATCH e detecção de PATCH sem mudança real (`ticketConcurrency.test.js`, `ticketChanges.test.js`)
+  - Aprovação de contas por código de empresa (`approval.test.js`)
   - Fluxo do Simulador Interativo (`demoTicketFlow.test.js`)
   - Consistência das contagens documentadas (`docsConsistency.test.js` — falha se `AGENTS.md` ou `README.md` divergirem da suíte real)
-- **E2E Cypress — 7 specs / 33 cenários em `cypress/e2e/`**: `auth.cy.js`, `tickets.cy.js`, `permissions.cy.js`, `comments.cy.js`, `concurrency.cy.js`, `detail-race.cy.js`, `notifications-states.cy.js`. Rodam contra servidor e banco reais; `cy.createTestUser` cria usuários via `/api/register` com `x-test-secret`.
+- **E2E Cypress — 8 specs / 36 cenários em `cypress/e2e/`**: `auth.cy.js`, `tickets.cy.js`, `permissions.cy.js`, `comments.cy.js`, `concurrency.cy.js`, `detail-race.cy.js`, `notifications-states.cy.js`, `approvals.cy.js`. Rodam contra servidor e banco reais; `cy.createTestUser` cria usuários via `/api/register` com `x-test-secret`.
 
 ### 10.1 Validação Obrigatória (Antes do Commit / Push / PR)
 

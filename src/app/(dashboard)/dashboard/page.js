@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useSession } from "next-auth/react";
-import { LuPlus, LuSearch, LuLayers, LuClock, LuListFilter, LuCircleCheck, LuCopy, LuCheck, LuBuilding, LuShare2, LuCircleAlert, LuUser, LuArrowUpDown } from 'react-icons/lu';
+import { LuPlus, LuSearch, LuLayers, LuClock, LuListFilter, LuCircleCheck, LuCopy, LuCheck, LuBuilding, LuShare2, LuCircleAlert, LuUser, LuUserCheck, LuArrowUpDown } from 'react-icons/lu';
 import TicketList from "../../components/TicketList";
 import { useTheme } from "../../components/ThemeProvider";
 import { formatDuration } from '@/lib/metrics';
@@ -28,6 +28,10 @@ export default function DashboardPage() {
   const [filters, setFilters] = useState({ search: '', status: '', priority: '', overdue: false, mine: false, sort: 'recent' });
   const [filterVersion, setFilterVersion] = useState(0);
   const [agents, setAgents] = useState([]);
+  // AUD-37: contas criadas por código de empresa que esperam decisão do AGENT.
+  const [pendingUsers, setPendingUsers] = useState([]);
+  const [pendingError, setPendingError] = useState('');
+  const [decidingId, setDecidingId] = useState('');
   const [copiedType, setCopiedType] = useState('');
   const abortRef = useRef(null);
   const filterTimerRef = useRef(null);
@@ -113,6 +117,46 @@ export default function DashboardPage() {
 
     fetchAgents();
   }, [status, session?.user?.role]);
+
+  const fetchPendingUsers = useCallback(async () => {
+    try {
+      const response = await fetch('/api/agents/pending');
+      if (!response.ok) throw new Error('Falha ao carregar contas pendentes.');
+      setPendingUsers(await response.json());
+      setPendingError('');
+    } catch (err) {
+      setPendingError(err.message);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (status !== 'authenticated' || session?.user?.role !== 'AGENT') return;
+    fetchPendingUsers();
+  }, [status, session?.user?.role, fetchPendingUsers]);
+
+  const handleApprovalDecision = async (userId, action) => {
+    setDecidingId(userId);
+    setPendingError('');
+    try {
+      const response = await fetch(`/api/agents/pending/${userId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      });
+      if (!response.ok && response.status !== 409) {
+        const data = await response.json().catch(() => null);
+        throw new Error(data?.message || 'Falha ao registrar a decisão.');
+      }
+      // 409 = outra pessoa já decidiu; o filtro local reflete o estado real
+      // em ambos os casos (e zera a lista, escondendo o card).
+      setPendingUsers((prev) => prev.filter((user) => user.id !== userId));
+      if (response.ok) fetchAgents();
+    } catch (err) {
+      setPendingError(err.message);
+    } finally {
+      setDecidingId('');
+    }
+  };
 
   const handleTicketDeleted = (deletedTicketId, deletedStatus) => {
     setTickets(prev => prev.filter(ticket => ticket.id !== deletedTicketId));
@@ -277,6 +321,67 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Contas aguardando aprovação (AUD-37) */}
+      {session?.user?.role === 'AGENT' && (pendingUsers.length > 0 || pendingError) && (
+        <section
+          data-cy="pending-approvals-card"
+          className={`rounded-2xl border p-4 sm:p-6 min-w-0 ${
+            theme === 'light'
+              ? 'bg-amber-50/70 border-amber-200 text-slate-900'
+              : 'bg-amber-950/20 border-amber-800/60 text-slate-100'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <LuUserCheck size={18} className="text-amber-600 dark:text-amber-400" aria-hidden="true" />
+            <h2 className="text-base sm:text-lg font-bold">
+              Aguardando aprovação ({pendingUsers.length})
+            </h2>
+          </div>
+          <p className={`mt-1 text-xs sm:text-sm ${theme === 'light' ? 'text-slate-600' : 'text-slate-400'}`}>
+            Contas criadas com o código da empresa só entram depois da sua aprovação.
+          </p>
+          {pendingError && (
+            <p role="alert" className="mt-2 text-xs text-red-500">{pendingError}</p>
+          )}
+          <ul className="mt-3 divide-y divide-amber-200/50 dark:divide-amber-800/40">
+            {pendingUsers.map((user) => (
+              <li key={user.id} className="flex flex-col gap-2 py-2.5 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold">{user.name || user.email}</p>
+                  <p className={`truncate text-xs ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
+                    {user.email}
+                  </p>
+                </div>
+                <div className="flex gap-2 shrink-0">
+                  <button
+                    type="button"
+                    data-cy={`approve-user-${user.id}`}
+                    onClick={() => handleApprovalDecision(user.id, 'APPROVE')}
+                    disabled={decidingId === user.id}
+                    className="rounded-lg bg-emerald-600 hover:bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white transition disabled:opacity-50"
+                  >
+                    Aprovar
+                  </button>
+                  <button
+                    type="button"
+                    data-cy={`reject-user-${user.id}`}
+                    onClick={() => handleApprovalDecision(user.id, 'REJECT')}
+                    disabled={decidingId === user.id}
+                    className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition disabled:opacity-50 ${
+                      theme === 'light'
+                        ? 'border-slate-300 bg-white hover:bg-slate-50 text-slate-700'
+                        : 'border-slate-700 bg-slate-900 hover:bg-slate-800 text-slate-200'
+                    }`}
+                  >
+                    Recusar
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
 
       {/* Barra de Filtros */}
