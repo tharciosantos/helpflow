@@ -37,6 +37,26 @@ Cypress.Commands.add("createTestUser", (overrides = {}) => {
     .then(() => user);
 });
 
+// Cadastra um funcionário pelo código da empresa (fluxo real, nasce PENDING).
+Cypress.Commands.add("registerEmployee", ({ name, email, password, companyCode }) => {
+  return cy.request({
+    method: "POST",
+    url: "/api/register",
+    body: {
+      accountType: "EMPLOYEE",
+      name,
+      email,
+      password,
+      confirmPassword: password,
+      companyCode,
+    },
+  }).then((res) => {
+    expect(res.status, "cadastro de funcionário").to.eq(201);
+    expect(res.body.approvalStatus, "conta nasce pendente").to.eq("PENDING");
+    return { name, email, password };
+  });
+});
+
 Cypress.Commands.add("login", (email, password) => {
   cy.session(
     // A origem entra na chave: os specs rodam contra o próprio app e um

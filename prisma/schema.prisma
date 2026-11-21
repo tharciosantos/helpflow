@@ -29,6 +29,10 @@ model User {
   password_hash String?
   image         String?
   role          Role      @default(CLIENT)
+  // Conta criada por código de empresa nasce PENDING: o login recusa e um
+  // AGENT da mesma empresa precisa aprovar (AUD-37). Contas criadas por
+  // outros fluxos (empresa, GitHub, legado) nascem ACTIVE.
+  approvalStatus ApprovalStatus @default(ACTIVE)
   auth_provider String    @default("credentials")
   // Incrementado em eventos que devem invalidar todas as sessões JWT
   // (ex.: redefinição de senha). Tokens antigos deixam de valer.
@@ -50,6 +54,7 @@ model User {
   passwordResets PasswordReset[]
 
   @@index([companyId])
+  @@index([companyId, approvalStatus])
 }
 
 model Ticket {
@@ -159,6 +164,13 @@ enum Priority {
 enum Role {
   CLIENT
   AGENT
+}
+
+// Porta de entrada do tenant: só ACTIVE autentica (ver src/lib/approval.js).
+enum ApprovalStatus {
+  PENDING
+  ACTIVE
+  REJECTED
 }
 
 model Account {
