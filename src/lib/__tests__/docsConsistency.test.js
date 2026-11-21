@@ -73,7 +73,7 @@ describe('consistência das contagens documentadas', () => {
 
   it('contabiliza os testes unitários da suíte', () => {
     expect(unitTests).toBeGreaterThan(0);
-    expect(testFiles).toBe(20);
+    expect(testFiles).toBe(21);
   });
 
   it('AGENTS.md cita a contagem real de testes unitários', () => {

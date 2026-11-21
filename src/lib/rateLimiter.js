@@ -1,5 +1,6 @@
 // Rate limiting com Upstash Redis (distribuído) + fallback em memória (dev/single-instance).
-// Uso: const { isLimited, remaining, resetTime } = await checkRateLimit(`login:${email}`);
+// Uso: const { isLimited, remaining, resetTime } = await checkRateLimit(`register:${ip}`);
+// Login: ver src/lib/loginRateLimit.js (chaves `login:` por e-mail e `login-ip:` por IP).
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 
@@ -61,9 +62,16 @@ export function _clearMemoryRateLimits() {
     requestCounts.clear();
 }
 
+// Zera um contador (ex.: login aceito). Só o fallback em memória tem contador
+// local para zerar; no Upstash a própria janela deslizante se encarrega.
+export function resetRateLimit(identifier) {
+    requestCounts.delete(identifier);
+}
+
 // --- Upstash (distribuído) ---
 let redis = null;
 let limiters = new Map();
+const RATE_LIMIT_PREFIX = 'helpflow:ratelimit';
 
 function getRedis() {
     const url = process.env.UPSTASH_REDIS_REST_URL;
@@ -88,7 +96,7 @@ function getLimiter(windowMs, maxRequests) {
                 redis: client,
                 limiter: Ratelimit.slidingWindow(maxRequests, `${seconds} s`),
                 analytics: true,
-                prefix: 'helpflow:ratelimit',
+                prefix: RATE_LIMIT_PREFIX,
             })
         );
     }
@@ -98,12 +106,12 @@ function getLimiter(windowMs, maxRequests) {
 /**
  * E2E: dev/testes com CYPRESS_TEST_SECRET definido rodam dezenas de cadastros
  * no mesmo IP e caem no limite. A exceção só vale com o segredo configurado e
- * para as chaves `register:*`/`login:*`; produção fica sempre limitada.
+ * para as chaves `register:*`/`login:*`/`login-ip:*`; produção fica sempre limitada.
  */
 function isTestBypass(identifier) {
     if (process.env.NODE_ENV === 'production') return false;
     if (!process.env.CYPRESS_TEST_SECRET) return false;
-    return identifier.startsWith('register:') || identifier.startsWith('login:');
+    return identifier.startsWith('register:') || identifier.startsWith('login:') || identifier.startsWith('login-ip:');
 }
 
 export async function checkRateLimit(identifier, { windowMs = DEFAULT_WINDOW_MS, maxRequests = DEFAULT_MAX_REQUESTS } = {}) {
@@ -130,6 +138,33 @@ export async function checkRateLimit(identifier, { windowMs = DEFAULT_WINDOW_MS,
     } catch (error) {
         console.error('[rateLimiter] Falha no Upstash, usando fallback em memória:', error?.message);
         return checkMemoryRateLimit(identifier, { windowMs, maxRequests });
+    }
+}
+
+/**
+ * Login aceito: limpa o histórico de falhas do próprio usuário. No Upstash, a
+ * chave em uso leva o prefixo fixo e um sufixo de tipo (`login:<epoch>:<email>`);
+ * no fallback em memória a chave é exatamente o identificador. Excluir pelo
+ * sufixo `:<identifier>` cobre os dois formatos sem apagar `x@a.com` quando o
+ * login é de `ax@a.com`.
+ */
+export async function resetRateLimits(identifiers) {
+    for (const identifier of identifiers) {
+        requestCounts.delete(identifier);
+
+        const client = getRedis();
+        if (!client) continue;
+
+        try {
+            let cursor = '0';
+            do {
+                const [next, keys] = await client.scan(cursor, { match: `${RATE_LIMIT_PREFIX}*:${identifier}`, count: 100 });
+                cursor = String(next);
+                if (keys.length > 0) await client.del(...keys);
+            } while (cursor !== '0');
+        } catch (error) {
+            console.error('[rateLimiter] Falha ao limpar contador no Upstash:', error?.message);
+        }
     }
 }
 

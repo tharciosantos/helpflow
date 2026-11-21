@@ -3,8 +3,19 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GitHubProvider from "next-auth/providers/github";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import { checkRateLimit } from "@/lib/rateLimiter";
+import { checkRateLimit, getClientIp, resetRateLimits } from "@/lib/rateLimiter";
+import { buildLoginRateLimits, buildLoginResetKeys, normalizeEmail } from "@/lib/loginRateLimit";
 import { isTokenVersionCurrent } from "@/lib/sessionVersion";
+
+// O `req` do authorize muda de forma conforme o runtime: em produção
+// (route handler) chega `{ query, body, headers: {...} }`, mas no `next dev`
+// vem um NextRequest, cujos headers só respondem a `.get()`. Normalizamos para
+// o formato do `Headers` antes de ler o IP.
+function getLoginIp(req) {
+  if (!req?.headers) return null;
+  const headers = typeof req.headers.get === 'function' ? req.headers : { get: (name) => req.headers[name] ?? null };
+  return getClientIp({ headers });
+}
 
 export const authOptions = {
   adapter: PrismaAdapter(prisma),
@@ -20,17 +31,23 @@ export const authOptions = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Invalid credentials");
         }
 
         // E-mails são armazenados normalizados; normalizamos a entrada para
         // que "  Joao@Empresa.com " encontre joao@empresa.com.
-        const email = credentials.email.trim().toLowerCase();
+        const email = normalizeEmail(credentials.email);
+        // AUD-38: o limite apertado é por IP (o atacante trava a si mesmo) e o
+        // por e-mail fica frouxo, para não dar a qualquer um o botão de bloquear
+        // a conta de outra pessoa.
+        const ip = getLoginIp(req);
 
-        const { isLimited } = await checkRateLimit(`login:${email}`);
-        if (isLimited) {
+        const limitResults = await Promise.all(
+          buildLoginRateLimits({ email, ip }).map(({ key, maxRequests }) => checkRateLimit(key, { maxRequests })),
+        );
+        if (limitResults.some(({ isLimited }) => isLimited)) {
           throw new Error('Muitas tentativas de login. Tente novamente em 15 minutos.');
         }
         const user = await prisma.user.findFirst({
@@ -63,6 +80,9 @@ export const authOptions = {
         if (!isValid) {
           throw new Error("Invalid credentials");
         }
+
+        // Senha certa: as falhas anteriores não devem contar para a próxima janela.
+        await resetRateLimits(buildLoginResetKeys({ email, ip }));
 
         // AUD-37: só depois de validar a senha a existência da conta fica
         // confirmada — por isso o recado de aprovação não enumera e-mails.
