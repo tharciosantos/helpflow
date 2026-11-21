@@ -1,9 +1,10 @@
 describe("Comentários do chamado", () => {
-    beforeEach(() => {
+    /** Usuário padronizado da spec: CLIENT sem empresa (escopo pessoal). */
+    function loginAsClient() {
         cy.createTestUser().then((user) => {
             cy.login(user.email, user.password);
         });
-    });
+    }
 
     function createTicketAndOpen(title) {
         cy.intercept("POST", "/api/tickets").as("createTicket");
@@ -23,6 +24,7 @@ describe("Comentários do chamado", () => {
     }
 
     it("deve enviar um comentário e persistir após recarregar", () => {
+        loginAsClient();
         const title = `Ticket comentários ${Date.now()}`;
         const message = `Mensagem de teste ${Date.now()}`;
 
@@ -45,6 +47,7 @@ describe("Comentários do chamado", () => {
     });
 
     it("deve bloquear envio de comentário vazio", () => {
+        loginAsClient();
         const title = `Ticket vazio ${Date.now()}`;
 
         createTicketAndOpen(title);
@@ -54,6 +57,7 @@ describe("Comentários do chamado", () => {
     });
 
     it("deve excluir o próprio comentário", () => {
+        loginAsClient();
         const title = `Ticket excluir msg ${Date.now()}`;
         const message = `Excluir esta ${Date.now()}`;
 
@@ -78,6 +82,28 @@ describe("Comentários do chamado", () => {
 
         cy.wait("@deleteComment").its("response.statusCode").should("eq", 200);
         cy.contains(message).should("not.exist");
+    });
+
+    it("esconde o campo de comentário para CLIENT em chamado fechado", () => {
+        loginAsClient();
+
+        cy.request({
+            method: "POST",
+            url: "/api/tickets",
+            body: { title: `Chamado fechado ${Date.now()}`, description: "Fechado pela equipe de suporte" },
+        }).then(({ body: ticket }) => {
+            cy.visit(`/ticket/${ticket.id}`);
+            cy.get('[data-cy="ticket-comment-input"]').should("exist");
+
+            // O CLIENT não tem poder de triagem (getForbiddenTicketFields):
+            // o fechamento vem da equipe, simulada pelo task do Cypress.
+            cy.task("closeTicket", ticket.id);
+            cy.reload();
+
+            cy.get('[data-cy="ticket-comment-closed"]').scrollIntoView().should("be.visible");
+            cy.get('[data-cy="ticket-comment-input"]').should("not.exist");
+            cy.get('[data-cy="ticket-comment-submit"]').should("not.exist");
+        });
     });
 
     it("API deve exigir autenticação para comentar", () => {

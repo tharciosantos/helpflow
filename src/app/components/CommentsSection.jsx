@@ -1,5 +1,5 @@
 import { LuMessageSquare, LuSend, LuTrash2, LuHistory, LuLock } from 'react-icons/lu';
-import { canDeleteComment } from '@/lib/ticketAuthorization';
+import { canCommentOnTicket, canDeleteComment } from '@/lib/ticketAuthorization';
 import { formatHistoryText } from '@/lib/ticketHistoryFormat';
 
 export default function CommentsSection({
@@ -20,6 +20,9 @@ export default function CommentsSection({
     onDeleteComment,
 }) {
     const isAgent = session?.user?.role === 'AGENT';
+    // Mesma regra da API: o CLIENT não comenta em chamado fechado (follow-up
+    // vira novo chamado). Sem isto o campo aparecia e só o envio dava 403.
+    const canComment = canCommentOnTicket(session?.user, ticket);
     const actorNameMap = Object.fromEntries(
         [...(agents ?? []), ticket?.author, ticket?.agent]
             .filter(Boolean)
@@ -236,12 +239,28 @@ export default function CommentsSection({
                 )}
             </div>
 
-            <form onSubmit={onAddComment} className="pt-2">
-                <div className={`p-4 rounded-xl border focus-within:ring-2 focus-within:ring-emerald-400/20 ${
-                    theme === 'light'
-                        ? 'bg-slate-50 border-slate-200 focus-within:border-emerald-500'
-                        : 'bg-slate-950/50 border-slate-800 focus-within:border-emerald-400'
-                }`}>
+            {!canComment ? (
+                <div
+                    data-cy="ticket-comment-closed"
+                    role="status"
+                    className={`flex items-start gap-2.5 rounded-xl border p-4 text-sm ${
+                        theme === 'light'
+                            ? 'bg-slate-50 border-slate-200 text-slate-600'
+                            : 'bg-slate-950/40 border-slate-800 text-slate-300'
+                    }`}
+                >
+                    <LuLock size={16} className="mt-0.5 shrink-0 opacity-70" />
+                    <p>
+                        Este chamado está fechado e não aceita novos comentários. Se precisar de acompanhamento, abra um novo chamado.
+                    </p>
+                </div>
+            ) : (
+                <form onSubmit={onAddComment} className="pt-2">
+                    <div className={`p-4 rounded-xl border focus-within:ring-2 focus-within:ring-emerald-400/20 ${
+                        theme === 'light'
+                            ? 'bg-slate-50 border-slate-200 focus-within:border-emerald-500'
+                            : 'bg-slate-950/50 border-slate-800 focus-within:border-emerald-400'
+                    }`}>
                     <label htmlFor="comment-input" className="sr-only">
                         Escreva uma mensagem ou atualização sobre o chamado
                     </label>
@@ -306,6 +325,7 @@ export default function CommentsSection({
                     </p>
                 )}
             </form>
+            )}
         </div>
     );
 }

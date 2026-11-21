@@ -19,6 +19,7 @@ import {
   isUpdatedAtCurrent,
   CONFLICT_MESSAGE,
 } from '@/lib/ticketConcurrency';
+import { hasTicketChanges } from '@/lib/ticketChanges';
 
 // FUNÇÃO GET
 export async function GET(req, { params }) {
@@ -227,6 +228,14 @@ export async function PATCH(req, { params }) {
         { message: CONFLICT_MESSAGE, current: ticket },
         { status: 409 }
       );
+    }
+
+    // PATCH sem mudança real: devolve o estado atual sem gravar. `updatedAt` é
+    // @updatedAt no Prisma e o update anterior o incrementava mesmo com dados
+    // idênticos — o que fazia o update otimista de quem tinha a tela aberta
+    // acusar conflito (409) sem que ninguém tivesse alterado o chamado.
+    if (!hasTicketChanges(ticket, data)) {
+      return NextResponse.json(ticket, { status: 200 });
     }
 
     const updatedTicket = await prisma.$transaction(async (tx) => {
