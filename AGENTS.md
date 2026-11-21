@@ -58,7 +58,7 @@ Regra: toda correção de um item `AUD-xx` deve atualizar o status, o commit e a
 | **Rate Limiting** | @upstash/ratelimit + @upstash/redis | Sliding window / fallback em memória |
 | **Animações** | Anime.js | 4.5.x |
 | **E-mail** | Nodemailer | Recuperação de senhas (`EMAIL_USER` / `EMAIL_PASS`) |
-| **Testes Unitários** | Vitest | 248 testes de **funções puras** em `src/lib/` (ambiente `node`, sem jsdom, sem Testing Library) |
+| **Testes Unitários** | Vitest | 258 testes de **funções puras** em `src/lib/` (ambiente `node`, sem jsdom, sem Testing Library) |
 | **Testes E2E** | Cypress | 15.x — 8 specs / 36 cenários em `cypress/e2e/` |
 | **Linter** | ESLint (flat config) + eslint-config-next | 9.x |
 
@@ -113,11 +113,12 @@ helpflow/
 │   │   ├── layout.js          # RootLayout com ThemeProvider e AuthProvider
 │   │   └── globals.css        # Tailwind v4 directives e estilos base
 │   └── lib/                   # ← Regra de negócio (funções puras) + integrações
-│       ├── __tests__/         # 248 testes Vitest (20 arquivos)
+│       ├── __tests__/         # 258 testes Vitest (21 arquivos)
 │       ├── auth.js            # Configuração do NextAuth, callbacks, authorize e tokenVersion
 │       ├── prisma.js          # Instância singleton do PrismaClient
 │       ├── email.js           # Envio de e-mails via Nodemailer (EMAIL_USER/EMAIL_PASS)
 │       ├── rateLimiter.js     # Rate limit Upstash/Redis + fallback em memória
+│       ├── loginRateLimit.js  # Chaves e limites de tentativa de login (e-mail x IP)
 │       ├── schemas.js         # Schemas Zod (auth, empresa, funcionário, ticket, comentário, reset)
 │       ├── ticketUtils.js     # Utilitários de status, prioridade e badges
 │       ├── ticketAuthorization.js  # RBAC + isolamento multiempresa (aplicação)
@@ -223,6 +224,7 @@ CYPRESS_TEST_SECRET="seu-segredo-cypress"
   - **Não há Supabase RLS/Row Level Security nem Policies** configuradas neste projeto. Se houver acesso direto ao banco (fora da aplicação), esse isolamento **não** é aplicado.
 - Senhas são criptografadas com `bcryptjs` (salt rounds = 10).
 - Revogação de sessão via `User.tokenVersion`: o callback `jwt` valida a versão contra o banco a cada requisição; redefinir a senha incrementa a versão e invalida todos os JWTs anteriores.
+- **Rate limit de login** (AUD-38): limite por IP (10/15 min, chave `login-ip:<ip>`) e por e-mail frouxo (20/15 min, `login:<email>`), montados em `src/lib/loginRateLimit.js`. Um login aceito zera os dois contadores; sem `x-forwarded-for`/`x-real-ip` o IP é `unknown` e vale só o limite por e-mail.
 - Contas de demonstração (definidas em `src/app/(auth)/login/page.jsx`):
   - **Agente Demo**: `agent.demo@helpflow.com` / `Demo@123456`
   - **Cliente Demo**: `client.demo@helpflow.com` / `Demo@123456`
@@ -294,7 +296,7 @@ CYPRESS_TEST_SECRET="seu-segredo-cypress"
 
 ## 10. Testes e Validação
 
-- **Suíte Vitest — 248 testes em 20 arquivos**: cobrem **funções puras** de `src/lib/` (ambiente `node`, **sem Testing Library e sem jsdom**). Não há testes de componentes ou de Route Handlers.
+- **Suíte Vitest — 258 testes em 21 arquivos**: cobrem **funções puras** de `src/lib/` (ambiente `node`, **sem Testing Library e sem jsdom**). Não há testes de componentes ou de Route Handlers.
   - Validações de Schemas Zod (`schemas.test.js`)
   - Utilitários de Tickets e Formatação (`ticketUtils.test.js`)
   - Autorização, RBAC e isolamento multiempresa (`ticketAuthorization.test.js`)
@@ -305,6 +307,7 @@ CYPRESS_TEST_SECRET="seu-segredo-cypress"
   - Fluxo de Registro e Roles (`registrationRole.test.js`)
   - Recuperação e Expiração de Senhas (`passwordReset.test.js`)
   - Rate Limiting e Fallback em Memória (`rateLimiter.test.js`)
+  - Chaves e limites de tentativa de login (`loginRateLimit.test.js`)
   - Versão de token / revogação de JWT (`sessionVersion.test.js`)
   - Autorização do cron / `CRON_SECRET` (`cronAuth.test.js`)
   - Concorrência no PATCH e detecção de PATCH sem mudança real (`ticketConcurrency.test.js`, `ticketChanges.test.js`)

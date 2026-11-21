@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { checkRateLimit, _clearMemoryRateLimits, buildRateLimitHeaders } from '../rateLimiter';
+import { checkRateLimit, _clearMemoryRateLimits, buildRateLimitHeaders, resetRateLimits } from '../rateLimiter';
 
 describe('checkRateLimit', () => {
     beforeEach(() => {
@@ -83,6 +83,26 @@ describe('checkRateLimit', () => {
         expect((await checkRateLimit('ip-1')).isLimited).toBe(true);
         expect((await checkRateLimit('ip-2')).isLimited).toBe(true);
         expect((await checkRateLimit('ip-3')).isLimited).toBe(false);
+    });
+
+    it('resetRateLimits zera o contador do identificador informado', async () => {
+        for (let i = 0; i < 5; i++) await checkRateLimit('login:x@a.com');
+        expect((await checkRateLimit('login:x@a.com')).isLimited).toBe(true);
+
+        await resetRateLimits(['login:x@a.com']);
+
+        expect((await checkRateLimit('login:x@a.com')).isLimited).toBe(false);
+        expect((await checkRateLimit('login:x@a.com')).isLimited).toBe(false);
+    });
+
+    it('resetRateLimits não afeta contadores de identificadores parecidos', async () => {
+        for (let i = 0; i < 5; i++) await checkRateLimit('login:x@a.com');
+        for (let i = 0; i < 5; i++) await checkRateLimit('login:ax@a.com');
+
+        await resetRateLimits(['login:x@a.com']);
+
+        expect((await checkRateLimit('login:x@a.com')).isLimited).toBe(false);
+        expect((await checkRateLimit('login:ax@a.com')).isLimited).toBe(true);
     });
 
     it('buildRateLimitHeaders gera Retry-After consistente', () => {
