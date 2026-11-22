@@ -6,6 +6,7 @@ import {
     registerSchema,
     registerCompanySchema,
     registerEmployeeSchema,
+    registerAccountTypeSchema,
     generateCompanyCode,
     createCommentSchema,
     forgotPasswordSchema,
@@ -256,6 +257,7 @@ describe('registerSchema', () => {
 describe('registerCompanySchema & registerEmployeeSchema', () => {
     it('deve aceitar dados válidos de cadastro de empresa', () => {
         const result = registerCompanySchema.safeParse({
+            accountType: 'COMPANY',
             name: 'Carlos Gestor',
             companyName: 'Tech Inovações',
             email: 'carlos@techinovacoes.com',
@@ -267,6 +269,7 @@ describe('registerCompanySchema & registerEmployeeSchema', () => {
 
     it('deve rejeitar cadastro de empresa sem companyName', () => {
         const result = registerCompanySchema.safeParse({
+            accountType: 'COMPANY',
             name: 'Carlos Gestor',
             email: 'carlos@techinovacoes.com',
             password: 'senhaSegura123',
@@ -304,6 +307,85 @@ describe('registerCompanySchema & registerEmployeeSchema', () => {
     it('deve gerar código amigável de empresa com prefixo correto', () => {
         const code = generateCompanyCode('Tech Corp');
         expect(code).toMatch(/^TECH-\d{4}$/);
+    });
+
+    // AUD-40: o tipo de conta é explícito e o fluxo não é derivado dos campos
+    // de vínculo.
+    it('deve rejeitar cadastro de empresa sem accountType', () => {
+        const result = registerCompanySchema.safeParse({
+            name: 'Carlos Gestor',
+            companyName: 'Tech Inovações',
+            email: 'carlos@techinovacoes.com',
+            password: 'senhaSegura123',
+            confirmPassword: 'senhaSegura123',
+        });
+        expect(result.success).toBe(false);
+        expect(result.error.issues.some((issue) => issue.path[0] === 'accountType')).toBe(true);
+    });
+
+    it('deve rejeitar empresa com companyCode (campo de vínculo do funcionário)', () => {
+        const result = registerCompanySchema.safeParse({
+            accountType: 'COMPANY',
+            name: 'Carlos Gestor',
+            companyName: 'Tech Inovações',
+            companyCode: 'TECH-4821',
+            email: 'carlos@techinovacoes.com',
+            password: 'senhaSegura123',
+            confirmPassword: 'senhaSegura123',
+        });
+        expect(result.success).toBe(false);
+        expect(result.error.issues).toContainEqual(
+            expect.objectContaining({ code: 'unrecognized_keys', keys: ['companyCode'] }),
+        );
+    });
+
+    it('deve rejeitar funcionário com companyName (campo de vínculo da empresa)', () => {
+        const result = registerEmployeeSchema.safeParse({
+            accountType: 'EMPLOYEE',
+            name: 'Ana Silva',
+            companyName: 'Tech Inovações',
+            companyCode: 'TECH-4821',
+            email: 'ana@techinovacoes.com',
+            password: 'senhaSegura123',
+            confirmPassword: 'senhaSegura123',
+        });
+        expect(result.success).toBe(false);
+        expect(result.error.issues).toContainEqual(
+            expect.objectContaining({ code: 'unrecognized_keys', keys: ['companyName'] }),
+        );
+    });
+
+    it('registerAccountTypeSchema só aceita COMPANY ou EMPLOYEE', () => {
+        expect(registerAccountTypeSchema.safeParse('COMPANY').data).toBe('COMPANY');
+        expect(registerAccountTypeSchema.safeParse('EMPLOYEE').data).toBe('EMPLOYEE');
+        expect(registerAccountTypeSchema.safeParse('CLIENT').success).toBe(false);
+        expect(registerAccountTypeSchema.safeParse(null).success).toBe(false);
+        expect(registerAccountTypeSchema.safeParse('company').success).toBe(false);
+        expect(registerAccountTypeSchema.safeParse(0).success).toBe(false);
+    });
+
+    it('registerSchema recusa accountType, companyName ou companyCode no Fluxo 3', () => {
+        const base = {
+            name: 'João Silva',
+            email: 'joao@exemplo.com',
+            password: 'senha1234',
+            confirmPassword: 'senha1234',
+        };
+
+        expect(registerSchema.safeParse(base).success).toBe(true);
+
+        for (const extra of [
+            { accountType: 'COMPANY' },
+            { companyName: 'Tech Inovações' },
+            { companyCode: 'TECH-4821' },
+        ]) {
+            const field = Object.keys(extra)[0];
+            const result = registerSchema.safeParse({ ...base, ...extra });
+            expect(result.success, field).toBe(false);
+            expect(result.error.issues, field).toContainEqual(
+                expect.objectContaining({ code: 'invalid_type', path: [field] }),
+            );
+        }
     });
 });
 

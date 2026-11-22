@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { checkRateLimit, getClientIp, buildRateLimitHeaders } from '@/lib/rateLimiter';
-import { registerSchema, registerCompanySchema, registerEmployeeSchema, generateCompanyCode } from '@/lib/schemas';
+import { registerSchema, registerCompanySchema, registerEmployeeSchema, registerAccountTypeSchema, generateCompanyCode } from '@/lib/schemas';
 import { resolveRegistrationRole } from '@/lib/registrationRole';
 
 export async function POST(req) {
@@ -21,7 +21,24 @@ export async function POST(req) {
 
     try {
         const body = await req.json();
-        const accountType = body.accountType || (body.companyName ? 'COMPANY' : (body.companyCode ? 'EMPLOYEE' : undefined));
+        // AUD-40: o tipo de conta é explícito. Se vier no corpo, só COMPANY ou
+        // EMPLOYEE; a rota não adivinha mais pelo `companyName`/`companyCode`.
+        let accountType;
+        if (body.accountType !== undefined) {
+            const parsedAccountType = registerAccountTypeSchema.safeParse(body.accountType);
+
+            if (!parsedAccountType.success) {
+                return NextResponse.json(
+                    {
+                        message: 'Tipo de conta inválido.',
+                        errors: { accountType: parsedAccountType.error.issues.map((issue) => issue.message) },
+                    },
+                    { status: 400 }
+                );
+            }
+
+            accountType = parsedAccountType.data;
+        }
 
         let validation;
         if (accountType === 'COMPANY') {
@@ -33,8 +50,25 @@ export async function POST(req) {
         }
 
         if (!validation.success) {
+            // Campo de vínculo mandado com o tipo de conta errado: o `.strict()`
+            // recusa como chave desconhecida; a mensagem explica o conflito.
+            const unrecognized = validation.error.issues.find((issue) => issue.code === 'unrecognized_keys');
+            const conflictingField = unrecognized?.keys.find((key) => ['companyName', 'companyCode'].includes(key));
+            const fieldErrors = validation.error.flatten().fieldErrors;
+
+            if (conflictingField) {
+                fieldErrors[conflictingField] = [
+                    `Este campo não combina com accountType: ${accountType}.`,
+                ];
+            }
+
             return NextResponse.json(
-                { message: 'Dados inválidos.', errors: validation.error.flatten().fieldErrors },
+                {
+                    message: conflictingField
+                        ? `O campo ${conflictingField} não combina com accountType: ${accountType}.`
+                        : 'Dados inválidos.',
+                    errors: fieldErrors,
+                },
                 { status: 400 }
             );
         }

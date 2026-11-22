@@ -11,9 +11,10 @@ Cypress.Commands.add("createTestUser", (overrides = {}) => {
   // IP único por criação para não estourar o rate limiter (register:${ip})
   const testIp = `127.0.0.${Cypress._.random(1, 254)}`;
 
-  // O registerSchema com accountType/companyName não aceita o campo `role`:
-  // nesse fluxo o papel vem do accountType. O `role` só é aceito no fallback.
-  const isCompany = user.role === "AGENT";
+  // AUD-40: o tipo de conta vai explícito no corpo. `accountType: "COMPANY"`
+  // cria empresa + AGENT; o payload sem `accountType` cai no Fluxo 3 (conta sem
+  // empresa, CLIENT em produção), que é a compatibilidade com as specs.
+  const isCompany = user.accountType === "COMPANY" || user.role === "AGENT";
   const body = {
     name: user.name,
     email: user.email,

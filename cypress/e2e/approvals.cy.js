@@ -25,7 +25,7 @@ describe('Aprovação de contas por código de empresa', () => {
     it('mantém o cadastro pendente, bloqueia o login e libera após aprovação', () => {
         const email = `pendente-${Date.now()}@teste.com`;
 
-        cy.createTestUser({ role: 'AGENT' }).then((agent) => {
+        cy.createTestUser({ accountType: 'COMPANY' }).then((agent) => {
             loginAndOpenDashboard(agent);
             companyCodeOf().then((companyCode) => {
                 expect(companyCode, 'código da empresa').to.be.a('string');
@@ -74,7 +74,7 @@ describe('Aprovação de contas por código de empresa', () => {
     it('recusa mantendo a conta fora do tenant', () => {
         const email = `recusado-${Date.now()}@teste.com`;
 
-        cy.createTestUser({ role: 'AGENT' }).then((agent) => {
+        cy.createTestUser({ accountType: 'COMPANY' }).then((agent) => {
             loginAndOpenDashboard(agent);
             companyCodeOf().then((companyCode) => {
                 cy.registerEmployee({ name: 'Funcionário Recusado', email, password, companyCode });
@@ -98,11 +98,11 @@ describe('Aprovação de contas por código de empresa', () => {
     it('não expõe a conta pendente para AGENT de outra empresa', () => {
         const email = `tenant-${Date.now()}@teste.com`;
 
-        cy.createTestUser({ role: 'AGENT' }).then((owner) => {
+        cy.createTestUser({ accountType: 'COMPANY' }).then((owner) => {
             loginAndOpenDashboard(owner);
             companyCodeOf().then((companyCode) => {
                 cy.registerEmployee({ name: 'Funcionário Alheio', email, password, companyCode }).then((created) => {
-                    cy.createTestUser({ role: 'AGENT' }).then((outsider) => {
+                    cy.createTestUser({ accountType: 'COMPANY' }).then((outsider) => {
                         // cy.session restaura a sessão sem `visit`: o cookie do
                         // AGENT dono sai e o do outsider entra antes do request.
                         cy.login(outsider.email, outsider.password);
