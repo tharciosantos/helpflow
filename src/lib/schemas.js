@@ -53,7 +53,12 @@ export const updateTicketSchema = z.object({
 });
 
 export const registerCompanySchema = z.object({
-    accountType: z.literal('COMPANY').optional().default('COMPANY'),
+    // Explícito desde a AUD-40: a rota não deriva o tipo pela presença de
+    // `companyName`/`companyCode`. Um campo de vínculo que não pertence ao
+    // tipo escolhido é recusado pelo `.strict()`.
+    accountType: z.literal('COMPANY', {
+        error: 'Tipo de conta obrigatório: use COMPANY ou EMPLOYEE.',
+    }),
     name: z.string({ required_error: 'Nome do responsável é obrigatório.' }).trim().min(2, 'Nome deve ter pelo menos 2 caracteres.'),
     companyName: z.string({ required_error: 'Nome da empresa é obrigatório.' }).trim().min(2, 'Nome da empresa deve ter pelo menos 2 caracteres.').max(80, 'Nome da empresa deve ter no máximo 80 caracteres.'),
     email: z.string({ required_error: 'Email é obrigatório.' }).trim().toLowerCase().email('Email inválido.'),
@@ -65,7 +70,9 @@ export const registerCompanySchema = z.object({
 });
 
 export const registerEmployeeSchema = z.object({
-    accountType: z.literal('EMPLOYEE'),
+    accountType: z.literal('EMPLOYEE', {
+        error: 'Tipo de conta obrigatório: use COMPANY ou EMPLOYEE.',
+    }),
     name: z.string({ required_error: 'Nome é obrigatório.' }).trim().min(2, 'Nome deve ter pelo menos 2 caracteres.'),
     companyCode: z.string({ required_error: 'Código da empresa é obrigatório.' }).trim().toUpperCase().min(3, 'Código da empresa inválido.').max(30, 'Código da empresa inválido.'),
     email: z.string({ required_error: 'Email é obrigatório.' }).trim().toLowerCase().email('Email inválido.'),
@@ -76,10 +83,20 @@ export const registerEmployeeSchema = z.object({
     path: ['confirmPassword'],
 });
 
+// Envelope de `/api/register` (AUD-40): só COMPANY e EMPLOYEE, nunca derivado
+// de outros campos. A rota só chama este schema quando `accountType` está
+// presente no corpo.
+export const registerAccountTypeSchema = z.enum(['COMPANY', 'EMPLOYEE'], {
+    error: 'Tipo de conta inválido. Use COMPANY ou EMPLOYEE.',
+});
+
+// Fluxo 3 (AUD-41): conta sem empresa, aceita por compatibilidade com as
+// suítes de teste. Sem `accountType`, `companyName` ou `companyCode`, para não
+// aceitar em silêncio um cadastro de empresa/funcionário com campos vazios.
 export const registerSchema = z.object({
-    accountType: z.enum(['COMPANY', 'EMPLOYEE']).optional(),
-    companyName: z.string().trim().min(2).max(80).optional(),
-    companyCode: z.string().trim().min(3).max(30).optional(),
+    accountType: z.never({ error: 'Informe accountType COMPANY ou EMPLOYEE para vincular a conta a uma empresa.' }).optional(),
+    companyName: z.never({ error: 'Nome da empresa exige accountType: COMPANY.' }).optional(),
+    companyCode: z.never({ error: 'Código da empresa exige accountType: EMPLOYEE.' }).optional(),
     name: z.string({ required_error: 'Nome é obrigatório.' }).trim().min(2, 'Nome deve ter pelo menos 2 caracteres.'),
     email: z.string().trim().toLowerCase().email('Email inválido.'),
     password: z.string().min(8, 'A senha deve ter pelo menos 8 caracteres.'),
