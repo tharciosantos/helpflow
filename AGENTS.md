@@ -89,7 +89,7 @@ helpflow/
 │   │   │   └── layout.js      # Server Component: getServerSession + redirect('/')
 │   │   ├── api/               # API Routes (Next.js App Router)
 │   │   │   ├── auth/          # [...nextauth], forgot-password, reset-password
-│   │   │   ├── agents/        # Listagem de membros da empresa (AGENT)
+│   │   │   ├── agents/        # Membros da empresa (AGENT) + pending/ (aprovação de contas)
 │   │   │   ├── cron/          # keep-alive do banco (Vercel Cron)
 │   │   │   ├── health/        # Health check da aplicação e DB
 │   │   │   ├── notifications/ # Sino in-app (GET/PATCH + PATCH por id)
@@ -225,6 +225,7 @@ CYPRESS_TEST_SECRET="seu-segredo-cypress"
   - **Não há Supabase RLS/Row Level Security nem Policies** configuradas neste projeto. Se houver acesso direto ao banco (fora da aplicação), esse isolamento **não** é aplicado.
 - Senhas são criptografadas com `bcryptjs` (salt rounds = 10).
 - Revogação de sessão via `User.tokenVersion`: o callback `jwt` valida a versão contra o banco a cada requisição; redefinir a senha incrementa a versão e invalida todos os JWTs anteriores.
+- **Aprovação de cadastro por código de empresa** (AUD-37): conhecer o código não basta para entrar no tenant. Conta criada em `/register?companyCode=...` nasce `PENDING`, recebe a mensagem de espera e o login é recusado (`authorize` lança o aviso de aprovação só depois de validar a senha, para não enumerar e-mails). Um `AGENT` da mesma empresa aprova ou recusa pelo card "Aguardando aprovação" em `/dashboard` (`src/lib/approval.js` centraliza as regras); conta `REJECTED` tem a sessão JWT revogada no callback `jwt`. Contas criadas por empresa, GitHub ou legado nascem `ACTIVE` (default da coluna).
 - **Rate limit de login** (AUD-38): limite por IP (10/15 min, chave `login-ip:<ip>`) e por e-mail frouxo (20/15 min, `login:<email>`), montados em `src/lib/loginRateLimit.js`. Um login aceito zera os dois contadores; sem `x-forwarded-for`/`x-real-ip` o IP é `unknown` e vale só o limite por e-mail.
 - Contas de demonstração (definidas em `src/app/(auth)/login/page.jsx`):
   - **Agente Demo**: `agent.demo@helpflow.com` / `Demo@123456`
@@ -237,7 +238,7 @@ CYPRESS_TEST_SECRET="seu-segredo-cypress"
 
 ### Modelos Principais:
 1. **`Company`**: Tenant. `id` (`uuid`), `name`, `code` **único** (código de convite, ex.: `TECH-4821`) e timestamps. Relações com `User` e `Ticket`.
-2. **`User`**: Identificador (`uuid`), e-mail único, hash da senha, nome, avatar, `role` (`CLIENT` | `AGENT`), `auth_provider`, `tokenVersion`, `companyId` opcional (FK `Company`, `onDelete: Cascade`), timestamps e relacionamentos `createdTickets` (autor) e `assignedTickets` (responsável).
+2. **`User`**: Identificador (`uuid`), e-mail único, hash da senha, nome, avatar, `role` (`CLIENT` | `AGENT`), `approvalStatus` (`PENDING` | `ACTIVE` | `REJECTED`, default `ACTIVE`, índice por `companyId`), `auth_provider`, `tokenVersion`, `companyId` opcional (FK `Company`, `onDelete: Cascade`), timestamps e relacionamentos `createdTickets` (autor) e `assignedTickets` (responsável).
 3. **`Ticket`**: Identificador (`cuid`), título, descrição, status (`OPEN` | `IN_PROGRESS` | `CLOSED`), prioridade (`LOW` | `MEDIUM` | `HIGH` | `URGENT`), `companyId` (FK `Company`), `authorId` (FK `User`), `agentId` (FK opcional `User`), `dueAt`, `resolvedAt`, `firstResponseAt`, timestamps e índices em `authorId`, `status` e `companyId`.
 4. **`TicketComment`**: Comentários do chamado com `visibility` (`PUBLIC` | `INTERNAL` — notas internas visíveis apenas a `AGENT`), `authorId` e `ticketId`.
 5. **`TicketHistory`**: Auditoria de mudanças (`field`, `from`, `to`, `actorId`), gravada na mesma transação do update.
@@ -261,7 +262,7 @@ CYPRESS_TEST_SECRET="seu-segredo-cypress"
   - `AGENT` atua em qualquer ticket **da própria empresa**: status, prioridade, responsável e prazo.
   - Campos de triagem (`status`, `priority`, `agentId`, `dueAt`, `recalcDue`) são bloqueados para `CLIENT` no `PATCH`.
   - **Chamado `CLOSED` não aceita comentário de `CLIENT`** (403 com mensagem específica — follow-up deve virar novo chamado), nem exclusão de comentário próprio. O `AGENT` continua podendo comentar e moderar em chamado fechado.
-  - **Atribuição de responsável aceita qualquer membro da empresa**, inclusive `CLIENT` (delegação a colaborador). `GET /api/agents` lista todos os membros do tenant, o `PATCH` valida apenas o vínculo com a empresa e o `EditTicketForm` rotula cada opção como `(TI / Suporte)` ou `(Funcionário)`. O `CLIENT` designado passa a ver o chamado (`canViewTicket`), mas não ganha poder de triagem.
+  - **Atribuição de responsável aceita qualquer membro da empresa**, inclusive `CLIENT` (delegação a colaborador). `GET /api/agents` lista os membros do tenant com `approvalStatus: 'ACTIVE'` (pendentes e recusados ficam fora), o `PATCH` valida apenas o vínculo com a empresa e o `EditTicketForm` rotula cada opção como `(TI / Suporte)` ou `(Funcionário)`. O `CLIENT` designado passa a ver o chamado (`canViewTicket`), mas não ganha poder de triagem.
   - Contas/tickets **sem empresa** operam em escopo pessoal; ticket com empresa só aceita responsável da mesma empresa.
 - **SLA**: `dueAt` é **derivado da prioridade** na criação — `LOW` 168h, `MEDIUM` 72h, `HIGH` 24h, `URGENT` 4h (`src/lib/sla.js`). O `AGENT` pode sobrescrever o prazo ou pedir recálculo (`recalcDue`). Atrasado é **calculado on-read** (`isOverdue`), não armazenado.
 - **Notificações in-app**: geradas para atribuição, comentário público e mudança de status; a regra de ouro é **nunca notificar quem praticou a ação** (`src/lib/notifications.js`). Notas internas (`INTERNAL`) não geram notificação.
@@ -272,7 +273,7 @@ CYPRESS_TEST_SECRET="seu-segredo-cypress"
 
 ## 9. APIs e Rotas
 
-- `POST /api/register` — Cria **Empresa + AGENT** (`accountType: 'COMPANY'`) ou **Funcionário + CLIENT** vinculado por `companyCode` (`accountType: 'EMPLOYEE'`). O parâmetro `role` só é honrado com `x-test-secret` válido e fora de produção.
+- `POST /api/register` — Cria **Empresa + AGENT** (`accountType: 'COMPANY'`) ou **Funcionário + CLIENT** vinculado por `companyCode` (`accountType: 'EMPLOYEE'`). O funcionário nasce com `approvalStatus: 'PENDING'` e recebe `201` com a mensagem de espera; a conta só autentica depois da aprovação. O parâmetro `role` só é honrado com `x-test-secret` válido e fora de produção.
 - `POST /api/auth/[...nextauth]` — Endpoint do NextAuth (credenciais e GitHub).
 - `POST /api/auth/forgot-password` — Gera token (256 bits, 15 min) e envia e-mail. Resposta genérica anti-enumeração.
 - `POST /api/auth/reset-password` — Consome o token atomicamente e redefine a senha, incrementando `tokenVersion`.
@@ -289,7 +290,9 @@ CYPRESS_TEST_SECRET="seu-segredo-cypress"
 - `GET /api/notifications` — Lista notificações do usuário (não lidas primeiro, limite de 30) + `unreadCount`.
 - `PATCH /api/notifications` — Marca **todas** as notificações do usuário como lidas.
 - `PATCH /api/notifications/[id]` — Marca uma notificação específica como lida (só do próprio usuário).
-- `GET /api/agents` — Retorna os membros da empresa para atribuição (exige `AGENT`).
+- `GET /api/agents` — Retorna os membros da empresa com `approvalStatus: 'ACTIVE'` para atribuição (exige `AGENT`).
+- `GET /api/agents/pending` — Lista as contas `CLIENT` com `approvalStatus: 'PENDING'` da empresa do `AGENT` (401 sem sessão, 403 para não-`AGENT`).
+- `PATCH /api/agents/pending/[id]` — Aprova (`APPROVE`) ou recusa (`REJECT`) a conta pendente com body Zod `{ action }`; só o `AGENT` da mesma empresa pode decidir (404 para outra empresa, 403 para conta própria/`AGENT`, 409 se já analisada).
 - `GET /api/health` — Verifica conectividade com o banco PostgreSQL via `SELECT 1` com prazo de 3 s (`src/lib/healthCheck.js`); responde 200 quando o banco responde e 503 em timeout ou erro.
 - `GET /api/cron/keep-alive` — Keep-alive do banco, protegido por `Bearer CRON_SECRET` (Vercel Cron, a cada 3 dias).
 
