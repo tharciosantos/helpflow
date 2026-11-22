@@ -96,7 +96,7 @@ A API do HelpFlow segue os padrões REST com validação de payload via Zod, rat
 
 | Método | Rota | Descrição | Acesso |
 |---|---|---|---|
-| `POST` | `/api/register` | Cadastro de Empresa (AGENT) ou Funcionário (CLIENT), via `accountType` e código de convite | Público |
+| `POST` | `/api/register` | Cadastro de Empresa (AGENT) ou Funcionário (CLIENT, pendente de aprovação), via `accountType` e código de convite | Público |
 | `POST` | `/api/auth/[...nextauth]` | Autenticação por credenciais e sessões JWT com NextAuth | Público |
 | `POST` | `/api/auth/forgot-password` | Solicitação de redefinição de senha por e-mail | Público |
 | `POST` | `/api/auth/reset-password` | Validação de token de segurança e definição de nova senha | Público |
@@ -108,7 +108,9 @@ A API do HelpFlow segue os padrões REST com validação de payload via Zod, rat
 | `GET` | `/api/tickets/[id]/comments` | Listagem de comentários e histórico de interações do chamado | Autenticado (RBAC) |
 | `POST` | `/api/tickets/[id]/comments` | Envio de nova mensagem no chamado com sanitização de texto | Autenticado (RBAC) |
 | `DELETE` | `/api/tickets/[id]/comments/[commentId]` | Remoção de comentário | Autor / AGENT |
-| `GET` | `/api/agents` | Listagem de membros da organização para delegação de atendimento | Empresa / TI (AGENT) |
+| `GET` | `/api/agents` | Listagem de membros ativos da organização para delegação de atendimento | Empresa / TI (AGENT) |
+| `GET` | `/api/agents/pending` | Contas criadas por código de empresa aguardando aprovação | Empresa / TI (AGENT) |
+| `PATCH` | `/api/agents/pending/[id]` | Aprovação ou recusa de uma conta pendente | Empresa / TI (AGENT) |
 | `GET` | `/api/notifications` | Lista as notificações do usuário, com não lidas primeiro | Autenticado |
 | `PATCH` | `/api/notifications` | Marca todas as notificações do usuário como lidas | Autenticado |
 | `PATCH` | `/api/notifications/[id]` | Marca uma notificação específica como lida | Autenticado |
