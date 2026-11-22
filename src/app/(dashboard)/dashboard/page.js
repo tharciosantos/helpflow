@@ -769,7 +769,7 @@ export default function DashboardPage() {
             <h3 className={`text-xs font-bold uppercase tracking-wider mb-2 ${
               theme === 'light' ? 'text-slate-900' : 'text-slate-100'
             }`}>
-              💡 Dica rápida
+              Dica rápida
             </h3>
             <p>
               Use os status <span className="font-semibold text-emerald-600 dark:text-emerald-400">Aberto</span>,{' '}
