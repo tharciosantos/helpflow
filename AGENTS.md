@@ -58,7 +58,7 @@ Regra: toda correção de um item `AUD-xx` deve atualizar o status, o commit e a
 | **Rate Limiting** | @upstash/ratelimit + @upstash/redis | Sliding window / fallback em memória |
 | **Animações** | Anime.js | 4.5.x |
 | **E-mail** | Nodemailer | Recuperação de senhas (`EMAIL_USER` / `EMAIL_PASS`) |
-| **Testes Unitários** | Vitest | 258 testes de **funções puras** em `src/lib/` (ambiente `node`, sem jsdom, sem Testing Library) |
+| **Testes Unitários** | Vitest | 267 testes de **funções puras** em `src/lib/` (ambiente `node`, sem jsdom, sem Testing Library) |
 | **Testes E2E** | Cypress | 15.x — 8 specs / 36 cenários em `cypress/e2e/` |
 | **Linter** | ESLint (flat config) + eslint-config-next | 9.x |
 
@@ -113,7 +113,7 @@ helpflow/
 │   │   ├── layout.js          # RootLayout com ThemeProvider e AuthProvider
 │   │   └── globals.css        # Tailwind v4 directives e estilos base
 │   └── lib/                   # ← Regra de negócio (funções puras) + integrações
-│       ├── __tests__/         # 258 testes Vitest (21 arquivos)
+│       ├── __tests__/         # 267 testes Vitest (22 arquivos)
 │       ├── auth.js            # Configuração do NextAuth, callbacks, authorize e tokenVersion
 │       ├── prisma.js          # Instância singleton do PrismaClient
 │       ├── email.js           # Envio de e-mails via Nodemailer (EMAIL_USER/EMAIL_PASS)
@@ -132,6 +132,7 @@ helpflow/
 │       ├── passwordReset.js   # Consumo atômico do token de reset
 │       ├── registrationRole.js# Impede escalada de privilégio no cadastro
 │       ├── sessionVersion.js  # Validação da versão do JWT
+│       ├── healthCheck.js     # Ping `SELECT 1` com prazo curto (health check)
 │       ├── ticketConcurrency.js # Update otimista do PATCH (expectedUpdatedAt, 409)
 │       ├── ticketChanges.js   # Detecta PATCH sem mudança real (evita 409 falso)
 │       └── demoTicketFlow.js  # Sequência de estados do simulador
@@ -289,14 +290,14 @@ CYPRESS_TEST_SECRET="seu-segredo-cypress"
 - `PATCH /api/notifications` — Marca **todas** as notificações do usuário como lidas.
 - `PATCH /api/notifications/[id]` — Marca uma notificação específica como lida (só do próprio usuário).
 - `GET /api/agents` — Retorna os membros da empresa para atribuição (exige `AGENT`).
-- `GET /api/health` — Verifica conectividade com o banco PostgreSQL.
+- `GET /api/health` — Verifica conectividade com o banco PostgreSQL via `SELECT 1` com prazo de 3 s (`src/lib/healthCheck.js`); responde 200 quando o banco responde e 503 em timeout ou erro.
 - `GET /api/cron/keep-alive` — Keep-alive do banco, protegido por `Bearer CRON_SECRET` (Vercel Cron, a cada 3 dias).
 
 ---
 
 ## 10. Testes e Validação
 
-- **Suíte Vitest — 258 testes em 21 arquivos**: cobrem **funções puras** de `src/lib/` (ambiente `node`, **sem Testing Library e sem jsdom**). Não há testes de componentes ou de Route Handlers.
+- **Suíte Vitest — 267 testes em 22 arquivos**: cobrem **funções puras** de `src/lib/` (ambiente `node`, **sem Testing Library e sem jsdom**). Não há testes de componentes ou de Route Handlers.
   - Validações de Schemas Zod (`schemas.test.js`)
   - Utilitários de Tickets e Formatação (`ticketUtils.test.js`)
   - Autorização, RBAC e isolamento multiempresa (`ticketAuthorization.test.js`)
@@ -310,6 +311,7 @@ CYPRESS_TEST_SECRET="seu-segredo-cypress"
   - Chaves e limites de tentativa de login (`loginRateLimit.test.js`)
   - Versão de token / revogação de JWT (`sessionVersion.test.js`)
   - Autorização do cron / `CRON_SECRET` (`cronAuth.test.js`)
+  - Ping do banco com prazo curto no health check (`healthCheck.test.js`)
   - Concorrência no PATCH e detecção de PATCH sem mudança real (`ticketConcurrency.test.js`, `ticketChanges.test.js`)
   - Aprovação de contas por código de empresa (`approval.test.js`)
   - Fluxo do Simulador Interativo (`demoTicketFlow.test.js`)
