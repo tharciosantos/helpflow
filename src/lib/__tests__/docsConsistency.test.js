@@ -142,6 +142,18 @@ describe('consistência das contagens documentadas', () => {
     }
   });
 
+  it('o backlog versionado existe e cita a data de atualização', () => {
+    // AUD-46: docs/AUDITORIA-2026-11-21.md é a fonte viva do backlog e agora é
+    // versionado — o guard garante que ele (a) está no repositório e (b) teve o
+    // cabeçalho atualizado junto com a última entrega. As contagens ficam fora
+    // de propósito: o relatório cita números históricos por fase e exigir o
+    // total atual o faria falhar a cada revisão.
+    const source = readFile('docs/AUDITORIA-2026-11-21.md');
+    expect(source, 'backlog versionado sem data de atualização').toMatch(
+      /Atualização\s*\(\d{2}\/\d{2}\/\d{4}\)/
+    );
+  });
+
   it('ESTADO_ATUAL.md cita as contagens reais e a data de atualização', () => {
     // ESTADO_ATUAL.md é controle local (ignorado pelo git): se não existir
     // neste clone, nada a validar. Commit, branches e fases ficam fora do

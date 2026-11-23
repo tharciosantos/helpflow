@@ -38,9 +38,10 @@ O **HelpFlow** é um sistema de help desk e gestão de chamados (tickets) com su
 | `README.md` | Apresentação pública, demonstração e stack |
 | `DEVELOPMENT.md` | Setup local e troubleshooting |
 | `ESTADO_ATUAL.md` | Estado da `main` ao fim de cada fase |
-| `docs/AUDITORIA.md` | Backlog local de correções com IDs estáveis (não versionado) |
+| `docs/AUDITORIA-2026-11-21.md` | Backlog de correções com IDs estáveis (versionado — `AUD-35` em diante) |
+| `docs/AUDITORIA.md` | Auditoria anterior, encerrada (`AUD-01` a `AUD-33`, `main` @ `2c64dd1`) — histórico local, não versionado |
 
-Regra: toda correção de um item `AUD-xx` deve atualizar o status, o commit e a validação no backlog local (`docs/AUDITORIA.md`, fora do versionamento).
+Regra: toda correção de um item `AUD-xx` deve atualizar o status, o commit e a validação em `docs/AUDITORIA-2026-11-21.md`, que é versionado e, por isso, verificável em qualquer clone e no CI. Novos itens entram nele; o `docs/AUDITORIA.md` não recebe mais itens.
 
 ---
 
@@ -58,7 +59,7 @@ Regra: toda correção de um item `AUD-xx` deve atualizar o status, o commit e a
 | **Rate Limiting** | @upstash/ratelimit + @upstash/redis | Sliding window / fallback em memória |
 | **Animações** | Anime.js | 4.5.x |
 | **E-mail** | Nodemailer | Recuperação de senhas (`EMAIL_USER` / `EMAIL_PASS`) |
-| **Testes Unitários** | Vitest | 283 testes de **funções puras** em `src/lib/` (ambiente `node`, sem jsdom, sem Testing Library) |
+| **Testes Unitários** | Vitest | 284 testes de **funções puras** em `src/lib/` (ambiente `node`, sem jsdom, sem Testing Library) |
 | **Testes E2E** | Cypress | 15.x — 10 specs / 55 cenários em `cypress/e2e/` |
 | **Linter** | ESLint (flat config) + eslint-config-next | 9.x |
 
@@ -113,7 +114,7 @@ helpflow/
 │   │   ├── layout.js          # RootLayout com ThemeProvider e AuthProvider
 │   │   └── globals.css        # Tailwind v4 directives e estilos base
 │   └── lib/                   # ← Regra de negócio (funções puras) + integrações
-│       ├── __tests__/         # 283 testes Vitest (23 arquivos)
+│       ├── __tests__/         # 284 testes Vitest (23 arquivos)
 │       ├── approval.js        # Aprovação/recusa de contas PENDING por AGENT da empresa (AUD-37)
 │       ├── auth.js            # Configuração do NextAuth, callbacks, authorize e tokenVersion
 │       ├── prisma.js          # Instância singleton do PrismaClient
@@ -305,7 +306,7 @@ CYPRESS_TEST_SECRET="seu-segredo-cypress"
 
 ## 10. Testes e Validação
 
-- **Suíte Vitest — 283 testes em 23 arquivos**: cobrem **funções puras** de `src/lib/` (ambiente `node`, **sem Testing Library e sem jsdom**). Não há testes de componentes ou de Route Handlers.
+- **Suíte Vitest — 284 testes em 23 arquivos**: cobrem **funções puras** de `src/lib/` (ambiente `node`, **sem Testing Library e sem jsdom**). Não há testes de componentes ou de Route Handlers.
   - Validações de Schemas Zod, incluindo o `accountType` explícito do cadastro (`schemas.test.js`)
   - Utilitários de Tickets e Formatação (`ticketUtils.test.js`)
   - Autorização, RBAC e isolamento multiempresa (`ticketAuthorization.test.js`)
