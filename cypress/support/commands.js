@@ -45,10 +45,14 @@ Cypress.Commands.add("createTestUser", (overrides = {}) => {
 });
 
 // Cadastra um funcionário pelo código da empresa (fluxo real, nasce PENDING).
+// IP único como no `createTestUser`: sem o header a rota cai em `unknown` e
+// todas as specs dividem a mesma cota de `register:<ip>` (5 por 15 min).
 Cypress.Commands.add("registerEmployee", ({ name, email, password, companyCode }) => {
+  const testIp = `127.0.0.${Cypress._.random(1, 254)}`;
   return cy.request({
     method: "POST",
     url: "/api/register",
+    headers: { "x-forwarded-for": testIp },
     body: {
       accountType: "EMPLOYEE",
       name,
