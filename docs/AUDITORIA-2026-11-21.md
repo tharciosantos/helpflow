@@ -4,7 +4,7 @@
 > **Escopo:** código de `src/`, `prisma/`, `cypress/`, CI, configuração e documentação viva.
 > **Validação executada:** `npm run lint` exit 0 · `npm run test:run` 18 arquivos / 224 testes ✅ · `npm run build` **não executado** (aplicaria migrations no banco de `DATABASE_URL`).
 > **Atualização (22/11/2026):** após o PR #104 — `main` @ `2c73585`; `npx prisma generate` ✅ · lint ✅ · 22 arquivos / 272 testes ✅ · build ✅ · Cypress 42/42 ✅. `AUD-35` a `AUD-40` concluídos (PRs #99, #100, #101, #102 e #104; documentação no #103); `AUD-44` concluído no #105 (aguardando merge); `AUD-41` a `AUD-43`, `AUD-45` e `AUD-46` seguem pendentes.
-> **Atualização (23/11/2026):** `main` @ `0f95f98` (PR #108). **Backlog encerrado — nenhum item em aberto.** `AUD-35` a `AUD-46` concluídos. `AUD-45` encerrado por **decisão** (mantém `Report-Only`, sem mudança de código) e `AUD-46` por **decisão** (este relatório passa a ser versionado como a fonte viva). `AUD-37` já estava implementado e mergeado (PR #100, `14e27cf`); o fechamento apenas registra isso.
+> **Atualização (23/11/2026):** `main` @ `3fc2ce6` (PRs #108 e #109). **Backlog encerrado — nenhum item em aberto.** `AUD-35` a `AUD-46` concluídos. `AUD-45` encerrado por **decisão** (mantém `Report-Only`, sem mudança de código) e `AUD-46` por **decisão** (este relatório passa a ser versionado como a fonte viva). O PR #109 sanitiza o conteúdo para registro de manutenção, sem os detalhes operacionais de exploração. `AUD-37` já estava implementado e mergeado (PR #100, `14e27cf`); o fechamento apenas registra isso.
 > **IDs:** `AUD-35` em diante (não renumera itens anteriores).
 
 ---
