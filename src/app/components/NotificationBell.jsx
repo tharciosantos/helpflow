@@ -127,7 +127,10 @@ export default function NotificationBell({ variant = 'nav' }) {
         return;
       }
       const data = await res.json();
-      setNotifications(sortNotifications(data.notifications || []));
+      // AUD-42: defesa em profundidade — o GET já omite notificações de
+      // chamados inacessíveis, mas uma resposta antiga/cacheada não pode
+      // reintroduzir o link que leva a 403.
+      setNotifications(sortNotifications((data.notifications || []).filter((n) => n.canOpen !== false)));
       setUnreadCount(data.unreadCount || 0);
       // Sucesso zera o histórico: o próximo poll volta ao intervalo normal.
       setFailures(0);
@@ -393,6 +396,7 @@ export default function NotificationBell({ variant = 'nav' }) {
                   {notifications.map((n) => (
                     <li
                       key={n.id}
+                      data-cy="notification-item"
                       className={`px-4 py-3.5 text-sm transition-colors ${
                         n.readAt
                           ? isLight ? 'hover:bg-slate-50' : 'hover:bg-slate-800/40'
@@ -412,7 +416,10 @@ export default function NotificationBell({ variant = 'nav' }) {
                           </div>
                           <p className="mt-1.5 break-words text-[13px] leading-relaxed text-slate-700 [overflow-wrap:anywhere] dark:text-slate-200">{n.message}</p>
                           <div className="mt-2 flex flex-wrap items-center gap-3">
-                            {n.ticket && (
+                            {/* AUD-42: o servidor marca `canOpen: false` quando o
+                                usuário perdeu acesso ao chamado (reatribuição);
+                                sem o link, o clique não cai em 403. */}
+                            {n.ticket && n.canOpen !== false && (
                               <Link
                                 href={`/ticket/${n.ticket.id}`}
                                 onClick={() => { if (!n.readAt) markRead(n.id); setOpen(false); }}
