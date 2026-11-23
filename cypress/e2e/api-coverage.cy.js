@@ -88,10 +88,16 @@ describe('Contrato de GET /api/tickets', () => {
       cy.visit('/dashboard');
       cy.get('[data-cy="ticket-filter-search"]').type(prefix);
 
-      // A busca do dashboard vai para a API com o `search` e espera o debounce.
-      // A paginação só aparece quando a lista tem mais de uma página; com 3
-      // resultados e limit 10, a UI não renderiza os controles.
-      cy.wait('@listTickets').then(({ response }) => {
+      // A busca do dashboard vai para a API com o `search` depois do debounce.
+      // O `cy.visit` também dispara um GET sem filtro, então a espera consome as
+      // chamadas até achar a da busca — em máquina rápida a busca chega antes e
+      // mascara a do carregamento inicial.
+      const waitForSearch = () =>
+        cy.wait('@listTickets').then(({ request, response }) =>
+          request.url.includes('search=') ? response : waitForSearch()
+        );
+
+      waitForSearch().then((response) => {
         expect(response.statusCode).to.eq(200);
         expect(response.body.pagination.total).to.eq(3);
         expect(response.body.pagination.totalPages).to.eq(1);
