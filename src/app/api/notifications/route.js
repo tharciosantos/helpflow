@@ -33,22 +33,30 @@ export async function GET() {
 
     // O filtro vem antes do limite: notificações inacessíveis não consomem as
     // 30 posições — sem isso, avisos de outros chamados sumiriam da lista.
+    // (A query não leva `take`: o limite é aplicado na lista já filtrada.)
     const tickets = new Map(
       notifications.filter((n) => n.ticket).map((n) => [n.ticket.id, n.ticket])
     );
-    const { visible } = partitionNotificationsByAccess(session.user, notifications, tickets);
+    const { visible: accessible } = partitionNotificationsByAccess(
+      session.user,
+      notifications,
+      tickets
+    );
+    // AUD-43: o `take: 30` acima vale para o que o sino exibe desde sempre; a
+    // AUD-42 removeu o `take` por engano, então o GET devolvia a lista inteira
+    // e o "Ler todas" (updateMany) não tinha como ser exercitado além da janela.
+    const visible = accessible.slice(0, 30);
 
-    if (visible.length === notifications.length) {
-      // Caso comum (nada filtrado): a contagem resolve no banco.
-      const unreadCount = await prisma.notification.count({
-        where: { userId: session.user.id, readAt: null },
-      });
-      return NextResponse.json({ notifications: visible, unreadCount }, { status: 200 });
-    }
-
-    // Só o que está na resposta pode ser contado como não lido — senão o
-    // contador do sino apontaria para itens que o painel nunca exibe.
-    const unreadCount = remainingUnreadCount(visible);
+    // O contador completo passa da lista de 30: é ele que mostra quantos avisos
+    // o "Ler todas" vai alcançar (e convida a clicar). O contador só inclui o
+    // que a lista pode exibir: um aviso inacessível nunca acende o badge.
+    const unreadCount =
+      accessible.length === notifications.length
+        ? // Caso comum (nada filtrado): a contagem resolve no banco.
+          await prisma.notification.count({
+            where: { userId: session.user.id, readAt: null },
+          })
+        : remainingUnreadCount(visible);
 
     return NextResponse.json({ notifications: visible, unreadCount }, { status: 200 });
   } catch (error) {

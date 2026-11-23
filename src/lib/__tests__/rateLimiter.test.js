@@ -143,11 +143,21 @@ describe('checkRateLimit', () => {
             expect((await checkRateLimit('login:pessoa@teste.com')).isLimited).toBe(false);
         });
 
+        it('libera as operações de chamado, que as specs montam em lote', async () => {
+            process.env.NODE_ENV = 'test';
+            process.env.CYPRESS_TEST_SECRET = 'segredo-e2e';
+            for (let i = 0; i < 35; i++) {
+                expect((await checkRateLimit('ticket:create:user-lote', { maxRequests: 10 })).isLimited).toBe(false);
+                expect((await checkRateLimit('ticket:update:user-lote', { maxRequests: 30 })).isLimited).toBe(false);
+                expect((await checkRateLimit('comment:create:user-lote', { maxRequests: 20 })).isLimited).toBe(false);
+            }
+        });
+
         it('não afeta as demais chaves nem produção', async () => {
             process.env.NODE_ENV = 'test';
             process.env.CYPRESS_TEST_SECRET = 'segredo-e2e';
-            for (let i = 0; i < 5; i++) await checkRateLimit('ticket:create:user-1');
-            expect((await checkRateLimit('ticket:create:user-1')).isLimited).toBe(true);
+            for (let i = 0; i < 5; i++) await checkRateLimit('health:ping');
+            expect((await checkRateLimit('health:ping')).isLimited).toBe(true);
 
             process.env.NODE_ENV = 'production';
             _clearMemoryRateLimits();

@@ -105,13 +105,23 @@ function getLimiter(windowMs, maxRequests) {
 
 /**
  * E2E: dev/testes com CYPRESS_TEST_SECRET definido rodam dezenas de cadastros
- * no mesmo IP e caem no limite. A exceção só vale com o segredo configurado e
- * para as chaves `register:*`/`login:*`/`login-ip:*`; produção fica sempre limitada.
+ * e dezenas de chamados com o mesmo usuário/IP e caem no limite. A exceção só
+ * vale com o segredo configurado e para as chaves de cadastro/login e das
+ * operações de chamado (as specs montam lotes para paginação, para a janela de
+ * 30 do sino e para a concorrência). Produção fica sempre limitada.
  */
+const TEST_BYPASS_PREFIXES = [
+    'register:',
+    'login:',
+    'login-ip:',
+    'ticket:',
+    'comment:create:',
+];
+
 function isTestBypass(identifier) {
     if (process.env.NODE_ENV === 'production') return false;
     if (!process.env.CYPRESS_TEST_SECRET) return false;
-    return identifier.startsWith('register:') || identifier.startsWith('login:') || identifier.startsWith('login-ip:');
+    return TEST_BYPASS_PREFIXES.some((prefix) => identifier.startsWith(prefix));
 }
 
 export async function checkRateLimit(identifier, { windowMs = DEFAULT_WINDOW_MS, maxRequests = DEFAULT_MAX_REQUESTS } = {}) {

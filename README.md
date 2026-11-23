@@ -301,8 +301,8 @@ model PasswordReset {
 - **ORM:** Prisma ORM 6
 
 ### Qualidade & Testes
-- **Testes Unitários:** Vitest — 282 testes unitários (23 suítes), cobrindo schemas, RBAC/multiempresa, SLA, métricas, notificações, histórico, sessões, aprovação de contas, cron, rate limiter e acessibilidade do sino.
-- **Testes E2E:** Cypress 15 — 9 specs com 43 cenários cobrindo autenticação, permissões, tickets e comentários.
+- **Testes Unitários:** Vitest — 283 testes unitários (23 suítes), cobrindo schemas, RBAC/multiempresa, SLA, métricas, notificações, histórico, sessões, aprovação de contas, cron, rate limiter e acessibilidade do sino.
+- **Testes E2E:** Cypress 15 — 10 specs com 55 cenários cobrindo autenticação, permissões, tickets e comentários.
 - **Linter:** ESLint 9
 
 ---
@@ -317,7 +317,7 @@ src/
 │   ├── api/                 # Endpoints REST (auth, register, tickets, agents, health, cron)
 │   └── components/          # Componentes de interface (TicketList, EditTicketForm, ThemeToggle, etc.)
 ├── lib/
-│   ├── __tests__/           # Suíte de 282 testes unitários do Vitest
+│   ├── __tests__/           # Suíte de 283 testes unitários do Vitest
 │   ├── auth.js              # NextAuth, callbacks de sessão e tokenVersion
 │   ├── prisma.js            # Instância singleton do PrismaClient
 │   ├── rateLimiter.js       # Rate limit Upstash + fallback em memória
@@ -403,7 +403,7 @@ Acesse [http://localhost:3000](http://localhost:3000) no seu navegador.
 ## Testes e Validação
 
 ```bash
-# Executar os 282 testes unitários (23 suítes) com Vitest
+# Executar os 283 testes unitários (23 suítes) com Vitest
 npm run test:run
 
 # Executar testes em modo watch
@@ -421,7 +421,7 @@ npm run build
 # Popular empresa, contas e chamados de demonstração
 npm run db:seed
 
-# Executar os 43 cenários E2E com Cypress
+# Executar os 55 cenários E2E com Cypress
 npm run cypress:run
 ```
 
