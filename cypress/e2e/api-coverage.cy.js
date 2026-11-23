@@ -11,21 +11,19 @@
 //   lista usa para se corrigir) — o caminho da UI já está em
 //   concurrency.cy.js, aqui o contrato da API é verificado direto.
 
+// O CI roda `next start` (NODE_ENV=production): o bypass do CYPRESS_TEST_SECRET
+// não vale, e `ticket:create` vale 10 por conta a cada 15 min. Cada cenário que
+// grava chamados usa uma conta própria e fica dentro dessa cota.
 describe('Contrato de GET /api/tickets', () => {
-  let agentUser;
-
-  // O POST /api/tickets limita 10 criações por usuário (`ticket:create:<id>`).
-  // A paginação precisa de mais que isso, então o usuário é novo por cenário —
-  // o contador em memória reinicia com a conta.
-  beforeEach(() => {
-    cy.createTestUser({ accountType: 'COMPANY' }).then((user) => {
-      agentUser = user;
-    });
-  });
-
-  beforeEach(() => {
-    cy.login(agentUser.email, agentUser.password);
-  });
+  /**
+   * Cria uma conta nova e faz login com ela. O spec nunca reaproveita a conta
+   * entre cenários que gravam: a cota é por usuário, não por chamado.
+   */
+  function loginAsNewAgent() {
+    return cy
+      .createTestUser({ accountType: 'COMPANY' })
+      .then((user) => cy.login(user.email, user.password));
+  }
 
   const uniquePrefix = () => `Cobertura ${Date.now()}`;
 
@@ -59,6 +57,7 @@ describe('Contrato de GET /api/tickets', () => {
 
   it('pagina respeitando page e limit e informa os totais', () => {
     const prefix = uniquePrefix();
+    loginAsNewAgent();
     createTickets(prefix, 3).then(() => {
       list(`?search=${encodeURIComponent(prefix)}&page=1&limit=2`).then(({ status, body }) => {
         expect(status).to.eq(200);
@@ -83,6 +82,7 @@ describe('Contrato de GET /api/tickets', () => {
   it('a lista do dashboard navega entre as páginas que a API informa', () => {
     const prefix = uniquePrefix();
     cy.intercept('GET', '/api/tickets?*').as('listTickets');
+    loginAsNewAgent();
 
     createTickets(prefix, 3).then(() => {
       cy.visit('/dashboard');
@@ -104,6 +104,8 @@ describe('Contrato de GET /api/tickets', () => {
   });
 
   it('limita o limit entre 1 e 50 em vez de aceitar qualquer valor', () => {
+    // Roda depois do cenário de 401, que limpa os cookies: a sessão volta aqui.
+    loginAsNewAgent();
     list('?limit=0').then(({ status, body }) => {
       expect(status).to.eq(200);
       expect(body.pagination.limit).to.eq(1);
@@ -121,6 +123,7 @@ describe('Contrato de GET /api/tickets', () => {
 
   it('filtra por status e prioridade, descartando valores fora do enum', () => {
     const prefix = uniquePrefix();
+    loginAsNewAgent();
     createTickets(prefix, 2, { priority: 'HIGH' }).then(() => {
       list(`?search=${encodeURIComponent(prefix)}&priority=HIGH`).then(({ body }) => {
         expect(body.tickets).to.have.length(2);
@@ -145,6 +148,7 @@ describe('Contrato de GET /api/tickets', () => {
 
   it('busca por título e por descrição sem diferenciar maiúsculas', () => {
     const prefix = uniquePrefix();
+    loginAsNewAgent();
     cy.request({
       method: 'POST',
       url: '/api/tickets',
@@ -172,6 +176,7 @@ describe('Contrato de GET /api/tickets', () => {
 
   it('ordena por prazo com sort=dueDate e coloca o URGENT antes do LOW', () => {
     const prefix = uniquePrefix();
+    loginAsNewAgent();
     // URGENT tem 4h de prazo e LOW 168h: a ordenação pelo dueAt tem que
     // devolver o urgente primeiro.
     createTickets(prefix, 1, { priority: 'LOW' }).then(() => {
@@ -187,6 +192,7 @@ describe('Contrato de GET /api/tickets', () => {
 
   it('mantém os KPIs do summary independentes dos filtros da lista', () => {
     const prefix = uniquePrefix();
+    loginAsNewAgent();
     createTickets(prefix, 2).then(() => {
       // Um filtro que não devolve nada na lista não zera os KPIs: eles usam a
       // visibilidade base (ver nota do AUD-04 no AGENTS.md §9).
@@ -275,27 +281,50 @@ describe('Contrato de PATCH /api/notifications', () => {
 
   it('atinge também as notificações antigas fora da lista de 30', () => {
     // O GET devolve no máximo 30 itens; o "Ler todas" precisa alcançar também
-    // o que não aparece na lista. 32 avisos = 32 atribuições ao leitor; as
-    // criações passam pelo `ticket:create` liberado em teste com
-    // CYPRESS_TEST_SECRET (ver `isTestBypass` em src/lib/rateLimiter.js).
-    cy.login(agentUser.email, agentUser.password);
-    for (let index = 0; index < 32; index++) {
-      const title = `Lote ${index} ${Date.now()}`;
+    // o que não aparece na lista. O CI roda `next start` (NODE_ENV=production),
+    // onde o bypass do CYPRESS_TEST_SECRET não vale e cada conta tem
+    // `ticket:create` 10, `ticket:update` 30 e `comment:create` 20 a cada 15 min.
+    //
+    // O leitor é o autor: ele abre 10 chamados (teto de criação dele). O dono
+    // move cada um para IN_PROGRESS e para CLOSED (20 updates, dentro do teto
+    // dele mesmo contando o "marca todas" anterior) e cada transição vira um
+    // STATUS para o autor. Comentar pelo dono rende mais 10 COMMENT (a cota é
+    // outra) e atribuir 5 chamados ao autor rende 5 ASSIGNED: 35 avisos, acima
+    // da janela de 30 que a lista exibe.
+    const prefix = `Janela ${Date.now()}`;
+    const readerTickets = [];
+    cy.login(reader.email, reader.password);
+    for (let index = 0; index < 10; index++) {
       cy.request('POST', '/api/tickets', {
-        title,
-        description: 'Chamado para a cobertura de notificações',
+        title: `${prefix} leitor ${index}`,
+        description: 'Chamado aberto pelo leitor',
         priority: 'LOW',
       })
         .its('body.id')
-        .then((ticketId) =>
-          cy
-            .request('PATCH', `/api/tickets/${ticketId}`, { agentId: reader.id })
-            .its('status')
-            .then((status) => expect(status, `atribuição de ${title}`).to.eq(200))
-        );
+        .then((id) => {
+          readerTickets.push(id);
+        });
     }
 
-    cy.clearCookies();
+    cy.login(agentUser.email, agentUser.password);
+    cy.wrap(readerTickets).each((ticketId, index) => {
+      cy.request('PATCH', `/api/tickets/${ticketId}`, {
+        status: 'IN_PROGRESS',
+        // Metade dos chamados fica atribuída ao autor: mais um ASSIGNED cada.
+        ...(index < 5 ? { agentId: reader.id } : {}),
+      })
+        .its('status')
+        .should('eq', 200);
+      cy.request('PATCH', `/api/tickets/${ticketId}`, { status: 'CLOSED' })
+        .its('status')
+        .should('eq', 200);
+      cy.request('POST', `/api/tickets/${ticketId}/comments`, {
+        content: 'Nota do agente para o autor',
+      })
+        .its('status')
+        .should('eq', 201);
+    });
+
     cy.login(reader.email, reader.password);
     cy.request('/api/notifications').then(({ body }) => {
       expect(body.notifications.length).to.eq(30);
