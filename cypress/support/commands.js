@@ -35,7 +35,13 @@ Cypress.Commands.add("createTestUser", (overrides = {}) => {
         "x-forwarded-for": testIp,
       },
     })
-    .then(() => user);
+    .then((res) => {
+      // O AGENT da empresa também transporta o companyCode: specs que precisam
+      // cadastrar um funcionário na própria empresa usam o código do próprio
+      // `agent` (sem reler o card do dashboard).
+      expect(res.status, "cadastro de usuário de teste").to.eq(201);
+      return { ...user, id: res.body.id, companyCode: res.body.companyCode || null };
+    });
 });
 
 // Cadastra um funcionário pelo código da empresa (fluxo real, nasce PENDING).
@@ -57,6 +63,18 @@ Cypress.Commands.add("registerEmployee", ({ name, email, password, companyCode }
     return { name, email, password };
   });
 });
+
+// Id do usuário por e-mail, para montar payloads de API nos specs que
+// precisam de um membro que não seja o próprio criador do chamado. Usa a
+// sessão restaurada pelo cy.login, então chame-o logo após o login.
+Cypress.Commands.add("userIdOf", (email) =>
+  cy.request("/api/agents").then(({ status, body }) => {
+    expect(status, `listagem de membros para ${email}`).to.eq(200);
+    const user = (body || []).find((u) => u.email === email);
+    expect(user, `membro ${email} em /api/agents`).to.not.be.undefined;
+    return user.id;
+  })
+);
 
 Cypress.Commands.add("login", (email, password) => {
   cy.session(
