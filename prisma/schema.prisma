@@ -92,6 +92,14 @@ model Ticket {
   @@index([authorId])
   @@index([status])
   @@index([companyId])
+  // Item 6: consultas da lista, dos KPIs e das médias do dashboard. Onde a
+  // ordenação é o gargalo (`ORDER BY ... DESC LIMIT n`), o índice existe para
+  // ser lido na ordem certa em vez de ordenar a tabela inteira.
+  @@index([createdAt])
+  @@index([dueAt])
+  @@index([resolvedAt])
+  @@index([firstResponseAt])
+  @@index([agentId])
 }
 
 model TicketComment {
