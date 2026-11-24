@@ -73,7 +73,7 @@ helpflow/
 │   ├── schema.prisma          # Modelos: Company, User, Ticket, TicketComment, TicketHistory,
 │   │                          #   Notification, Account, Session, PasswordReset
 │   ├── seed.js                # Seed idempotente: empresa DEMO-2026, contas demo e chamados
-│   └── migrations/            # Histórico de migrations PostgreSQL (11 migrations)
+│   └── migrations/            # Histórico de migrations PostgreSQL (14 migrations)
 ├── src/
 │   ├── middleware.js          # withAuth — protege /dashboard/:path* e /ticket/:path*
 │   ├── app/
@@ -243,7 +243,7 @@ CYPRESS_TEST_SECRET="seu-segredo-cypress"
 ### Modelos Principais:
 1. **`Company`**: Tenant. `id` (`uuid`), `name`, `code` **único** (código de convite, ex.: `TECH-4821`) e timestamps. Relações com `User` e `Ticket`.
 2. **`User`**: Identificador (`uuid`), e-mail único, hash da senha, nome, avatar, `role` (`CLIENT` | `AGENT`), `approvalStatus` (`PENDING` | `ACTIVE` | `REJECTED`, default `ACTIVE`, índice por `companyId`), `auth_provider`, `tokenVersion`, `companyId` opcional (FK `Company`, `onDelete: Cascade`), timestamps e relacionamentos `createdTickets` (autor) e `assignedTickets` (responsável).
-3. **`Ticket`**: Identificador (`cuid`), título, descrição, status (`OPEN` | `IN_PROGRESS` | `CLOSED`), prioridade (`LOW` | `MEDIUM` | `HIGH` | `URGENT`), `companyId` (FK `Company`), `authorId` (FK `User`), `agentId` (FK opcional `User`), `dueAt`, `resolvedAt`, `firstResponseAt`, timestamps e índices em `authorId`, `status` e `companyId`.
+3. **`Ticket`**: Identificador (`cuid`), título, descrição, status (`OPEN` | `IN_PROGRESS` | `CLOSED`), prioridade (`LOW` | `MEDIUM` | `HIGH` | `URGENT`), `companyId` (FK `Company`), `authorId` (FK `User`), `agentId` (FK opcional `User`), `dueAt`, `resolvedAt`, `firstResponseAt`, timestamps e índices em `authorId`, `status`, `companyId`, `agentId`, `createdAt`, `dueAt`, `resolvedAt` e `firstResponseAt` (item 6 do backlog).
 4. **`TicketComment`**: Comentários do chamado com `visibility` (`PUBLIC` | `INTERNAL` — notas internas visíveis apenas a `AGENT`), `authorId` e `ticketId`.
 5. **`TicketHistory`**: Auditoria de mudanças (`field`, `from`, `to`, `actorId`), gravada na mesma transação do update.
 6. **`Notification`**: Notificações in-app do sino (`userId` destinatário, `ticketId`, `type` `ASSIGNED` | `COMMENT` | `STATUS`, `readAt`).
