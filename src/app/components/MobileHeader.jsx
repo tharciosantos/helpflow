@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { HiMenu, HiX } from 'react-icons/hi';
 import SidebarNav from './SidebarNav';
@@ -8,12 +8,19 @@ import NotificationBell from './NotificationBell';
 import UserProfile from './UserProfile';
 import ThemeToggle from './ThemeToggle';
 import { useTheme } from './ThemeProvider';
+import useFocusTrap from './useFocusTrap';
 import { usePathname } from 'next/navigation';
 
 export default function MobileHeader() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { theme } = useTheme();
   const pathname = usePathname();
+  const drawerRef = useRef(null);
+  const openButtonRef = useRef(null);
+
+  // Item 10: o drawer é um painel modal — Tab cicla dentro dele e o foco volta
+  // ao botão do menu ao fechar (inclusive quando o Esc fecha).
+  useFocusTrap({ active: isSidebarOpen, containerRef: drawerRef, returnFocusTo: openButtonRef });
 
   // Fecha o drawer ao navegar
   useEffect(() => {
@@ -48,12 +55,15 @@ export default function MobileHeader() {
         <div className="flex shrink-0 items-center gap-1.5">
           <ThemeToggle />
           <NotificationBell variant="icon" />
-          <button 
+          <button
+            ref={openButtonRef}
+            type="button"
             data-cy="mobile-menu-open"
             onClick={() => setIsSidebarOpen(true)}
             className={`${theme === 'light' ? 'text-slate-700 hover:text-slate-900' : 'text-slate-300 hover:text-white'} rounded-lg p-2 -m-1 min-h-[44px] min-w-[44px] inline-flex items-center justify-center`}
             aria-label="Abrir menu"
             aria-expanded={isSidebarOpen}
+            aria-controls="mobile-nav-drawer"
           >
             <HiMenu size={24} />
           </button>
@@ -70,6 +80,9 @@ export default function MobileHeader() {
           />
 
           <aside
+            ref={drawerRef}
+            id="mobile-nav-drawer"
+            tabIndex={-1}
             role="dialog"
             aria-modal="true"
             aria-label="Menu de navegação"

@@ -59,7 +59,7 @@ Regra: toda correção de um item `AUD-xx` deve atualizar o status, o commit e a
 | **Rate Limiting** | @upstash/ratelimit + @upstash/redis | Sliding window / fallback em memória |
 | **Animações** | Anime.js | 4.5.x |
 | **E-mail** | Nodemailer | Recuperação de senhas (`EMAIL_USER` / `EMAIL_PASS`) |
-| **Testes Unitários** | Vitest | 284 testes de **funções puras** em `src/lib/` (ambiente `node`, sem jsdom, sem Testing Library) |
+| **Testes Unitários** | Vitest | 306 testes de **funções puras** em `src/lib/` (ambiente `node`, sem jsdom, sem Testing Library) |
 | **Testes E2E** | Cypress | 15.x — 10 specs / 55 cenários em `cypress/e2e/` |
 | **Linter** | ESLint (flat config) + eslint-config-next | 9.x |
 
@@ -114,7 +114,7 @@ helpflow/
 │   │   ├── layout.js          # RootLayout com ThemeProvider e AuthProvider
 │   │   └── globals.css        # Tailwind v4 directives e estilos base
 │   └── lib/                   # ← Regra de negócio (funções puras) + integrações
-│       ├── __tests__/         # 284 testes Vitest (23 arquivos)
+│       ├── __tests__/         # 306 testes Vitest (24 arquivos)
 │       ├── approval.js        # Aprovação/recusa de contas PENDING por AGENT da empresa (AUD-37)
 │       ├── auth.js            # Configuração do NextAuth, callbacks, authorize e tokenVersion
 │       ├── prisma.js          # Instância singleton do PrismaClient
@@ -139,6 +139,7 @@ helpflow/
 │       ├── healthCheck.js     # Ping `SELECT 1` com prazo curto (health check)
 │       ├── ticketConcurrency.js # Update otimista do PATCH (expectedUpdatedAt, 409)
 │       ├── ticketChanges.js   # Detecta PATCH sem mudança real (evita 409 falso)
+│       ├── focusTrap.js       # Focus trap dos painéis modais + rótulo dos selects da lista (item 10)
 │       └── demoTicketFlow.js  # Sequência de estados do simulador
 ├── cypress/
 │   ├── e2e/                   # auth · tickets · permissions · comments · concurrency · detail-race · notifications-states · approvals · register-contract · api-coverage (10 specs)
@@ -306,7 +307,7 @@ CYPRESS_TEST_SECRET="seu-segredo-cypress"
 
 ## 10. Testes e Validação
 
-- **Suíte Vitest — 284 testes em 23 arquivos**: cobrem **funções puras** de `src/lib/` (ambiente `node`, **sem Testing Library e sem jsdom**). Não há testes de componentes ou de Route Handlers.
+- **Suíte Vitest — 306 testes em 24 arquivos**: cobrem **funções puras** de `src/lib/` (ambiente `node`, **sem Testing Library e sem jsdom**). Não há testes de componentes ou de Route Handlers.
   - Validações de Schemas Zod, incluindo o `accountType` explícito do cadastro (`schemas.test.js`)
   - Utilitários de Tickets e Formatação (`ticketUtils.test.js`)
   - Autorização, RBAC e isolamento multiempresa (`ticketAuthorization.test.js`)
@@ -324,6 +325,7 @@ CYPRESS_TEST_SECRET="seu-segredo-cypress"
   - Concorrência no PATCH e detecção de PATCH sem mudança real (`ticketConcurrency.test.js`, `ticketChanges.test.js`)
   - Aprovação de contas por código de empresa (`approval.test.js`)
   - Fluxo do Simulador Interativo (`demoTicketFlow.test.js`)
+  - Focus trap, restauração de foco e rótulos dos selects (`focusTrap.test.js`)
   - Consistência das contagens documentadas (`docsConsistency.test.js` — falha se `AGENTS.md` ou `README.md` divergirem da suíte real)
 - **E2E Cypress — 10 specs / 55 cenários em `cypress/e2e/`**: `auth.cy.js`, `tickets.cy.js`, `permissions.cy.js`, `comments.cy.js`, `concurrency.cy.js`, `detail-race.cy.js`, `notifications-states.cy.js`, `approvals.cy.js`, `register-contract.cy.js`, `api-coverage.cy.js`. Rodam contra servidor e banco reais; `cy.createTestUser` cria usuários via `/api/register` com `x-test-secret`.
 
@@ -347,7 +349,7 @@ npm run build         # 4° — build de produção Next.js (roda prisma migrate
 ## 11. Padrões de Código e UI
 
 - **Estética Minimalista & Funcional**: Tipografia legível, bordas discretas em `border-slate-800`, paleta dark neutra com acentos em `teal-500` e badges semânticos (`emerald`, `amber`, `red`, `sky`).
-- **Acessibilidade**: Labels para inputs, contrastes adequados e estados de foco visíveis.
+- **Acessibilidade**: Labels para inputs, contrastes adequados e estados de foco visíveis. Painéis modais (sino, drawer mobile e `ConfirmDialog`) usam `useFocusTrap` + `src/lib/focusTrap.js`: Tab cicla dentro do painel, o fundo fica `inert` e o foco volta ao gatilho ao fechar. Selects dentro de listas recebem `aria-label` com o chamado (`buildTicketSelectLabel`).
 - **Responsividade**: Grid fluido de 1 a 4 colunas com adaptação móvel (`sm:`, `md:`, `lg:`).
 
 ---

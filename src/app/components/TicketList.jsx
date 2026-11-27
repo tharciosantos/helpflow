@@ -4,6 +4,7 @@ import { LuTicket, LuInbox, LuUser, LuCalendar, LuCircleAlert, LuPencil, LuTrash
 import { getStatusDisplayNamePT, getStatusBadgeClasses, getPriorityBadge } from '@/lib/ticketUtils';
 import { canDeleteTicket, canEditTicketContent } from '@/lib/ticketAuthorization';
 import { isOverdue } from '@/lib/sla';
+import { buildTicketSelectLabel } from '@/lib/focusTrap';
 import { useTheme } from "./ThemeProvider";
 import ConfirmDialog from "./ConfirmDialog";
 
@@ -283,6 +284,7 @@ export default function TicketList({
                               theme === 'light' ? 'text-slate-500' : 'text-slate-400'
                             }`}>Status:</span>
                             <select
+                              aria-label={buildTicketSelectLabel('status', ticket)}
                               disabled={updatingId === ticket.id}
                               value={ticket.status}
                               onChange={(e) => handleStatusChange(ticket, e.target.value)}
@@ -305,6 +307,7 @@ export default function TicketList({
                               theme === 'light' ? 'text-slate-500' : 'text-slate-400'
                             }`}>Responsável:</span>
                             <select
+                              aria-label={buildTicketSelectLabel('agentId', ticket)}
                               disabled={updatingId === ticket.id}
                               value={ticket.agentId || ''}
                               onChange={(e) => handleAgentChange(ticket, e.target.value)}
