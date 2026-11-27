@@ -14,6 +14,7 @@ import {
   POLL_INTERVAL_MS,
 } from '@/lib/notificationConnection';
 import { useTheme } from './ThemeProvider';
+import useFocusTrap from './useFocusTrap';
 
 const TYPE_LABEL = {
   ASSIGNED: 'Atribuído',
@@ -73,6 +74,12 @@ export default function NotificationBell({ variant = 'nav' }) {
   const containerRef = useRef(null);
   const buttonRef = useRef(null);
   const panelRef = useRef(null);
+
+  // Item 10: o painel é modal (aria-modal) — Tab fica dentro dele e o foco
+  // volta ao sino ao fechar, em vez de seguir para o início da página.
+  // Só depois de montado: no desktop o painel em portal é posicionado em
+  // `useEffect`, e focar antes moveria o foco para um painel invisível.
+  useFocusTrap({ active: open && mounted, containerRef: panelRef, returnFocusTo: buttonRef });
 
   // O laço de polling lê o valor mais recente sem reiniciar o efeito.
   useEffect(() => {
