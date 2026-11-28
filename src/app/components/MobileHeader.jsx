@@ -17,10 +17,30 @@ export default function MobileHeader() {
   const pathname = usePathname();
   const drawerRef = useRef(null);
   const openButtonRef = useRef(null);
+  // Item 11: o drawer agora desliza. Ele entra montado já em `-translate-x-full`
+  // e só recebe `translate-x-0` no quadro seguinte — inverter a classe no mesmo
+  // paint não anima nada. O foco entra junto com o slide.
+  const [drawerSlid, setDrawerSlid] = useState(false);
 
-  // Item 10: o drawer é um painel modal — Tab cicla dentro dele e o foco volta
-  // ao botão do menu ao fechar (inclusive quando o Esc fecha).
-  useFocusTrap({ active: isSidebarOpen, containerRef: drawerRef, returnFocusTo: openButtonRef });
+  useFocusTrap({
+    active: isSidebarOpen && drawerSlid,
+    containerRef: drawerRef,
+    returnFocusTo: openButtonRef,
+  });
+
+  useEffect(() => {
+    if (!isSidebarOpen) {
+      setDrawerSlid(false);
+      return undefined;
+    }
+    // Dois quadros: o primeiro pinta o drawer fora da tela, o segundo dispara o
+    // transition. Abrir e fechar no mesmo quadro (clique duplo, Esc imediato)
+    // não chega a montar o slide, e o painel segue fechado.
+    const frame = requestAnimationFrame(() => {
+      requestAnimationFrame(() => setDrawerSlid(true));
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [isSidebarOpen]);
 
   // Fecha o drawer ao navegar
   useEffect(() => {
@@ -39,6 +59,8 @@ export default function MobileHeader() {
       document.removeEventListener('keydown', onKey);
     };
   }, [isSidebarOpen]);
+
+  const closeDrawer = () => setIsSidebarOpen(false);
 
   return (
     <>
@@ -72,10 +94,10 @@ export default function MobileHeader() {
 
       {isSidebarOpen && (
         <>
-          <div 
+          <div
             data-cy="mobile-menu-overlay"
-            className="fixed inset-0 bg-black/60 z-40 md:hidden" 
-            onClick={() => setIsSidebarOpen(false)}
+            className="fixed inset-0 z-40 bg-black/60 motion-safe:animate-[notification-in_0.2s_ease-out] md:hidden"
+            onClick={closeDrawer}
             aria-hidden="true"
           />
 
@@ -86,28 +108,28 @@ export default function MobileHeader() {
             role="dialog"
             aria-modal="true"
             aria-label="Menu de navegação"
-            className={`fixed top-0 left-0 h-dvh w-[85vw] max-w-xs px-5 pt-5 pb-5 flex flex-col min-h-0 z-50 transform transition-transform duration-300 ease-in-out md:hidden border-r [padding-bottom:max(1.25rem,env(safe-area-inset-bottom))] ${
+            className={`fixed top-0 left-0 h-dvh w-[85vw] max-w-xs px-5 pt-5 pb-5 flex flex-col min-h-0 z-50 transform transition-transform duration-300 ease-in-out motion-reduce:transition-none md:hidden border-r [padding-bottom:max(1.25rem,env(safe-area-inset-bottom))] ${
             theme === 'light'
               ? 'bg-white text-slate-900 border-slate-200'
               : 'bg-slate-900 text-white border-slate-800'
-          }`}
-            style={{ transform: isSidebarOpen ? 'translateX(0)' : 'translateX(-100%)' }}
+          } ${drawerSlid ? 'translate-x-0' : '-translate-x-full'}`}
           >
             <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
               <div className="flex justify-between items-center mb-6">
                 <h1 className={`text-2xl font-bold tracking-tight ${
                   theme === 'light' ? 'text-slate-900' : 'text-white'
                 }`}>HelpFlow</h1>
-                <button 
+                <button
+                  type="button"
                   data-cy="mobile-menu-close"
-                  onClick={() => setIsSidebarOpen(false)}
+                  onClick={closeDrawer}
                   className={`inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg -m-1 p-2 ${theme === 'light' ? 'text-slate-500 hover:text-slate-900' : 'text-slate-400 hover:text-white'}`}
                   aria-label="Fechar menu"
                 >
                   <HiX size={24} />
                 </button>
               </div>
-              <div onClick={() => setIsSidebarOpen(false)}> 
+              <div onClick={closeDrawer}>
                  <SidebarNav dataCyPrefix="mobile-sidebar" showNotifications={false} />
               </div>
             </div>

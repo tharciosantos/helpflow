@@ -103,6 +103,15 @@ export default function TicketDetailsPage() {
     // Aborta a requisição em andamento ao desmontar (ex.: voltar ao dashboard).
     useEffect(() => () => abortRef.current?.abort(), []);
 
+    // Item 11: o aviso de sucesso some sozinho depois de 4 s. O timer guarda um
+    // só id e é zerado a cada novo aviso — sem isso, salvar duas vezes em menos
+    // de 4 s apagava o segundo aviso no prazo do primeiro — e é limpo no
+    // desmontar para o setState não cair num componente que já saiu da tela.
+    const successTimerRef = useRef(null);
+    useEffect(() => () => {
+        if (successTimerRef.current) clearTimeout(successTimerRef.current);
+    }, []);
+
     useEffect(() => {
         if (session?.user?.role === 'AGENT') {
             const fetchAgents = async () => {
@@ -157,7 +166,8 @@ export default function TicketDetailsPage() {
             setNewPriority(updated.priority);
             setNewAgentId(updated.agentId || '');
             setSuccess('Alterações salvas com sucesso!');
-            setTimeout(() => setSuccess(''), 4000);
+            if (successTimerRef.current) clearTimeout(successTimerRef.current);
+            successTimerRef.current = setTimeout(() => setSuccess(''), 4000);
         } catch (err) {
             console.error('Erro ao atualizar chamado:', err);
             setError(err.message || 'Erro ao atualizar o chamado.');

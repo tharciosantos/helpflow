@@ -137,8 +137,11 @@ svg {
   transform: translateY(24px);
 }
 
+/* O atraso da cascata vem do `animation-delay` inline do FeatureCard. Com
+   `backwards`, o card segura o quadro inicial (opacity 0) durante o delay em
+   vez de aparecer e piscar; `forwards` preserva o estado final. */
 .animate-reveal {
-  animation: reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards forwards;
 }
 
 /* Animações de hover suaves para cards */

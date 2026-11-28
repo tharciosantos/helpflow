@@ -301,7 +301,7 @@ model PasswordReset {
 - **ORM:** Prisma ORM 6
 
 ### Qualidade & Testes
-- **Testes Unitários:** Vitest — 306 testes unitários (24 suítes), cobrindo schemas, RBAC/multiempresa, SLA, métricas, notificações, histórico, sessões, aprovação de contas, cron, rate limiter e acessibilidade do sino.
+- **Testes Unitários:** Vitest — 316 testes unitários (25 suítes), cobrindo schemas, RBAC/multiempresa, SLA, métricas, notificações, histórico, sessões, aprovação de contas, cron, rate limiter e acessibilidade do sino.
 - **Testes E2E:** Cypress 15 — 10 specs com 55 cenários cobrindo autenticação, permissões, tickets e comentários.
 - **Linter:** ESLint 9
 
@@ -317,7 +317,7 @@ src/
 │   ├── api/                 # Endpoints REST (auth, register, tickets, agents, health, cron)
 │   └── components/          # Componentes de interface (TicketList, EditTicketForm, ThemeToggle, etc.)
 ├── lib/
-│   ├── __tests__/           # Suíte de 306 testes unitários do Vitest
+│   ├── __tests__/           # Suíte de 316 testes unitários do Vitest
 │   ├── auth.js              # NextAuth, callbacks de sessão e tokenVersion
 │   ├── prisma.js            # Instância singleton do PrismaClient
 │   ├── rateLimiter.js       # Rate limit Upstash + fallback em memória
@@ -403,7 +403,7 @@ Acesse [http://localhost:3000](http://localhost:3000) no seu navegador.
 ## Testes e Validação
 
 ```bash
-# Executar os 306 testes unitários (24 suítes) com Vitest
+# Executar os 316 testes unitários (25 suítes) com Vitest
 npm run test:run
 
 # Executar testes em modo watch
