@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LuTicket, LuInbox, LuUser, LuCalendar, LuCircleAlert, LuPencil, LuTrash2, LuShield } from "react-icons/lu";
 import { getStatusDisplayNamePT, getStatusBadgeClasses, getPriorityBadge } from '@/lib/ticketUtils';
 import { canDeleteTicket, canEditTicketContent } from '@/lib/ticketAuthorization';
@@ -30,12 +30,29 @@ export default function TicketList({
   const [successMessage, setSuccessMessage] = useState('');
   const [infoMessage, setInfoMessage] = useState('');
 
+  // Item 11: cada aviso some em 4 s e o timer anterior é cancelado — uma ação
+  // nova reinicia o prazo em vez de a mensagem nova herdar o do aviso antigo.
+  // Os ids vivem numa ref e são limpos no desmontar.
+  const feedbackTimersRef = useRef(new Map());
   const showFeedback = (setter, message) => {
     setter(message);
-    if (message) {
-      setTimeout(() => setter(''), 4000);
-    }
+    const pending = feedbackTimersRef.current.get(setter);
+    if (pending) clearTimeout(pending);
+    if (!message) return;
+    const timer = setTimeout(() => {
+      feedbackTimersRef.current.delete(setter);
+      setter('');
+    }, 4000);
+    feedbackTimersRef.current.set(setter, timer);
   };
+
+  useEffect(() => {
+    const timers = feedbackTimersRef.current;
+    return () => {
+      timers.forEach((timer) => clearTimeout(timer));
+      timers.clear();
+    };
+  }, []);
 
   const handleDelete = async (ticketId) => {
     setErrorMessage('');

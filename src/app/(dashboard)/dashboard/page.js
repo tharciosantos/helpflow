@@ -36,11 +36,20 @@ export default function DashboardPage() {
   const abortRef = useRef(null);
   const filterTimerRef = useRef(null);
 
+  // Item 11: o "Copiado" some depois de 2,5 s. O id do timer é guardado para
+  // copiar de novo reiniciar o prazo (e não sumir antes) e para ser limpo no
+  // desmontar.
+  const copyTimerRef = useRef(null);
   const handleCopy = (text, type) => {
     navigator.clipboard.writeText(text);
     setCopiedType(type);
-    setTimeout(() => setCopiedType(''), 2500);
+    if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    copyTimerRef.current = setTimeout(() => setCopiedType(''), 2500);
   };
+
+  useEffect(() => () => {
+    if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+  }, []);
 
   const fetchTickets = useCallback(async (page = 1, activeFilters = {}) => {
     abortRef.current?.abort();

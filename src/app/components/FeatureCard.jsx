@@ -15,6 +15,9 @@ const iconMap = {
 export default function FeatureCard({ title, description, delay = 0, theme = "dark", icon }) {
   const ref = useRef(null);
   const [hasAnimated, setHasAnimated] = useState(false);
+  // Animação pulada (reduced motion, sem IntersectionObserver ou fora da tela
+  // ao desmontar): o card precisa ficar visível mesmo sem receber a classe.
+  const [revealSkipped, setRevealSkipped] = useState(false);
   const IconComponent = iconMap[icon || title] || LuShieldCheck;
 
   useEffect(() => {
@@ -26,17 +29,19 @@ export default function FeatureCard({ title, description, delay = 0, theme = "da
       "(prefers-reduced-motion: reduce)"
     ).matches;
 
-    if (prefersReducedMotion) {
-      element.style.opacity = "1";
-      element.style.transform = "none";
+    if (prefersReducedMotion || typeof IntersectionObserver === "undefined") {
+      setRevealSkipped(true);
       setHasAnimated(true);
       return;
     }
 
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
-        if (entry.isIntersecting && !hasAnimated) {
-          entry.target.classList.add("animate-reveal");
+        if (entry.isIntersecting) {
+          // A classe vai para o <article>, não para o wrapper criado pelo
+          // observer: com `entry.target` a animação pegava no wrapper e o card
+          // seguia em opacity: 0.
+          element.classList.add("animate-reveal");
           setHasAnimated(true);
           observer.unobserve(entry.target);
         }
@@ -55,14 +60,15 @@ export default function FeatureCard({ title, description, delay = 0, theme = "da
   return (
     <article
       ref={ref}
+      data-revealed={hasAnimated ? "true" : "false"}
       className={`hover-lift group h-full rounded-xl border p-4 sm:p-5 transition-all duration-300 ${
-        hasAnimated ? "opacity-100" : "scroll-reveal"
+        revealSkipped ? "" : hasAnimated ? "animate-reveal" : "scroll-reveal"
       } ${
         theme === "light"
           ? "border-slate-200 bg-white hover:border-emerald-200 hover:shadow-md"
           : "border-slate-800 bg-slate-900/90 hover:border-slate-700 hover:shadow-md"
       }`}
-      style={{ animationDelay: hasAnimated ? "0ms" : `${delay}ms` }}
+      style={{ animationDelay: `${delay}ms` }}
     >
       <div className={`mb-3 inline-flex h-9 w-9 items-center justify-center rounded-xl border transition-transform duration-300 group-hover:scale-105 ${
         theme === "light"
